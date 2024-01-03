@@ -8,6 +8,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.rounded.FilterList
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Sort
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.Divider
@@ -51,7 +56,7 @@ fun Layout(
                 Text("Drawer title", modifier = Modifier.padding(16.dp))
                 Divider()
                 Column(
-                    modifier = Modifier.padding(8.dp),
+                    modifier = Modifier.padding(10.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     NavigationDrawerItem(
@@ -84,13 +89,13 @@ fun Layout(
                 BottomAppBar(
                     actions = {
                         IconButton(onClick = { /* do something */ }) {
-                            Icon(Icons.Filled.Check, contentDescription = "Localized description")
+                            Icon(Icons.Rounded.Search, contentDescription = "Localized description")
                         }
                         IconButton(onClick = { /* do something */ }) {
-                            Icon(
-                                Icons.Filled.Edit,
-                                contentDescription = "Localized description",
-                            )
+                            Icon(Icons.Rounded.FilterList, contentDescription = "Localized description")
+                        }
+                        IconButton(onClick = { /* do something */ }) {
+                            Icon(Icons.Rounded.Sort, contentDescription = "Localized description")
                         }
                     },
                     floatingActionButton = {
