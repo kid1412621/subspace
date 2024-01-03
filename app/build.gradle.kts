@@ -15,6 +15,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables {
+            useSupportLibrary = true
+        }
     }
 
     buildTypes {
@@ -48,6 +51,7 @@ dependencies {
 
     // Material Design 3
     implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material3:material3-window-size-class")
 
     implementation("androidx.compose.ui:ui")
@@ -61,6 +65,7 @@ dependencies {
     // Optional - Integration with activities
     implementation("androidx.activity:activity-compose")
     // Optional - Integration with ViewModels
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose")
     // Optional - Integration with LiveData
     implementation("androidx.compose.runtime:runtime-livedata")
