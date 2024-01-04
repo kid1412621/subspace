@@ -63,6 +63,9 @@ dependencies {
     // Material Design 3
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material3:material3-window-size-class")
+    // not ready yet
+//    implementation("androidx.compose.material3:material3-adaptive:1.0.0-alpha03")
+//    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.0.0-alpha02")
     // wait for MD3 implementation
     implementation("androidx.compose.material:material-icons-extended")
 

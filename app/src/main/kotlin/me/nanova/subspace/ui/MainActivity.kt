@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+
 package me.nanova.subspace.ui
 
 import android.os.Bundle
@@ -14,7 +16,6 @@ import me.nanova.subspace.ui.theme.Theme
 
 class MainActivity : ComponentActivity() {
 
-    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -30,7 +31,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Preview(showBackground = true)
 @Composable
 fun AppPreview() {
