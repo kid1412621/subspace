@@ -1,13 +1,16 @@
-package me.nanova.subspace
+package me.nanova.subspace.ui
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import me.nanova.subspace.theme.Theme
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
+import me.nanova.subspace.ui.theme.Theme
 
 class MainActivity : ComponentActivity() {
 
@@ -19,9 +22,8 @@ class MainActivity : ComponentActivity() {
             Theme {
                 val windowSize = calculateWindowSizeClass(this)
 
-
                 Layout(
-
+                    windowSize = windowSize
                 )
             }
         }
@@ -31,10 +33,10 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Preview(showBackground = true)
 @Composable
-fun ReplyAppPreview() {
+fun AppPreview() {
     Theme {
         Layout(
-
+            windowSize = WindowSizeClass.calculateFromSize(DpSize(400.dp, 900.dp)),
         )
     }
 }

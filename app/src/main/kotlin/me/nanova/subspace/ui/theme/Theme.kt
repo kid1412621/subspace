@@ -1,4 +1,4 @@
-package me.nanova.subspace.theme
+package me.nanova.subspace.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme

@@ -1,4 +1,4 @@
-package me.nanova.subspace.theme
+package me.nanova.subspace.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
