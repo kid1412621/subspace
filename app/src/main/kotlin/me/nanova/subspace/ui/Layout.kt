@@ -1,14 +1,15 @@
 package me.nanova.subspace.ui
 
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material.icons.rounded.Search
@@ -58,11 +59,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun Layout(
     windowSize: WindowSizeClass?,
@@ -77,7 +77,7 @@ fun Layout(
     if (state.isRefreshing) {
         LaunchedEffect(true) {
             // fetch something
-            delay(1500)
+            delay(100)
             itemCount += 5
             state.endRefresh()
         }
@@ -151,9 +151,7 @@ fun Layout(
             },
             floatingActionButton = {
                 ExtendedFloatingActionButton(
-                    modifier = Modifier
-                        .absoluteOffset(x = 230.dp, y = 600.dp)
-                        .zIndex(1.1F),
+//                    modifier = Modifier.align()
                     onClick = { presses++ }) {
                     Text(text = "Extended FAB")
                 }
@@ -212,13 +210,32 @@ fun Layout(
                 modifier = Modifier
                     .padding(innerPadding)
                     .fillMaxSize(),
+//                    .nestedScroll(state.nestedScrollConnection),
                 tonalElevation = 1.dp
             ) {
-                Box(Modifier.nestedScroll(state.nestedScrollConnection)) {
-                    LazyColumn(Modifier.fillMaxSize()) {
+                Box(
+                    Modifier.nestedScroll(state.nestedScrollConnection)
+                ) {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
                         if (!state.isRefreshing) {
-                            items(itemCount) {
-                                ListItem({ Text(text = "Item ${itemCount - it} and count: $presses") })
+                            items(itemCount, key = { it }) {
+                                ListItem(
+                                    modifier = Modifier.animateItemPlacement(),
+                                    headlineContent = { Text("Three line list item") },
+                                    supportingContent = {
+                                        Text("Secondary text that is long and perhaps goes onto another ${itemCount - it} and count: $presses")
+                                    },
+                                    leadingContent = {
+                                        Icon(
+                                            Icons.Filled.Favorite,
+                                            contentDescription = "Localized description",
+                                        )
+                                    },
+                                    trailingContent = { Text("meta") }
+                                )
+
                                 HorizontalDivider()
                             }
                         }
