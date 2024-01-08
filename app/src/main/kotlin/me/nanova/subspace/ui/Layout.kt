@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.rounded.Add
@@ -66,6 +67,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun Layout(
     windowSize: WindowSizeClass?,
+    homeViewModel: HomeViewModel
 ) {
     var presses by remember { mutableIntStateOf(0) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -196,7 +198,7 @@ fun Layout(
                     },
                     floatingActionButton = {
                         FloatingActionButton(
-                            onClick = { /* do something */ },
+                            onClick = { homeViewModel.getTorrents() },
                             containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
                             elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
                         ) {
@@ -219,13 +221,17 @@ fun Layout(
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        if (!state.isRefreshing) {
-                            items(itemCount, key = { it }) {
+
+                        if (!state.isRefreshing && homeViewModel.uiState is UiState.Success) {
+                            items(
+                                (homeViewModel.uiState as UiState.Success).torrents,
+                                key = { it.name }
+                            ) { torrent ->
                                 ListItem(
                                     modifier = Modifier.animateItemPlacement(),
-                                    headlineContent = { Text("Three line list item") },
+                                    headlineContent = { Text(torrent.name) },
                                     supportingContent = {
-                                        Text("Secondary text that is long and perhaps goes onto another ${itemCount - it} and count: $presses")
+                                        Text("count: $presses")
                                     },
                                     leadingContent = {
                                         Icon(
@@ -233,7 +239,7 @@ fun Layout(
                                             contentDescription = "Localized description",
                                         )
                                     },
-                                    trailingContent = { Text("meta") }
+                                    trailingContent = { Text(torrent.state) }
                                 )
 
                                 HorizontalDivider()
@@ -254,6 +260,11 @@ fun Layout(
 @Composable
 @Preview
 fun LayoutPrev() {
-    Layout(null)
+//    Layout(null, HomeViewModel().apply {
+//        uiState = UiState.Success(
+//            listOf(
+//            )
+//        )
+//    })
 }
 
