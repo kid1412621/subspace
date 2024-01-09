@@ -50,6 +50,7 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,12 +63,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import me.nanova.subspace.data.QtListParams
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun Layout(
     windowSize: WindowSizeClass?,
-    homeViewModel: HomeViewModel
+    homeViewModel: HomeViewModel,
 ) {
     var presses by remember { mutableIntStateOf(0) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -83,6 +85,13 @@ fun Layout(
             itemCount += 5
             state.endRefresh()
         }
+    }
+
+    val params = remember {  mutableStateOf(QtListParams())}
+    val data by homeViewModel.data.observeAsState()
+
+    LaunchedEffect(params.value) {
+        homeViewModel.getTorrents(params.value)
     }
 
     val navigationType: NavigationType
@@ -172,8 +181,8 @@ fun Layout(
                                     contentDescription = "Sort by name"
                                 )
                             },
-                            onClick = { /*TODO*/ })
-                        DropdownMenuItem(text = { Text(text = "Added On") }, onClick = { /*TODO*/ })
+                            onClick = { params.value.sort = "name" })
+                        DropdownMenuItem(text = { Text(text = "Added On") }, onClick = { params.value.sort = "added_on" })
                         DropdownMenuItem(text = { Text(text = "Speed") }, onClick = { /*TODO*/ })
                     }
                 }
@@ -198,7 +207,7 @@ fun Layout(
                     },
                     floatingActionButton = {
                         FloatingActionButton(
-                            onClick = { homeViewModel.getTorrents() },
+                            onClick = {  },
                             containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
                             elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
                         ) {
@@ -224,7 +233,7 @@ fun Layout(
 
                         if (!state.isRefreshing && homeViewModel.uiState is UiState.Success) {
                             items(
-                                (homeViewModel.uiState as UiState.Success).torrents,
+                                data?: emptyList(),
                                 key = { it.name }
                             ) { torrent ->
                                 ListItem(

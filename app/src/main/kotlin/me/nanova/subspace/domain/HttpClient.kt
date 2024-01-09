@@ -4,6 +4,7 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import me.nanova.subspace.data.NetworkRepo
+import me.nanova.subspace.data.QtListParams
 import me.nanova.subspace.data.Repo
 import okhttp3.Authenticator
 import okhttp3.Interceptor
@@ -20,13 +21,14 @@ import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.QueryMap
 
 interface AppContainer {
     val repo: Repo
 }
 
 private val authApiService =
-    Retrofit.Builder().baseUrl("https://url/")
+    Retrofit.Builder().baseUrl("")
         .addConverterFactory(ScalarsConverterFactory.create())
         .build().create(QtAuthApiService::class.java)
 var call = authApiService.login("", "")
@@ -37,7 +39,7 @@ var cookie = call.execute().headers().get("Set-Cookie") ?: ""
 class DefaultAppContainer : AppContainer {
 
     private val BASE_URL =
-        "https://url/"
+        ""
     private val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
         .build()
@@ -107,7 +109,7 @@ interface QtApiService {
     suspend fun version(): Response<String>
 
     @GET("api/v2/torrents/info")
-    suspend fun getTorrents(): List<Torrent>
+    suspend fun getTorrents(@QueryMap params: Map<String, String?>): List<Torrent>
 }
 
 data class Torrent(

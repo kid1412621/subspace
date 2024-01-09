@@ -11,6 +11,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import me.nanova.subspace.data.QtListParams
 import me.nanova.subspace.ui.theme.Theme
 
 class MainActivity : ComponentActivity() {
@@ -27,7 +28,7 @@ class MainActivity : ComponentActivity() {
 
                 Layout(
                     windowSize = windowSize,
-                    homeViewModel = homeViewModel
+                    homeViewModel = homeViewModel,
                 )
             }
         }

@@ -58,6 +58,7 @@ dependencies {
     implementation("androidx.activity:activity-compose")
     implementation("androidx.lifecycle:lifecycle-runtime-compose")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose")
+    implementation("androidx.compose.runtime:runtime-livedata")
 //    implementation("androidx.navigation:navigation-compose")
 //    kapt("androidx.lifecycle:lifecycle-compiler")
     // Material Design 3 (TODO: specify the version to use PullToRefresh)
@@ -73,14 +74,13 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
 
-    // todo use retrofit bom: https://github.com/square/retrofit/issues/3231
+    // TODO: use retrofit bom: https://github.com/square/retrofit/issues/3231
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.moshi:moshi-kotlin:1.13.0")
     implementation("com.squareup.retrofit2:converter-moshi:2.9.0")
     implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
-//    implementation("androidx.compose.runtime:runtime-livedata")
 
     androidTestImplementation(composeBom)
     // UI Tests
