@@ -20,7 +20,6 @@ import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.DismissibleNavigationDrawer
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -45,10 +44,9 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
@@ -63,12 +61,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import me.nanova.subspace.data.QtListParams
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun Layout(
-    windowSize: WindowSizeClass?,
     homeViewModel: HomeViewModel,
 ) {
     var presses by remember { mutableIntStateOf(0) }
@@ -87,27 +83,17 @@ fun Layout(
         }
     }
 
-    val params = remember {  mutableStateOf(QtListParams())}
-    val data by homeViewModel.data.observeAsState()
+    val params by homeViewModel.filter.collectAsState()
+//    val data by homeViewModel.data.observeAsState()
+    val uiState by homeViewModel.homeUiState.collectAsState()
+    val list by uiState.list.collectAsState(emptyList())
 
-    LaunchedEffect(params.value) {
-        homeViewModel.getTorrents(params.value)
+    LaunchedEffect(Unit) {
+        homeViewModel.getTorrents(params)
     }
 
-    val navigationType: NavigationType
-    val contentType: ContentType
     val scope = rememberCoroutineScope()
-    when (windowSize?.widthSizeClass) {
-        WindowWidthSizeClass.Compact -> {
-            navigationType = NavigationType.BOTTOM_NAVIGATION
-            contentType = ContentType.SINGLE_PANE
-        }
 
-        else -> {
-            navigationType = NavigationType.BOTTOM_NAVIGATION
-            contentType = ContentType.SINGLE_PANE
-        }
-    }
 
     if (showBottomSheet) {
         ModalBottomSheet(
@@ -134,7 +120,7 @@ fun Layout(
         drawerContent = {
             ModalDrawerSheet {
                 Text("Drawer title", modifier = Modifier.padding(16.dp))
-                Divider()
+                HorizontalDivider()
                 Column(
                     modifier = Modifier.padding(10.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -181,8 +167,10 @@ fun Layout(
                                     contentDescription = "Sort by name"
                                 )
                             },
-                            onClick = { params.value.sort = "name" })
-                        DropdownMenuItem(text = { Text(text = "Added On") }, onClick = { params.value.sort = "added_on" })
+                            onClick = { homeViewModel.updateFilter(params) })
+                        DropdownMenuItem(
+                            text = { Text(text = "Added On") },
+                            onClick = { params.sort = "added_on" })
                         DropdownMenuItem(text = { Text(text = "Speed") }, onClick = { /*TODO*/ })
                     }
                 }
@@ -207,7 +195,7 @@ fun Layout(
                     },
                     floatingActionButton = {
                         FloatingActionButton(
-                            onClick = {  },
+                            onClick = { },
                             containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
                             elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
                         ) {
@@ -233,7 +221,7 @@ fun Layout(
 
                         if (!state.isRefreshing && homeViewModel.uiState is UiState.Success) {
                             items(
-                                data?: emptyList(),
+                                list ,
                                 key = { it.name }
                             ) { torrent ->
                                 ListItem(

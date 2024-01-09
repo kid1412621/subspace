@@ -50,7 +50,7 @@ android {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.window:window:1.2.0")
+//    implementation("androidx.window:window:1.2.0")
 
     // https://developer.android.com/jetpack/compose/bom/bom-mapping
     val composeBom = platform("androidx.compose:compose-bom:2023.10.01")

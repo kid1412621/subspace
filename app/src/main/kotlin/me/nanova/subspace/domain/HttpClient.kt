@@ -4,7 +4,6 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import me.nanova.subspace.data.NetworkRepo
-import me.nanova.subspace.data.QtListParams
 import me.nanova.subspace.data.Repo
 import okhttp3.Authenticator
 import okhttp3.Interceptor
@@ -27,19 +26,22 @@ interface AppContainer {
     val repo: Repo
 }
 
+private val BASEURL = "https://url"
+private val USER = ""
+private val PSWD = ""
+
 private val authApiService =
-    Retrofit.Builder().baseUrl("")
+    Retrofit.Builder().baseUrl(BASEURL)
         .addConverterFactory(ScalarsConverterFactory.create())
         .build().create(QtAuthApiService::class.java)
-var call = authApiService.login("", "")
+var call = authApiService.login(USER, PSWD)
 
 var cookie = call.execute().headers().get("Set-Cookie") ?: ""
 
 
 class DefaultAppContainer : AppContainer {
 
-    private val BASE_URL =
-        ""
+    private val BASE_URL = BASEURL
     private val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
         .build()
