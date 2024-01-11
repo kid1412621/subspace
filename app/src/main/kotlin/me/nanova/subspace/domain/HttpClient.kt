@@ -26,7 +26,7 @@ interface AppContainer {
     val repo: Repo
 }
 
-private val BASEURL = "https://url"
+private val BASEURL = ""
 private val USER = ""
 private val PSWD = ""
 
@@ -41,7 +41,7 @@ var cookie = call.execute().headers().get("Set-Cookie") ?: ""
 
 class DefaultAppContainer : AppContainer {
 
-    private val BASE_URL = BASEURL
+    private val BASE_URL = ""
     private val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
         .build()

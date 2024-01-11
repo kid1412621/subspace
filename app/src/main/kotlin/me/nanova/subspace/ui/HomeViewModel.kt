@@ -1,8 +1,5 @@
 package me.nanova.subspace.ui
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -21,43 +18,37 @@ import me.nanova.subspace.data.QtListParams
 import me.nanova.subspace.data.Repo
 import me.nanova.subspace.domain.Torrent
 
-sealed interface UiState {
-    data class Success(val torrents: List<Torrent>) : UiState
-    object Error : UiState
-    object Loading : UiState
 
+enum class CallState {
+    Success, Error, Loading
 }
 
 data class HomeUiState(
-    val list: Flow<List<Torrent>> = emptyFlow()
+    val list: Flow<List<Torrent>> = emptyFlow(),
+    val state: CallState = CallState.Loading
 )
 
 class HomeViewModel(private val repo: Repo) : ViewModel() {
-    var uiState: UiState by mutableStateOf(UiState.Loading)
-    //        private set
-
     private val _homeUiState = MutableStateFlow(HomeUiState())
     val homeUiState: StateFlow<HomeUiState> = _homeUiState.asStateFlow()
-
-
-    private val _data = MutableStateFlow(emptyFlow<List<Torrent>>())
-    val data: StateFlow<Flow<List<Torrent>>> = _data.asStateFlow()
 
     private val _filter = MutableStateFlow(QtListParams())
     val filter: StateFlow<QtListParams> = _filter.asStateFlow()
 
+
     init {
-
-//        viewModelScope.launch {
-//            getTorrents(_filter.value)
-//        }
+        viewModelScope.launch {
+            filter.collect { newFilter ->
+                getTorrents(newFilter)
+            }
+        }
     }
-
 
     suspend fun getTorrents(filter: QtListParams) {
         _homeUiState.update {
             it.copy(
-                list = repo.torrents(filter.toMap())
+                list = repo.torrents(filter.toMap()),
+                state = CallState.Success
             )
         }
 
@@ -75,10 +66,8 @@ class HomeViewModel(private val repo: Repo) : ViewModel() {
 //        }
     }
 
-    fun updateFilter(newFilter: QtListParams) {
-        _filter.update {
-            it.copy(sort = newFilter.sort)
-        }
+    fun updateSort(newFilter: QtListParams) {
+        _filter.update { newFilter }
     }
 
     companion object {

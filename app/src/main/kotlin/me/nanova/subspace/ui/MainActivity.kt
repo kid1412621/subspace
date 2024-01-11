@@ -6,6 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHost
+import androidx.navigation.compose.rememberNavController
 import me.nanova.subspace.ui.theme.Theme
 
 class MainActivity : ComponentActivity() {
@@ -33,4 +35,17 @@ fun AppPreview() {
 //            homeViewModel = HomeViewModel().apply {  }
 //        )
     }
+}
+@Composable
+fun Navigation() {
+    val navController = rememberNavController()
+//    NavHost(navController = navController, startDestination = "home") {
+//        composable("home") { Layout(navController) }
+//        composable(
+//            "details/{itemId}",
+//            arguments = listOf(navArgument("itemId") { type = NavType.StringType })
+//        ) { backStackEntry ->
+//            DetailsScreen(itemId = backStackEntry.arguments?.getString("itemId") ?: "")
+//        }
+//    }
 }

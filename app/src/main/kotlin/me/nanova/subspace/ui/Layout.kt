@@ -9,9 +9,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.rounded.AccessTime
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.ArrowDropDown
+import androidx.compose.material.icons.rounded.ArrowDropUp
 import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.SortByAlpha
@@ -48,8 +52,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -59,37 +61,35 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
+import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun Layout(
     homeViewModel: HomeViewModel,
+//    avController: NavController
 ) {
-    var presses by remember { mutableIntStateOf(0) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by remember { mutableStateOf(false) }
     var menuExpanded by remember { mutableStateOf(false) }
-    var itemCount by remember { mutableStateOf(15) }
-    val state = rememberPullToRefreshState()
-    if (state.isRefreshing) {
-        LaunchedEffect(true) {
-            // fetch something
-            delay(100)
-            itemCount += 5
-            state.endRefresh()
-        }
-    }
+    val refreshState = rememberPullToRefreshState()
+    val lazyListState = rememberLazyListState()
 
-    val params by homeViewModel.filter.collectAsState()
-//    val data by homeViewModel.data.observeAsState()
+    val filter by homeViewModel.filter.collectAsState()
     val uiState by homeViewModel.homeUiState.collectAsState()
     val list by uiState.list.collectAsState(emptyList())
 
+    if (refreshState.isRefreshing) {
+        LaunchedEffect(true) {
+            homeViewModel.getTorrents(filter)
+            refreshState.endRefresh()
+        }
+    }
+
     LaunchedEffect(Unit) {
-        homeViewModel.getTorrents(params)
+        homeViewModel.getTorrents(filter)
     }
 
     val scope = rememberCoroutineScope()
@@ -149,7 +149,7 @@ fun Layout(
             floatingActionButton = {
                 ExtendedFloatingActionButton(
 //                    modifier = Modifier.align()
-                    onClick = { presses++ }) {
+                    onClick = { }) {
                     Text(text = "Extended FAB")
                 }
             },
@@ -167,10 +167,64 @@ fun Layout(
                                     contentDescription = "Sort by name"
                                 )
                             },
-                            onClick = { homeViewModel.updateFilter(params) })
+                            trailingIcon = {
+                                if (filter.reverse) {
+                                    Icon(
+                                        Icons.Rounded.ArrowDropDown,
+                                        contentDescription = "Descending"
+                                    )
+                                } else {
+                                    Icon(
+                                        Icons.Rounded.ArrowDropUp,
+                                        contentDescription = "Ascending"
+                                    )
+                                }
+                            },
+                            onClick = {
+                                homeViewModel.updateSort(
+                                    filter.copy(
+                                        sort = "name",
+                                        reverse = if (filter.sort == "name") !filter.reverse else filter.reverse
+                                    )
+                                )
+                                menuExpanded = false
+                                scope.launch {
+                                    lazyListState.animateScrollToItem(0)
+                                }
+                            })
                         DropdownMenuItem(
                             text = { Text(text = "Added On") },
-                            onClick = { params.sort = "added_on" })
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Rounded.AccessTime,
+                                    contentDescription = "Sort by add time"
+                                )
+                            },
+                            trailingIcon = {
+                                if (filter.reverse) {
+                                    Icon(
+                                        Icons.Rounded.ArrowDropDown,
+                                        contentDescription = "Descending"
+                                    )
+                                } else {
+                                    Icon(
+                                        Icons.Rounded.ArrowDropUp,
+                                        contentDescription = "Ascending"
+                                    )
+                                }
+                            },
+                            onClick = {
+                                homeViewModel.updateSort(
+                                    filter.copy(
+                                        sort = "added_on",
+                                        reverse = if (filter.sort == "added_on") !filter.reverse else filter.reverse
+                                    )
+                                )
+                                menuExpanded = false
+                                scope.launch {
+                                    lazyListState.animateScrollToItem(0)
+                                }
+                            })
                         DropdownMenuItem(text = { Text(text = "Speed") }, onClick = { /*TODO*/ })
                     }
                 }
@@ -213,22 +267,23 @@ fun Layout(
                 tonalElevation = 1.dp
             ) {
                 Box(
-                    Modifier.nestedScroll(state.nestedScrollConnection)
+                    Modifier.nestedScroll(refreshState.nestedScrollConnection)
                 ) {
                     LazyColumn(
+                        state = lazyListState,
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
 
-                        if (!state.isRefreshing && homeViewModel.uiState is UiState.Success) {
+                        if (!refreshState.isRefreshing && uiState.state == CallState.Success) {
                             items(
-                                list ,
+                                list,
                                 key = { it.name }
-                            ) { torrent ->
+                            ) {
                                 ListItem(
                                     modifier = Modifier.animateItemPlacement(),
-                                    headlineContent = { Text(torrent.name) },
+                                    headlineContent = { Text(it.name) },
                                     supportingContent = {
-                                        Text("count: $presses")
+                                        Text(it.addedOn.toString())
                                     },
                                     leadingContent = {
                                         Icon(
@@ -236,7 +291,7 @@ fun Layout(
                                             contentDescription = "Localized description",
                                         )
                                     },
-                                    trailingContent = { Text(torrent.state) }
+                                    trailingContent = { Text(it.state) }
                                 )
 
                                 HorizontalDivider()
@@ -245,7 +300,7 @@ fun Layout(
                     }
                     PullToRefreshContainer(
                         modifier = Modifier.align(Alignment.TopCenter),
-                        state = state,
+                        state = refreshState,
                     )
                 }
             }
@@ -265,3 +320,9 @@ fun LayoutPrev() {
 //    })
 }
 
+//fun formatUnixTimestamp(unixTimestamp: Long): String {
+//    val instant = Instant.fromEpochSeconds(unixTimestamp)
+//    val localDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
+////    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+//    return localDateTime.format(formatter)
+//}

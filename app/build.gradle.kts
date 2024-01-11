@@ -49,6 +49,7 @@ android {
 }
 
 dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
     implementation("androidx.core:core-ktx:1.12.0")
 //    implementation("androidx.window:window:1.2.0")
 
@@ -59,10 +60,12 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose")
     implementation("androidx.compose.runtime:runtime-livedata")
-//    implementation("androidx.navigation:navigation-compose")
+
+    implementation("androidx.navigation:navigation-compose")
+    implementation("androidx.navigation:navigation-runtime-ktx:2.7.6")
 //    kapt("androidx.lifecycle:lifecycle-compiler")
     // Material Design 3 (TODO: specify the version to use PullToRefresh)
-    implementation("androidx.compose.material3:material3:1.2.0-beta01")
+    implementation("androidx.compose.material3:material3:1.2.0-beta02")
     implementation("androidx.compose.material3:material3-window-size-class")
     // not ready yet
 //    implementation("androidx.compose.material3:material3-adaptive:1.0.0-alpha03")
