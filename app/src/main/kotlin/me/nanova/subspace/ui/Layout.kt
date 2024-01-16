@@ -62,13 +62,14 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun Layout(
     homeViewModel: HomeViewModel,
-//    avController: NavController
+    navController: NavHostController,
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val sheetState = rememberModalBottomSheetState()
@@ -128,7 +129,7 @@ fun Layout(
                     NavigationDrawerItem(
                         label = { Text(text = "Drawer Item") },
                         selected = false,
-                        onClick = { /*TODO*/ }
+                        onClick = { navController.navigate(Routes.Settings.name) }
                     )
                 }
             }
