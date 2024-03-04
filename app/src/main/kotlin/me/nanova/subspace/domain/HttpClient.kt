@@ -3,9 +3,8 @@ package me.nanova.subspace.domain
 import com.squareup.moshi.Json
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import me.nanova.subspace.data.NetworkRepo
-import me.nanova.subspace.data.Repo
-import okhttp3.Authenticator
+import me.nanova.subspace.data.AccountType
+import me.nanova.subspace.ui.Account
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -22,37 +21,35 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.QueryMap
 
-interface AppContainer {
-    val repo: Repo
-}
+class HttpClient(account: Account){
+    private val authApiService =
+        Retrofit.Builder().baseUrl(account.host)
+            .addConverterFactory(ScalarsConverterFactory.create())
+            .build().create(QtAuthApiService::class.java)
+    var call = authApiService.login(account.user, account.password)
 
-private val BASEURL = ""
-private val USER = ""
-private val PSWD = ""
+    var cookie = call.execute().headers().get("Set-Cookie") ?: ""
 
-private val authApiService =
-    Retrofit.Builder().baseUrl(BASEURL)
-        .addConverterFactory(ScalarsConverterFactory.create())
-        .build().create(QtAuthApiService::class.java)
-var call = authApiService.login(USER, PSWD)
-
-var cookie = call.execute().headers().get("Set-Cookie") ?: ""
-
-
-class DefaultAppContainer : AppContainer {
-
-    private val BASE_URL = ""
     private val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
         .build()
     private val retrofit = Retrofit.Builder()
-        .client(createOkHttpClient())
+        .client(httpClientByType(account.type))
         .addConverterFactory(ScalarsConverterFactory.create())
         .addConverterFactory(MoshiConverterFactory.create(moshi))
-        .baseUrl(BASE_URL)
+        .baseUrl(account.host)
         .build()
-    private val retrofitService: QtApiService by lazy {
-        retrofit.create(QtApiService::class.java)
+
+    fun getRetrofit(): Retrofit{
+        return retrofit
+    }
+
+    private fun httpClientByType(type: AccountType): OkHttpClient {
+        when (type) {
+            AccountType.QT -> createOkHttpClient();
+            AccountType.TRANSMISSION -> TODO()
+        }
+        return TODO("Provide the return value")
     }
 
     private fun createOkHttpClient(): OkHttpClient {
@@ -77,21 +74,18 @@ class DefaultAppContainer : AppContainer {
             .build()
     }
 
-    override val repo: Repo by lazy {
-        NetworkRepo(retrofitService)
-    }
-}
+//    class QtAuthenticator(val api: QtAuthApiService) : Authenticator {
+//
+//        override fun authenticate(route: Route?, response: okhttp3.Response): Request? {
+//            if (response.request.header("Cookie") != null) {
+//                return null
+//            }
+//
+//            var call = api.login("", "")
+//            return response.request.newBuilder().header("Cookie", cookie).build()
+//        }
+//    }
 
-class QtAuthenticator(val api: QtAuthApiService) : Authenticator {
-
-    override fun authenticate(route: Route?, response: okhttp3.Response): Request? {
-        if (response.request.header("Cookie") != null) {
-            return null
-        }
-
-        var call = api.login("", "")
-        return response.request.newBuilder().header("Cookie", cookie).build()
-    }
 }
 
 interface QtAuthApiService {

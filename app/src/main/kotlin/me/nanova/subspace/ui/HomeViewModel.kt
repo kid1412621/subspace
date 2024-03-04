@@ -72,11 +72,11 @@ class HomeViewModel(private val repo: Repo) : ViewModel() {
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val application = (this[APPLICATION_KEY] as App)
-                val repo = application.container.repo
-                HomeViewModel(repo = repo)
-            }
+//            initializer {
+//                val application = (this[APPLICATION_KEY] as App)
+//                val repo = application.container.repo
+//                HomeViewModel(repo = repo)
+//            }
         }
     }
 }

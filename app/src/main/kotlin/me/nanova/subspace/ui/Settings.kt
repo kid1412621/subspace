@@ -3,6 +3,7 @@ package me.nanova.subspace.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -12,13 +13,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import me.nanova.subspace.data.AccountType
 
 @Composable
-fun Settings() {
+fun Settings(viewModel: SettingsViewModel) {
     Text("Under construction...")
 
     var host by rememberSaveable { mutableStateOf("") }
     var user by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
 
     Column(
         modifier = Modifier.padding(10.dp),
@@ -39,5 +42,24 @@ fun Settings() {
             singleLine = true,
             placeholder = { Text("Your username") }
         )
+
+        TextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Password") },
+            singleLine = true,
+            placeholder = { Text("Your password") }
+        )
+
+        Button(onClick = { viewModel.saveAccount(Account(host, user, password, AccountType.QT)) }) {
+            Text("Submit")
+        }
     }
 }
+
+data class Account(
+    val host: String,
+    val user: String,
+    val password: String,
+    val type: AccountType
+)
