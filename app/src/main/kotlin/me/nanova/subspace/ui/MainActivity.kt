@@ -30,23 +30,12 @@ class MainActivity : ComponentActivity() {
 fun AppWrapper(
     navController: NavHostController = rememberNavController()
 ) {
-//    val settingViewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)
     val settingViewModel: SettingsViewModel = SettingsViewModel()
-//    val homeViewModel: HomeViewModel
 //    val account = settingViewModel.accounts[AccountType.QT]
-//
-//    val retrofitService: QtApiService by lazy {
-//        HttpClient(account).getRetrofit()
-//            .create(QtApiService::class.java)
-//    }
-//    val repo: Repo by lazy {
-//        NetworkRepo(retrofitService)
-//    }
-//    homeViewModel = HomeViewModel(repo)
 
     NavHost(
         navController = navController,
-        startDestination = Routes.Blank.name,
+        startDestination = Routes.Home.name,
 //                    modifier = Modifier.padding(innerPadding)
     ) {
         composable(route = Routes.Settings.name) {

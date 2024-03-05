@@ -1,11 +1,13 @@
 package me.nanova.subspace.domain
 
+import android.content.Context
 import com.squareup.moshi.Json
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import me.nanova.subspace.data.AccountType
 import me.nanova.subspace.data.NetworkRepo
@@ -25,13 +27,12 @@ import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.QueryMap
+import javax.inject.Inject
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-
-    private lateinit var cookie: String
 
     private val account: Account
         get() {
@@ -42,25 +43,17 @@ object NetworkModule {
     fun getRetrofit(
         httpClient: OkHttpClient,
     ): Retrofit {
-        val authApiService =
-            Retrofit.Builder().baseUrl(account.host)
-                .addConverterFactory(ScalarsConverterFactory.create())
-                .build().create(QtAuthApiService::class.java)
-        val call = authApiService.login(account.user, account.password)
-
-        cookie = call.execute().headers().get("Set-Cookie") ?: ""
 
         val moshi = Moshi.Builder()
             .add(KotlinJsonAdapterFactory())
             .build()
 
-        val retrofit = Retrofit.Builder()
+        return Retrofit.Builder()
             .client(httpClient)
             .addConverterFactory(ScalarsConverterFactory.create())
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .baseUrl(account.host)
             .build()
-        return retrofit
     }
 
     fun httpClientByType(type: AccountType): OkHttpClient {
@@ -81,7 +74,21 @@ object NetworkModule {
         // qt returns 403, okhttp authenticator only response to 401/407
         val cookieInterceptor = Interceptor { chain ->
             val requestBuilder: Request.Builder = chain.request().newBuilder()
+            val sharedPreferences = context.getSharedPreferences("cookie", Context.MODE_PRIVATE)
 
+            var cookie = sharedPreferences.getString("qt-cookie", null)
+            if (cookie == null) {
+                val authApiService =
+                    Retrofit.Builder().baseUrl(account.host)
+                        .addConverterFactory(ScalarsConverterFactory.create())
+                        .build().create(QtAuthApiService::class.java)
+                val call = authApiService.login(account.user, account.password)
+
+                cookie = call.execute().headers().get("Set-Cookie") ?: ""
+                val editor = sharedPreferences.edit()
+                editor.putString("qt-cookie", cookie)
+                editor.apply()
+            }
             requestBuilder.header("Cookie", cookie)
 
             chain.proceed(requestBuilder.build())
