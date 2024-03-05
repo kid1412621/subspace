@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,6 +18,7 @@ import me.nanova.subspace.App
 import me.nanova.subspace.data.QtListParams
 import me.nanova.subspace.data.Repo
 import me.nanova.subspace.domain.Torrent
+import javax.inject.Inject
 
 
 enum class CallState {
@@ -28,7 +30,8 @@ data class HomeUiState(
     val state: CallState = CallState.Loading
 )
 
-class HomeViewModel(private val repo: Repo) : ViewModel() {
+@HiltViewModel
+class HomeViewModel @Inject constructor(private val repo: Repo) : ViewModel() {
     private val _homeUiState = MutableStateFlow(HomeUiState())
     val homeUiState: StateFlow<HomeUiState> = _homeUiState.asStateFlow()
 

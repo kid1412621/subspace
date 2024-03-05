@@ -61,14 +61,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun Layout(
-    homeViewModel: HomeViewModel,
+fun HomePage(
+    homeViewModel: HomeViewModel = hiltViewModel(),
     navController: NavHostController,
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)

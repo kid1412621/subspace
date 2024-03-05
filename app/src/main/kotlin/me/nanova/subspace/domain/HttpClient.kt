@@ -3,12 +3,17 @@ package me.nanova.subspace.domain
 import com.squareup.moshi.Json
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 import me.nanova.subspace.data.AccountType
+import me.nanova.subspace.data.NetworkRepo
+import me.nanova.subspace.data.Repo
 import me.nanova.subspace.ui.Account
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.Route
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Call
 import retrofit2.Response
@@ -20,31 +25,45 @@ import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.QueryMap
+import javax.inject.Singleton
 
-class HttpClient(account: Account){
-    private val authApiService =
-        Retrofit.Builder().baseUrl(account.host)
+@Module
+@InstallIn(SingletonComponent::class)
+object NetworkModule {
+
+    private lateinit var cookie: String
+
+    private val account: Account
+        get() {
+            TODO()
+        }
+
+    @Provides
+    fun getRetrofit(
+        httpClient: OkHttpClient,
+    ): Retrofit {
+        val authApiService =
+            Retrofit.Builder().baseUrl(account.host)
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .build().create(QtAuthApiService::class.java)
+        val call = authApiService.login(account.user, account.password)
+
+        cookie = call.execute().headers().get("Set-Cookie") ?: ""
+
+        val moshi = Moshi.Builder()
+            .add(KotlinJsonAdapterFactory())
+            .build()
+
+        val retrofit = Retrofit.Builder()
+            .client(httpClient)
             .addConverterFactory(ScalarsConverterFactory.create())
-            .build().create(QtAuthApiService::class.java)
-    var call = authApiService.login(account.user, account.password)
-
-    var cookie = call.execute().headers().get("Set-Cookie") ?: ""
-
-    private val moshi = Moshi.Builder()
-        .add(KotlinJsonAdapterFactory())
-        .build()
-    private val retrofit = Retrofit.Builder()
-        .client(httpClientByType(account.type))
-        .addConverterFactory(ScalarsConverterFactory.create())
-        .addConverterFactory(MoshiConverterFactory.create(moshi))
-        .baseUrl(account.host)
-        .build()
-
-    fun getRetrofit(): Retrofit{
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .baseUrl(account.host)
+            .build()
         return retrofit
     }
 
-    private fun httpClientByType(type: AccountType): OkHttpClient {
+    fun httpClientByType(type: AccountType): OkHttpClient {
         when (type) {
             AccountType.QT -> createOkHttpClient();
             AccountType.TRANSMISSION -> TODO()
@@ -52,7 +71,8 @@ class HttpClient(account: Account){
         return TODO("Provide the return value")
     }
 
-    private fun createOkHttpClient(): OkHttpClient {
+    @Provides
+    fun createOkHttpClient(): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY // Log HTTP request and response details
         }
@@ -74,18 +94,12 @@ class HttpClient(account: Account){
             .build()
     }
 
-//    class QtAuthenticator(val api: QtAuthApiService) : Authenticator {
-//
-//        override fun authenticate(route: Route?, response: okhttp3.Response): Request? {
-//            if (response.request.header("Cookie") != null) {
-//                return null
-//            }
-//
-//            var call = api.login("", "")
-//            return response.request.newBuilder().header("Cookie", cookie).build()
-//        }
-//    }
-
+    @Provides
+    @Singleton
+    fun provideRepo(retrofit: Retrofit): Repo {
+        val apiService = retrofit.create(QtApiService::class.java)
+        return NetworkRepo(apiService)
+    }
 }
 
 interface QtAuthApiService {
