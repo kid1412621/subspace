@@ -30,7 +30,6 @@ class MainActivity : ComponentActivity() {
 fun AppWrapper(
     navController: NavHostController = rememberNavController()
 ) {
-    val settingViewModel: SettingsViewModel = SettingsViewModel()
 //    val account = settingViewModel.accounts[AccountType.QT]
 
     NavHost(
@@ -40,7 +39,6 @@ fun AppWrapper(
     ) {
         composable(route = Routes.Settings.name) {
             Settings(
-                viewModel = settingViewModel
             )
         }
         composable(route = Routes.Home.name) {

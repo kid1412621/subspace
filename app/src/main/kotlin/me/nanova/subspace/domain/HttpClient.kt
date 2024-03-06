@@ -1,6 +1,8 @@
 package me.nanova.subspace.domain
 
 import android.content.Context
+import android.content.SharedPreferences
+import android.preference.PreferenceManager
 import com.squareup.moshi.Json
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -34,10 +36,15 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private val account: Account
+    private val account : Account
         get() {
             TODO()
         }
+    @Provides
+    @Singleton
+    fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+    }
 
     @Provides
     fun getRetrofit(
@@ -56,16 +63,18 @@ object NetworkModule {
             .build()
     }
 
-    fun httpClientByType(type: AccountType): OkHttpClient {
-        when (type) {
-            AccountType.QT -> createOkHttpClient();
-            AccountType.TRANSMISSION -> TODO()
-        }
-        return TODO("Provide the return value")
-    }
+//    fun httpClientByType(type: AccountType): OkHttpClient {
+//        when (type) {
+//            AccountType.QT -> createOkHttpClient();
+//            AccountType.TRANSMISSION -> TODO()
+//        }
+//        return TODO("Provide the return value")
+//    }
 
     @Provides
-    fun createOkHttpClient(): OkHttpClient {
+    fun createOkHttpClient(
+        sharedPreferences: SharedPreferences
+    ): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY // Log HTTP request and response details
         }
@@ -74,7 +83,6 @@ object NetworkModule {
         // qt returns 403, okhttp authenticator only response to 401/407
         val cookieInterceptor = Interceptor { chain ->
             val requestBuilder: Request.Builder = chain.request().newBuilder()
-            val sharedPreferences = context.getSharedPreferences("cookie", Context.MODE_PRIVATE)
 
             var cookie = sharedPreferences.getString("qt-cookie", null)
             if (cookie == null) {

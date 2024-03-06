@@ -13,10 +13,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import me.nanova.subspace.data.AccountType
 
 @Composable
-fun Settings(viewModel: SettingsViewModel) {
+fun Settings(viewModel: SettingsViewModel = hiltViewModel()) {
     Text("Under construction...")
 
     var host by rememberSaveable { mutableStateOf("") }
