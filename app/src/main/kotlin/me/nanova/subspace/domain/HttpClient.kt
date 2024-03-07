@@ -2,7 +2,11 @@ package me.nanova.subspace.domain
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.preference.PreferenceDataStore
 import android.preference.PreferenceManager
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
 import com.squareup.moshi.Json
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -11,7 +15,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import me.nanova.subspace.data.AccountType
 import me.nanova.subspace.data.NetworkRepo
 import me.nanova.subspace.data.Repo
 import me.nanova.subspace.ui.Account
@@ -29,17 +32,17 @@ import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.QueryMap
-import javax.inject.Inject
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-
-    private val account : Account
+    val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+    private val account: Account
         get() {
             TODO()
         }
+
     @Provides
     @Singleton
     fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {

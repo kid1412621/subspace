@@ -62,6 +62,8 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose")
     implementation("androidx.compose.runtime:runtime-livedata")
 
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
     // hilt
     implementation("com.google.dagger:hilt-android:2.50")
     kapt("com.google.dagger:hilt-compiler:2.50")
@@ -71,7 +73,7 @@ dependencies {
     implementation("androidx.navigation:navigation-runtime-ktx:2.7.7")
 //    kapt("androidx.lifecycle:lifecycle-compiler")
     // Material Design 3 (TODO: specify the version to use PullToRefresh)
-    implementation("androidx.compose.material3:material3:1.2.0")
+    implementation("androidx.compose.material3:material3:1.2.1")
     implementation("androidx.compose.material3:material3-window-size-class")
     // not ready yet
 //    implementation("androidx.compose.material3:material3-adaptive:1.0.0-alpha03")
