@@ -1,7 +1,5 @@
 package me.nanova.subspace.data
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import me.nanova.subspace.data.api.QTApiService
 import me.nanova.subspace.data.db.TorrentDao
 import me.nanova.subspace.domain.repo.QTRepo
@@ -14,9 +12,7 @@ class QTRepoImpl @Inject constructor(
 
     override fun torrents() = torrentDao.getAll()
 
-    override suspend fun refresh(params: Map<String, String?>) = withContext(
-        Dispatchers.IO
-    ) {
+    override suspend fun refresh(params: Map<String, String?>) {
         val list = apiService.getTorrents(params)
         torrentDao.insertAll(list)
     }

@@ -13,5 +13,5 @@ interface TorrentDao {
     fun getAll(): Flow<List<Torrent>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertAll(torrents: List<Torrent>)
+    suspend fun insertAll(torrents: List<Torrent>)
 }
