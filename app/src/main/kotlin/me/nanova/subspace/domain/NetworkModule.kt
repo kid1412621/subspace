@@ -1,7 +1,6 @@
 package me.nanova.subspace.domain
 
 import android.content.Context
-import com.squareup.moshi.Json
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
@@ -14,22 +13,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import me.nanova.subspace.data.AccountType
-import me.nanova.subspace.data.NetworkRepo
-import me.nanova.subspace.data.Repo
+import me.nanova.subspace.data.QTRepoImpl
+import me.nanova.subspace.data.api.QTApiService
+import me.nanova.subspace.data.api.QTAuthService
+import me.nanova.subspace.data.db.TorrentDao
+import me.nanova.subspace.domain.repo.QTRepo
 import me.nanova.subspace.ui.Account
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Call
-import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
-import retrofit2.http.Field
-import retrofit2.http.FormUrlEncoded
-import retrofit2.http.GET
-import retrofit2.http.POST
-import retrofit2.http.QueryMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -90,21 +85,32 @@ object NetworkModule {
     }
 
     @Provides
+    fun provideQTRepo(apiService: QTApiService, torrentDao: TorrentDao): QTRepo {
+        return QTRepoImpl(apiService, torrentDao)
+    }
+
+    @Provides
     @Singleton
-    fun provideRepo(retrofit: Retrofit): Repo {
-        val apiService = retrofit.create(QtApiService::class.java)
-        return NetworkRepo(apiService)
+    fun provideQTApiService(retrofit: Retrofit): QTApiService {
+        return retrofit.create(QTApiService::class.java)
     }
 }
 
-class AddCookiesInterceptor @Inject constructor(private val preferenceStorage: PreferenceStorage) :
-    Interceptor {
+class AddCookiesInterceptor
+@Inject constructor(private val preferenceStorage: PreferenceStorage) : Interceptor {
     private var cookie: String? = null
+    private var timestamp: Long? = null
+
+    // default 1h session
+    private val ttl = 50 * 60 * 1000
 
     init {
         CoroutineScope(Dispatchers.IO).launch {
             preferenceStorage.qtCookie.collect { newCookie ->
                 cookie = newCookie
+            }
+            preferenceStorage.qtCookieTime.collect { cookieTime ->
+                timestamp = cookieTime
             }
         }
     }
@@ -113,15 +119,16 @@ class AddCookiesInterceptor @Inject constructor(private val preferenceStorage: P
         val builder = chain.request().newBuilder()
         // Add cookie to every request if available
 
-        if (cookie == null) {
+        if (cookie == null || timestamp == null || System.currentTimeMillis() - timestamp!! > ttl) {
             val authApiService =
                 Retrofit.Builder().baseUrl(account.host)
                     .addConverterFactory(ScalarsConverterFactory.create())
-                    .build().create(QtAuthApiService::class.java)
+                    .build().create(QTAuthService::class.java)
             val call = authApiService.login(account.user, account.password)
             val newCookie = call.execute().headers()["Set-Cookie"] ?: ""
             runBlocking {
                 preferenceStorage.saveQtCookie(newCookie)
+                preferenceStorage.updateQtCookieTime()
             }
         }
         cookie?.let {
@@ -131,31 +138,5 @@ class AddCookiesInterceptor @Inject constructor(private val preferenceStorage: P
     }
 }
 
-interface QtAuthApiService {
 
-    @FormUrlEncoded
-    @POST("api/v2/auth/login")
-    fun login(
-        @Field("username") username: String,
-        @Field("password") password: String
-    ): Call<String>
 
-}
-
-interface QtApiService {
-
-    @GET("api/v2/app/version")
-    suspend fun version(): Response<String>
-
-    @GET("api/v2/torrents/info")
-    suspend fun getTorrents(@QueryMap params: Map<String, String?>): List<Torrent>
-}
-
-data class Torrent(
-    val hash: String,
-    val name: String,
-    @Json(name = "added_on")
-    val addedOn: Long,
-    val size: Long,
-    val state: String
-)

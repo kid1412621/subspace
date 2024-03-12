@@ -1,11 +1,7 @@
 package me.nanova.subspace.ui
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,10 +10,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import me.nanova.subspace.App
-import me.nanova.subspace.data.QtListParams
-import me.nanova.subspace.data.Repo
-import me.nanova.subspace.domain.Torrent
+import me.nanova.subspace.domain.model.QTListParams
+import me.nanova.subspace.domain.model.Torrent
+import me.nanova.subspace.domain.repo.QTRepo
 import javax.inject.Inject
 
 
@@ -31,12 +26,14 @@ data class HomeUiState(
 )
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(private val repo: Repo) : ViewModel() {
+class HomeViewModel @Inject constructor(
+    private val QTRepo: QTRepo,
+) : ViewModel() {
     private val _homeUiState = MutableStateFlow(HomeUiState())
     val homeUiState: StateFlow<HomeUiState> = _homeUiState.asStateFlow()
 
-    private val _filter = MutableStateFlow(QtListParams())
-    val filter: StateFlow<QtListParams> = _filter.asStateFlow()
+    private val _filter = MutableStateFlow(QTListParams())
+    val filter: StateFlow<QTListParams> = _filter.asStateFlow()
 
 
     init {
@@ -47,10 +44,10 @@ class HomeViewModel @Inject constructor(private val repo: Repo) : ViewModel() {
         }
     }
 
-    suspend fun getTorrents(filter: QtListParams) {
+    suspend fun getTorrents(filter: QTListParams) {
         _homeUiState.update {
             it.copy(
-                list = repo.torrents(filter.toMap()),
+                list = QTRepo.torrents(filter.toMap()),
                 state = CallState.Success
             )
         }
@@ -69,17 +66,7 @@ class HomeViewModel @Inject constructor(private val repo: Repo) : ViewModel() {
 //        }
     }
 
-    fun updateSort(newFilter: QtListParams) {
+    fun updateSort(newFilter: QTListParams) {
         _filter.update { newFilter }
-    }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-//            initializer {
-//                val application = (this[APPLICATION_KEY] as App)
-//                val repo = application.container.repo
-//                HomeViewModel(repo = repo)
-//            }
-        }
     }
 }

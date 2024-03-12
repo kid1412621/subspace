@@ -2,12 +2,8 @@ package me.nanova.subspace
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
-import me.nanova.subspace.data.AccountType
-import me.nanova.subspace.data.NetworkRepo
-import me.nanova.subspace.data.Repo
-import me.nanova.subspace.domain.QtApiService
+import me.nanova.subspace.domain.repo.QTRepo
 import me.nanova.subspace.ui.Account
-import javax.inject.Inject
 
 @HiltAndroidApp
 class App : Application() {
@@ -19,7 +15,7 @@ class App : Application() {
 }
 
 interface Container {
-    val repo: Repo?
+    val QTRepo: QTRepo?
     val account: Account?
 }
 

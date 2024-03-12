@@ -1,10 +1,6 @@
-package me.nanova.subspace.data
+package me.nanova.subspace.domain.model
 
-import kotlin.reflect.KProperty1
-import kotlin.reflect.full.memberProperties
-import kotlin.reflect.jvm.isAccessible
-
-data class QtListParams(
+data class QTListParams(
 
     var filter: String = "all",
     var category: String? = null,
