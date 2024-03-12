@@ -1,21 +1,21 @@
 package me.nanova.subspace.ui
 
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import me.nanova.subspace.data.AccountType
-import me.nanova.subspace.domain.PreferenceStorage
+import kotlinx.coroutines.launch
+import me.nanova.subspace.data.db.AccountDao
+import me.nanova.subspace.domain.model.Account
 import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel
-@Inject constructor(private val preferenceStorage: PreferenceStorage) : ViewModel() {
-    private val _accounts = mutableStateMapOf<AccountType, Account>()
-    val accounts: SnapshotStateMap<AccountType, Account> = _accounts
+@Inject constructor(private val accountDao: AccountDao) : ViewModel() {
 
     fun saveAccount(account: Account) {
-        _accounts[account.type] = account
+        viewModelScope.launch {
+            accountDao.insert(account)
+        }
     }
 
 

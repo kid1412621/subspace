@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import me.nanova.subspace.data.AccountType
+import me.nanova.subspace.domain.model.Account
 
 @Composable
 fun Settings(viewModel: SettingsViewModel = hiltViewModel()) {
@@ -52,15 +53,17 @@ fun Settings(viewModel: SettingsViewModel = hiltViewModel()) {
             placeholder = { Text("Your password") }
         )
 
-        Button(onClick = { viewModel.saveAccount(Account(host, user, password, AccountType.QT)) }) {
+        Button(onClick = {
+            viewModel.saveAccount(
+                Account(
+                    url = host,
+                    user = user,
+                    pass = password,
+                    type = AccountType.QT
+                )
+            )
+        }) {
             Text("Submit")
         }
     }
 }
-
-data class Account(
-    val host: String,
-    val user: String,
-    val password: String,
-    val type: AccountType
-)

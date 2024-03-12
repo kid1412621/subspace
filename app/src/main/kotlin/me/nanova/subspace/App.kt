@@ -2,8 +2,8 @@ package me.nanova.subspace
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
+import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.domain.repo.QTRepo
-import me.nanova.subspace.ui.Account
 
 @HiltAndroidApp
 class App : Application() {

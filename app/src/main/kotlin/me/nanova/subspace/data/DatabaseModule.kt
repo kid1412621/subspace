@@ -7,13 +7,16 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import me.nanova.subspace.data.db.AccountDao
+import me.nanova.subspace.data.db.AppDatabase
 import me.nanova.subspace.data.db.TorrentDao
-import me.nanova.subspace.domain.AppDatabase
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
+
+    private const val DB_NAME = "subspace.db"
 
     @Provides
     @Singleton
@@ -21,12 +24,17 @@ object DatabaseModule {
         return Room.databaseBuilder(
             appContext,
             AppDatabase::class.java,
-            "subspace.db"
+            DB_NAME
         ).build()
     }
 
     @Provides
-    fun provideUserDao(database: AppDatabase): TorrentDao {
-        return database.torrentRepo()
+    fun provideAccountDao(database: AppDatabase): AccountDao {
+        return database.accountDao()
+    }
+
+    @Provides
+    fun provideTorrentDao(database: AppDatabase): TorrentDao {
+        return database.torrentDao()
     }
 }

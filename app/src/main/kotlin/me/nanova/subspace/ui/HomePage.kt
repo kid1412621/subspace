@@ -84,15 +84,7 @@ fun HomePage(
     if (refreshState.isRefreshing) {
         homeViewModel.refresh()
         refreshState.endRefresh()
-//        LaunchedEffect(true) {
-//            homeViewModel.getTorrents(filter)
-//            refreshState.endRefresh()
-//        }
     }
-
-//    LaunchedEffect(Unit) {
-//        homeViewModel.getTorrents(filter)
-//    }
 
     val scope = rememberCoroutineScope()
 

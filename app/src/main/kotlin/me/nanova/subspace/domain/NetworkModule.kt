@@ -17,8 +17,8 @@ import me.nanova.subspace.data.QTRepoImpl
 import me.nanova.subspace.data.api.QTApiService
 import me.nanova.subspace.data.api.QTAuthService
 import me.nanova.subspace.data.db.TorrentDao
+import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.domain.repo.QTRepo
-import me.nanova.subspace.ui.Account
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -56,7 +56,7 @@ object NetworkModule {
             .client(httpClient)
             .addConverterFactory(ScalarsConverterFactory.create())
             .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .baseUrl(account.host)
+            .baseUrl(account.url)
             .build()
     }
 
@@ -121,10 +121,10 @@ class AddCookiesInterceptor
 
         if (cookie == null || timestamp == null || System.currentTimeMillis() - timestamp!! > ttl) {
             val authApiService =
-                Retrofit.Builder().baseUrl(account.host)
+                Retrofit.Builder().baseUrl(account.url)
                     .addConverterFactory(ScalarsConverterFactory.create())
                     .build().create(QTAuthService::class.java)
-            val call = authApiService.login(account.user, account.password)
+            val call = authApiService.login(account.user, account.pass)
             val newCookie = call.execute().headers()["Set-Cookie"] ?: ""
             runBlocking {
                 preferenceStorage.saveQtCookie(newCookie)
