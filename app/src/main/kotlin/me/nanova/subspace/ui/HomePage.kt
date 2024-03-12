@@ -49,7 +49,6 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -80,18 +79,20 @@ fun HomePage(
 
     val filter by homeViewModel.filter.collectAsState()
     val uiState by homeViewModel.homeUiState.collectAsState()
-    val list by uiState.list.collectAsState(emptyList())
+    val list by homeViewModel.torrentState.collectAsState(emptyList())
 
     if (refreshState.isRefreshing) {
-        LaunchedEffect(true) {
-            homeViewModel.getTorrents(filter)
-            refreshState.endRefresh()
-        }
+        homeViewModel.refresh()
+        refreshState.endRefresh()
+//        LaunchedEffect(true) {
+//            homeViewModel.getTorrents(filter)
+//            refreshState.endRefresh()
+//        }
     }
 
-    LaunchedEffect(Unit) {
-        homeViewModel.getTorrents(filter)
-    }
+//    LaunchedEffect(Unit) {
+//        homeViewModel.getTorrents(filter)
+//    }
 
     val scope = rememberCoroutineScope()
 
@@ -250,7 +251,7 @@ fun HomePage(
                     },
                     floatingActionButton = {
                         FloatingActionButton(
-                            onClick = { },
+                            onClick = { homeViewModel.refresh() },
                             containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
                             elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
                         ) {

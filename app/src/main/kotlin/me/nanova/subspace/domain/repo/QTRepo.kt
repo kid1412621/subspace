@@ -4,6 +4,8 @@ import kotlinx.coroutines.flow.Flow
 import me.nanova.subspace.domain.model.Torrent
 
 interface QTRepo {
-    suspend fun torrents(params: Map<String, String?>): Flow<List<Torrent>>
+
+    fun torrents(): Flow<List<Torrent>>
+    suspend fun refresh(params: Map<String, String?>)
 }
 

@@ -3,11 +3,9 @@ package me.nanova.subspace.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import me.nanova.subspace.domain.model.QTListParams
@@ -21,14 +19,16 @@ enum class CallState {
 }
 
 data class HomeUiState(
-    val list: Flow<List<Torrent>> = emptyFlow(),
     val state: CallState = CallState.Loading
 )
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val QTRepo: QTRepo,
+    private val qtRepo: QTRepo,
 ) : ViewModel() {
+    private val _torrentsFlow = MutableStateFlow<List<Torrent>>(emptyList())
+    val torrentState: StateFlow<List<Torrent>> = _torrentsFlow.asStateFlow()
+
     private val _homeUiState = MutableStateFlow(HomeUiState())
     val homeUiState: StateFlow<HomeUiState> = _homeUiState.asStateFlow()
 
@@ -38,32 +38,30 @@ class HomeViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            filter.collect { newFilter ->
-                getTorrents(newFilter)
+            qtRepo.torrents().collect { list ->
+                _torrentsFlow.value = list
+
+                _homeUiState.update {
+                    it.copy(
+                        state = CallState.Success
+                    )
+                }
             }
         }
     }
 
-    suspend fun getTorrents(filter: QTListParams) {
-        _homeUiState.update {
-            it.copy(
-                list = QTRepo.torrents(filter.toMap()),
-                state = CallState.Success
-            )
-        }
+    fun refresh() {
+        viewModelScope.launch {
+            filter.collect { newFilter ->
+                qtRepo.refresh(newFilter.toMap())
 
-//        viewModelScope.launch {
-//            uiState = UiState.Loading
-//            uiState = try {
-//                val listResult = repo.torrents(QtListParams().toMap())
-//                _data.postValue(listResult)
-//                UiState.Success(listResult)
-//            } catch (e: IOException) {
-//                UiState.Error
-//            } catch (e: HttpException) {
-//                UiState.Error
-//            }
-//        }
+                _homeUiState.update {
+                    it.copy(
+                        state = CallState.Success
+                    )
+                }
+            }
+        }
     }
 
     fun updateSort(newFilter: QTListParams) {

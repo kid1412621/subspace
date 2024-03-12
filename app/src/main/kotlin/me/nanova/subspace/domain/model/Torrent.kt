@@ -12,5 +12,8 @@ data class Torrent(
     @Json(name = "added_on")
     val addedOn: Long,
     val size: Long,
-    val state: String
+    val progress: Float,
+    val eta: Long,
+    val state: String,
+    val category: String?,
 )
