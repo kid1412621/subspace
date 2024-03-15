@@ -10,14 +10,18 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import me.nanova.subspace.data.AccountType
+import me.nanova.subspace.data.AccountRepoImpl
 import me.nanova.subspace.data.QTRepoImpl
 import me.nanova.subspace.data.api.QTApiService
 import me.nanova.subspace.data.api.QTAuthService
+import me.nanova.subspace.data.db.AccountDao
 import me.nanova.subspace.data.db.TorrentDao
 import me.nanova.subspace.domain.model.Account
+import me.nanova.subspace.domain.repo.AccountRepo
 import me.nanova.subspace.domain.repo.QTRepo
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -28,25 +32,22 @@ import retrofit2.converter.scalars.ScalarsConverterFactory
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private val account: Account
-    get() {
-        TODO()
-    }
-
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
     @Singleton
     @Provides
-    fun providePreferenceStorage(@ApplicationContext context: Context): PreferenceStorage {
-        return PreferenceStorage(context)
+    fun providePreferenceStorage(@ApplicationContext context: Context): Storage {
+        return Storage(context)
     }
 
 
     @Provides
     fun getRetrofit(
         httpClient: OkHttpClient,
+        accountRepo: AccountRepo
     ): Retrofit {
+        val account = runBlocking {   accountRepo.currentAccount.first()}
 
         val moshi = Moshi.Builder()
             .add(KotlinJsonAdapterFactory())
@@ -56,7 +57,7 @@ object NetworkModule {
             .client(httpClient)
             .addConverterFactory(ScalarsConverterFactory.create())
             .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .baseUrl(account.url)
+            .baseUrl(account?.url)
             .build()
     }
 
@@ -85,6 +86,11 @@ object NetworkModule {
     }
 
     @Provides
+    fun provideAccountRepo(accountDao: AccountDao, storage: Storage): AccountRepo {
+        return AccountRepoImpl(accountDao, storage)
+    }
+
+    @Provides
     fun provideQTRepo(apiService: QTApiService, torrentDao: TorrentDao): QTRepo {
         return QTRepoImpl(apiService, torrentDao)
     }
@@ -97,7 +103,7 @@ object NetworkModule {
 }
 
 class AddCookiesInterceptor
-@Inject constructor(private val preferenceStorage: PreferenceStorage) : Interceptor {
+@Inject constructor(private val storage: Storage) : Interceptor {
     private var cookie: String? = null
     private var timestamp: Long? = null
 
@@ -106,10 +112,10 @@ class AddCookiesInterceptor
 
     init {
         CoroutineScope(Dispatchers.IO).launch {
-            preferenceStorage.qtCookie.collect { newCookie ->
+            storage.qtCookie.collect { newCookie ->
                 cookie = newCookie
             }
-            preferenceStorage.qtCookieTime.collect { cookieTime ->
+            storage.qtCookieTime.collect { cookieTime ->
                 timestamp = cookieTime
             }
         }
@@ -127,8 +133,8 @@ class AddCookiesInterceptor
             val call = authApiService.login(account.user, account.pass)
             val newCookie = call.execute().headers()["Set-Cookie"] ?: ""
             runBlocking {
-                preferenceStorage.saveQtCookie(newCookie)
-                preferenceStorage.updateQtCookieTime()
+                storage.saveQtCookie(newCookie)
+                storage.updateQtCookieTime()
             }
         }
         cookie?.let {
