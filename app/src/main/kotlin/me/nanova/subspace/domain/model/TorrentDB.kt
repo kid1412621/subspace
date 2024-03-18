@@ -1,11 +1,16 @@
 package me.nanova.subspace.domain.model
 
-import com.squareup.moshi.Json
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
-data class Torrent(
+@Entity(tableName = "torrent")
+data class TorrentDB(
+    @PrimaryKey
     val hash: String,
+    @ColumnInfo(index = true)
+    val accountId: Long,
     val name: String,
-    @Json(name = "added_on")
     val addedOn: Long,
     val size: Long,
     val progress: Float,
@@ -13,8 +18,7 @@ data class Torrent(
     val state: String,
     val category: String?,
 )
-
-fun Torrent.toEntity(id: Long) = TorrentDB(
+fun TorrentDB.toModel() = Torrent(
     hash = this.hash,
     name = this.name,
     addedOn = this.addedOn,
@@ -22,6 +26,5 @@ fun Torrent.toEntity(id: Long) = TorrentDB(
     progress = this.progress,
     eta = this.eta,
     state = this.state,
-    category = this.category,
-    accountId = id
+    category = this.category
 )

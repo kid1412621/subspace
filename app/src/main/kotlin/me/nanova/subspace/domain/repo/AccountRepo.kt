@@ -6,5 +6,5 @@ import me.nanova.subspace.domain.model.Account
 interface AccountRepo {
 
     val currentAccount: Flow<Account?>
-    suspend fun switchAccount(accountId: Int)
+    suspend fun switchAccount(accountId: Long)
 }

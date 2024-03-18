@@ -12,14 +12,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import me.nanova.subspace.data.AccountType
+import me.nanova.subspace.data.Storage
 import me.nanova.subspace.domain.model.Account
 
 @Composable
-fun Settings(viewModel: SettingsViewModel = hiltViewModel()) {
-    Text("Under construction...")
+fun Settings(
+    viewModel: SettingsViewModel = hiltViewModel(),
+) {
 
     var host by rememberSaveable { mutableStateOf("") }
     var user by rememberSaveable { mutableStateOf("") }
@@ -50,7 +53,8 @@ fun Settings(viewModel: SettingsViewModel = hiltViewModel()) {
             onValueChange = { password = it },
             label = { Text("Password") },
             singleLine = true,
-            placeholder = { Text("Your password") }
+            placeholder = { Text("Your password") },
+            visualTransformation = PasswordVisualTransformation()
         )
 
         Button(onClick = {

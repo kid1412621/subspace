@@ -1,4 +1,4 @@
-package me.nanova.subspace.data
+package me.nanova.subspace.di
 
 import android.content.Context
 import androidx.room.Room

@@ -1,4 +1,4 @@
-package me.nanova.subspace.domain
+package me.nanova.subspace.data
 
 import android.content.Context
 import androidx.datastore.core.DataStore
@@ -21,13 +21,13 @@ class Storage @Inject constructor(@ApplicationContext context: Context) {
     private val dataStore = context.dataStore
 
     companion object {
-        val CURRENT_ACCOUNT_ID = intPreferencesKey("account")
+        val CURRENT_ACCOUNT_ID = longPreferencesKey("account")
         val QT_COOKIE_KEY = stringPreferencesKey("qt-cookie")
         val QT_COOKIE_TIME_KEY = longPreferencesKey("qt-cookie-time")
     }
 
 
-    val currentAccountId: Flow<Int?> = dataStore.data
+    val currentAccountId: Flow<Long?> = dataStore.data
         .map { preferences ->
             preferences[CURRENT_ACCOUNT_ID]
         }
@@ -40,7 +40,7 @@ class Storage @Inject constructor(@ApplicationContext context: Context) {
             preferences[QT_COOKIE_TIME_KEY]
         }
 
-    suspend fun saveCurrentAccountId(id: Int) {
+    suspend fun saveCurrentAccountId(id: Long) {
         dataStore.edit { preferences ->
             preferences[CURRENT_ACCOUNT_ID] = id
         }
