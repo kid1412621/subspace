@@ -26,6 +26,13 @@ class AccountRepoImpl @Inject constructor(
         }
 
     override suspend fun switchAccount(accountId: Long) {
-        storage.saveCurrentAccountId(accountId)
+        storage.updateCurrentAccountId(accountId)
+    }
+
+    override suspend fun deleteAccount(accountId: Long) {
+        accountDao.delete(accountId)
+        val account = accountDao.getLatest()
+        currentAccountCache = account
+        storage.updateCurrentAccountId(account)
     }
 }

@@ -7,4 +7,7 @@ interface AccountRepo {
 
     val currentAccount: Flow<Account?>
     suspend fun switchAccount(accountId: Long)
+
+    suspend fun deleteAccount(accountId: Long)
+
 }

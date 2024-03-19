@@ -13,5 +13,6 @@ data class Account(
     val type: AccountType,
     val user: String,
     // api key or password
-    val pass: String
+    val pass: String,
+    val created: Long = System.currentTimeMillis()
 )

@@ -5,13 +5,14 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import me.nanova.subspace.data.AccountRepoImpl
-import me.nanova.subspace.data.QTRepoImpl
 import me.nanova.subspace.data.Storage
+import me.nanova.subspace.data.TorrentRepoImpl
 import me.nanova.subspace.data.api.QTApiService
 import me.nanova.subspace.data.db.AccountDao
 import me.nanova.subspace.data.db.TorrentDao
 import me.nanova.subspace.domain.repo.AccountRepo
-import me.nanova.subspace.domain.repo.QTRepo
+import me.nanova.subspace.domain.repo.TorrentRepo
+import javax.inject.Provider
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -24,7 +25,11 @@ object RepoModule {
     }
 
     @Provides
-    fun provideQTRepo(apiService: QTApiService, torrentDao: TorrentDao, storage: Storage): QTRepo {
-        return QTRepoImpl(apiService, torrentDao, storage)
+    fun provideTorrentRepo(
+        torrentDao: TorrentDao,
+        storage: Storage,
+        apiService: Provider<QTApiService>
+    ): TorrentRepo {
+        return TorrentRepoImpl(torrentDao, storage, apiService)
     }
 }

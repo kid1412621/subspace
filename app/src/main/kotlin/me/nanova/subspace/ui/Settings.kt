@@ -15,13 +15,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import me.nanova.subspace.data.AccountType
-import me.nanova.subspace.data.Storage
 import me.nanova.subspace.domain.model.Account
 
 @Composable
 fun Settings(
     viewModel: SettingsViewModel = hiltViewModel(),
+    navController: NavHostController,
 ) {
 
     var host by rememberSaveable { mutableStateOf("") }
@@ -66,6 +67,7 @@ fun Settings(
                     type = AccountType.QT
                 )
             )
+            navController.navigate(Routes.Home.name)
         }) {
             Text("Submit")
         }

@@ -19,7 +19,7 @@ class SettingsViewModel
     fun saveAccount(account: Account) {
         viewModelScope.launch {
             val id = accountDao.insert(account)
-            storage.saveCurrentAccountId(id)
+            storage.updateCurrentAccountId(id)
         }
     }
 

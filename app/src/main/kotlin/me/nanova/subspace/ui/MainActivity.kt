@@ -4,7 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -20,25 +22,27 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             Theme {
-                AppWrapper()
+                AppContainer()
             }
         }
     }
 }
 
 @Composable
-fun AppWrapper(
-    navController: NavHostController = rememberNavController()
+fun AppContainer(
+    navController: NavHostController = rememberNavController(),
+    homeViewModel: HomeViewModel = viewModel()
 ) {
-//    val account = settingViewModel.accounts[AccountType.QT]
+    val currentAccount = homeViewModel.currentAccount.collectAsState(initial = null)
 
     NavHost(
         navController = navController,
-        startDestination = Routes.Home.name,
+        startDestination = if (currentAccount.value == null) Routes.Blank.name else Routes.Home.name,
 //                    modifier = Modifier.padding(innerPadding)
     ) {
         composable(route = Routes.Settings.name) {
             Settings(
+                navController = navController
             )
         }
         composable(route = Routes.Home.name) {

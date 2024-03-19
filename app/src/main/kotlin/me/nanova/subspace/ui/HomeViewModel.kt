@@ -10,7 +10,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import me.nanova.subspace.domain.model.QTListParams
 import me.nanova.subspace.domain.model.Torrent
-import me.nanova.subspace.domain.repo.QTRepo
+import me.nanova.subspace.domain.repo.AccountRepo
+import me.nanova.subspace.domain.repo.TorrentRepo
 import javax.inject.Inject
 
 
@@ -24,7 +25,8 @@ data class HomeUiState(
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val qtRepo: QTRepo,
+    private val torrentRepo: TorrentRepo,
+    private val accountRepo: AccountRepo
 ) : ViewModel() {
     private val _torrentsFlow = MutableStateFlow<List<Torrent>>(emptyList())
     val torrentState: StateFlow<List<Torrent>> = _torrentsFlow.asStateFlow()
@@ -35,10 +37,11 @@ class HomeViewModel @Inject constructor(
     private val _filter = MutableStateFlow(QTListParams())
     val filter: StateFlow<QTListParams> = _filter.asStateFlow()
 
+    val currentAccount = accountRepo.currentAccount
 
     init {
         viewModelScope.launch {
-            qtRepo.torrents().collect { list ->
+            torrentRepo.torrents().collect { list ->
                 _torrentsFlow.value = list
 
                 _homeUiState.update {
@@ -53,7 +56,7 @@ class HomeViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             filter.collect { newFilter ->
-                qtRepo.refresh(newFilter.toMap())
+                torrentRepo.refresh(newFilter.toMap())
 
                 _homeUiState.update {
                     it.copy(

@@ -26,7 +26,7 @@ class RetrofitFactory @Inject constructor(
 ) {
     private val retrofitMap = mutableMapOf<Account, Retrofit>()
 
-    fun create(): Retrofit {
+    fun retrofit(): Retrofit {
         return runBlocking { accountRepo.currentAccount.first() }?.let {
             retrofitMap.getOrPut(it) {
                 // Create and return new Retrofit instance
@@ -41,7 +41,7 @@ class RetrofitFactory @Inject constructor(
                     .baseUrl(it.url)
                     .build()
             }
-        } ?: Retrofit.Builder().baseUrl("https://xxx.local").build()
+        } ?: Retrofit.Builder().baseUrl("https://placeholder.local").build()
     }
 }
 
