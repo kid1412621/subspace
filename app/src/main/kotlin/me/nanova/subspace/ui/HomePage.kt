@@ -34,6 +34,7 @@ import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -63,6 +64,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
+import me.nanova.subspace.ui.component.BlankAccount
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -70,6 +72,9 @@ fun HomePage(
     homeViewModel: HomeViewModel = hiltViewModel(),
     navController: NavHostController,
 ) {
+    val uiState by homeViewModel.homeUiState.collectAsState()
+    val currentAccount by homeViewModel.currentAccount.collectAsState(initial = null)
+
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -77,9 +82,6 @@ fun HomePage(
     val refreshState = rememberPullToRefreshState()
     val lazyListState = rememberLazyListState()
 
-    val filter by homeViewModel.filter.collectAsState()
-    val uiState by homeViewModel.homeUiState.collectAsState()
-    val list by homeViewModel.torrentState.collectAsState(emptyList())
 
     if (refreshState.isRefreshing) {
         homeViewModel.refresh()
@@ -162,7 +164,7 @@ fun HomePage(
                                 )
                             },
                             trailingIcon = {
-                                if (filter.reverse) {
+                                if (uiState.filter.reverse) {
                                     Icon(
                                         Icons.Rounded.ArrowDropDown,
                                         contentDescription = "Descending"
@@ -176,9 +178,9 @@ fun HomePage(
                             },
                             onClick = {
                                 homeViewModel.updateSort(
-                                    filter.copy(
+                                    uiState.filter.copy(
                                         sort = "name",
-                                        reverse = if (filter.sort == "name") !filter.reverse else filter.reverse
+                                        reverse = if (uiState.filter.sort == "name") !uiState.filter.reverse else uiState.filter.reverse
                                     )
                                 )
                                 menuExpanded = false
@@ -195,7 +197,7 @@ fun HomePage(
                                 )
                             },
                             trailingIcon = {
-                                if (filter.reverse) {
+                                if (uiState.filter.reverse) {
                                     Icon(
                                         Icons.Rounded.ArrowDropDown,
                                         contentDescription = "Descending"
@@ -209,9 +211,9 @@ fun HomePage(
                             },
                             onClick = {
                                 homeViewModel.updateSort(
-                                    filter.copy(
+                                    uiState.filter.copy(
                                         sort = "added_on",
-                                        reverse = if (filter.sort == "added_on") !filter.reverse else filter.reverse
+                                        reverse = if (uiState.filter.sort == "added_on") !uiState.filter.reverse else uiState.filter.reverse
                                     )
                                 )
                                 menuExpanded = false
@@ -257,45 +259,52 @@ fun HomePage(
                 modifier = Modifier
                     .padding(innerPadding)
                     .fillMaxSize(),
-//                    .nestedScroll(state.nestedScrollConnection),
                 tonalElevation = 1.dp
             ) {
-                Box(
-                    Modifier.nestedScroll(refreshState.nestedScrollConnection)
-                ) {
-                    LazyColumn(
-                        state = lazyListState,
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                if (currentAccount == null) {
+                    BlankAccount(onGoSetting = { navController.navigate(Routes.Settings.name) })
+                } else {
+                    Box(
+                        Modifier.nestedScroll(refreshState.nestedScrollConnection)
                     ) {
+                        LazyColumn(
+                            state = lazyListState,
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
 
-                        if (!refreshState.isRefreshing && uiState.state == CallState.Success) {
-                            items(
-                                list,
-                                key = { it.name }
-                            ) {
-                                ListItem(
-                                    modifier = Modifier.animateItemPlacement(),
-                                    headlineContent = { Text(it.name) },
-                                    supportingContent = {
-                                        Text(it.addedOn.toString())
-                                    },
-                                    leadingContent = {
-                                        Icon(
-                                            Icons.Filled.Favorite,
-                                            contentDescription = "Localized description",
-                                        )
-                                    },
-                                    trailingContent = { Text(it.state) }
-                                )
+                            if (!refreshState.isRefreshing && uiState.state == CallState.Success) {
+                                items(
+                                    uiState.list,
+                                    key = { it.name }
+                                ) {
+                                    ListItem(
+                                        modifier = Modifier.animateItemPlacement(),
+                                        headlineContent = { Text(it.name) },
+                                        supportingContent = {
+                                            Text(it.addedOn.toString())
+                                        },
+                                        leadingContent = {
+                                            Icon(
+                                                Icons.Filled.Favorite,
+                                                contentDescription = "Localized description",
+                                            )
+                                        },
+                                        trailingContent = { Text(it.state) }
+                                    )
 
-                                HorizontalDivider()
+                                    HorizontalDivider()
+                                }
                             }
                         }
+
+                        if (refreshState.isRefreshing) {
+                            LinearProgressIndicator(progress = { refreshState.progress })
+                        }
+                        PullToRefreshContainer(
+                            modifier = Modifier.align(Alignment.TopCenter),
+                            state = refreshState,
+                        )
                     }
-                    PullToRefreshContainer(
-                        modifier = Modifier.align(Alignment.TopCenter),
-                        state = refreshState,
-                    )
                 }
             }
         }

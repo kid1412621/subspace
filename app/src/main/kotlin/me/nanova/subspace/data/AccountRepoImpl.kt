@@ -15,6 +15,8 @@ class AccountRepoImpl @Inject constructor(
 ) : AccountRepo {
     private var currentAccountCache: Account? = null
 
+//    override val currentAccount: Account? = if(currentAccountCache!=null)  currentAccountCache else accountDao.getById(storage.currentAccountId)
+
     @OptIn(ExperimentalCoroutinesApi::class)
     override val currentAccount: Flow<Account?> = storage.currentAccountId
         .flatMapLatest { accountId ->

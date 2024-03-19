@@ -3,6 +3,8 @@ package me.nanova.subspace.data
 import kotlinx.coroutines.flow.map
 import me.nanova.subspace.data.api.QTApiService
 import me.nanova.subspace.data.db.TorrentDao
+import me.nanova.subspace.domain.model.QTListParams
+import me.nanova.subspace.domain.model.Torrent
 import me.nanova.subspace.domain.model.toEntity
 import me.nanova.subspace.domain.model.toModel
 import me.nanova.subspace.domain.repo.TorrentRepo
@@ -26,6 +28,18 @@ class TorrentRepoImpl @Inject constructor(
             }
             torrentDao.insertAll(copy)
         }
+    }
+
+    override suspend fun fetch(params: QTListParams): List<Torrent> {
+        val list = apiService.get().list(params.toMap())
+
+//        storage.currentAccountId.collect { id ->
+//            val copy = list.map {
+//                it.toEntity(id ?: throw RuntimeException("no current account"))
+//            }
+//            torrentDao.insertAll(copy)
+//        }
+        return list
     }
 }
 

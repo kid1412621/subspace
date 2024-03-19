@@ -6,6 +6,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import me.nanova.subspace.domain.model.QTListParams
@@ -20,7 +23,9 @@ enum class CallState {
 }
 
 data class HomeUiState(
-    val state: CallState = CallState.Loading
+    val state: CallState = CallState.Loading,
+    val list: List<Torrent> = emptyList(),
+    val filter: QTListParams = QTListParams()
 )
 
 @HiltViewModel
@@ -28,46 +33,55 @@ class HomeViewModel @Inject constructor(
     private val torrentRepo: TorrentRepo,
     private val accountRepo: AccountRepo
 ) : ViewModel() {
-    private val _torrentsFlow = MutableStateFlow<List<Torrent>>(emptyList())
-    val torrentState: StateFlow<List<Torrent>> = _torrentsFlow.asStateFlow()
 
     private val _homeUiState = MutableStateFlow(HomeUiState())
     val homeUiState: StateFlow<HomeUiState> = _homeUiState.asStateFlow()
-
-    private val _filter = MutableStateFlow(QTListParams())
-    val filter: StateFlow<QTListParams> = _filter.asStateFlow()
 
     val currentAccount = accountRepo.currentAccount
 
     init {
         viewModelScope.launch {
-            torrentRepo.torrents().collect { list ->
-                _torrentsFlow.value = list
+//            _homeUiState.update { it.copy(state = CallState.Loading) }
+//
+//            torrentRepo.torrents().collect { list ->
+//                _homeUiState.update {
+//                    it.copy(
+//                        state = CallState.Success,
+//                        list = list
+//                    )
+//                }
+//            }
 
-                _homeUiState.update {
-                    it.copy(
-                        state = CallState.Success
-                    )
+            _homeUiState
+                .map { it.filter }
+                .distinctUntilChanged()
+                .collectLatest {
+                    refresh()
                 }
-            }
         }
     }
 
     fun refresh() {
         viewModelScope.launch {
-            filter.collect { newFilter ->
-                torrentRepo.refresh(newFilter.toMap())
-
-                _homeUiState.update {
-                    it.copy(
-                        state = CallState.Success
-                    )
+            currentAccount.collect { id ->
+                id?.let {
+                    _homeUiState.update {
+                        it.copy(
+                            state = CallState.Success,
+                            list = torrentRepo.fetch(_homeUiState.value.filter)
+                        )
+                    }
                 }
             }
         }
     }
 
     fun updateSort(newFilter: QTListParams) {
-        _filter.update { newFilter }
+        _homeUiState.update {
+            it.copy(
+                state = CallState.Loading,
+                filter = newFilter
+            )
+        }
     }
 }

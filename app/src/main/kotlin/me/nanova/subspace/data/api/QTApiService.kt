@@ -12,5 +12,8 @@ interface QTApiService {
 
     @GET("api/v2/torrents/info")
     suspend fun getTorrents(@QueryMap params: Map<String, String?>): List<Torrent>
+
+    @GET("api/v2/torrents/info")
+    suspend fun list(@QueryMap params: Map<String, String?>): List<Torrent>
 }
 

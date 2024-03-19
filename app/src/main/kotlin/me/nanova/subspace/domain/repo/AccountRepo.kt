@@ -6,6 +6,7 @@ import me.nanova.subspace.domain.model.Account
 interface AccountRepo {
 
     val currentAccount: Flow<Account?>
+//    val currentAccount: Account?
     suspend fun switchAccount(accountId: Long)
 
     suspend fun deleteAccount(accountId: Long)
