@@ -41,7 +41,7 @@ class RetrofitFactory @Inject constructor(
                     .baseUrl(it.url)
                     .build()
             }
-        } ?: TODO()
+        } ?: Retrofit.Builder().baseUrl("https://xxx.local").build()
     }
 }
 
