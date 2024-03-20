@@ -59,7 +59,7 @@ dependencies {
     implementation("androidx.activity:activity-compose")
     implementation("androidx.lifecycle:lifecycle-runtime-compose")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose")
-    implementation("androidx.compose.runtime:runtime-livedata")
+//    ksp("androidx.lifecycle:lifecycle-compiler")
     // Android Studio Preview support
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
@@ -70,7 +70,6 @@ dependencies {
     implementation("androidx.navigation:navigation-compose")
     implementation("androidx.navigation:navigation-runtime-ktx:2.7.7")
 
-//    kapt("androidx.lifecycle:lifecycle-compiler")
     // Material Design 3
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material3:material3-window-size-class")

@@ -44,10 +44,11 @@ constructor(
             val account =
                 runBlocking { accountRepo.currentAccount.first() } ?: throw RuntimeException()
 
-            val authApiService =
-                Retrofit.Builder().baseUrl(account.url)
-                    .addConverterFactory(ScalarsConverterFactory.create())
-                    .build().create(QTAuthService::class.java)
+            val authApiService = Retrofit.Builder()
+                .baseUrl(account.url)
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .build()
+                .create(QTAuthService::class.java)
             val call = authApiService.login(account.user, account.pass)
             val newCookie = call.execute().headers()["Set-Cookie"] ?: ""
             runBlocking {

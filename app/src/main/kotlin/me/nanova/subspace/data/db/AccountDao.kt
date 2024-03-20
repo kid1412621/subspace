@@ -22,6 +22,8 @@ interface AccountDao {
     @Query("SELECT * FROM account WHERE type = :type")
     fun getByType(type: AccountType): Flow<List<Account>>
 
+    @Query("SELECT * FROM account WHERE type = :type AND url = :url AND user = :user LIMIT 1")
+    suspend fun getByUrlTypeUser(type: AccountType, url: String, user: String): Account?
     @Insert
     suspend fun insert(account: Account): Long
 

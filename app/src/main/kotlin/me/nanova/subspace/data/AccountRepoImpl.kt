@@ -27,11 +27,22 @@ class AccountRepoImpl @Inject constructor(
             } ?: flowOf(null)
         }
 
-    override suspend fun switchAccount(accountId: Long) {
+    override suspend fun save(account: Account): Long {
+        val existed = accountDao.getByUrlTypeUser(account.type, account.url, account.user)
+        if (existed != null) {
+            throw RuntimeException("Account already exists")
+        }
+
+        val id = accountDao.insert(account)
+        storage.updateCurrentAccountId(id)
+        return id
+    }
+
+    override suspend fun switch(accountId: Long) {
         storage.updateCurrentAccountId(accountId)
     }
 
-    override suspend fun deleteAccount(accountId: Long) {
+    override suspend fun delete(accountId: Long) {
         accountDao.delete(accountId)
         val account = accountDao.getLatest()
         currentAccountCache = account

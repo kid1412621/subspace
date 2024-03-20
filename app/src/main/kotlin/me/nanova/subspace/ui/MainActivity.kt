@@ -10,6 +10,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
+import me.nanova.subspace.ui.page.HomePage
+import me.nanova.subspace.ui.page.Settings
 import me.nanova.subspace.ui.theme.Theme
 
 @AndroidEntryPoint

@@ -1,4 +1,4 @@
-package me.nanova.subspace.ui
+package me.nanova.subspace.ui.vm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

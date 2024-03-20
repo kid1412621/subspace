@@ -7,8 +7,8 @@ interface AccountRepo {
 
     val currentAccount: Flow<Account?>
 //    val currentAccount: Account?
-    suspend fun switchAccount(accountId: Long)
-
-    suspend fun deleteAccount(accountId: Long)
+    suspend fun save(account: Account): Long
+    suspend fun switch(accountId: Long)
+    suspend fun delete(accountId: Long)
 
 }

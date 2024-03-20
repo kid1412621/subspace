@@ -16,6 +16,8 @@ class TorrentRepoImpl @Inject constructor(
     private val storage: Storage,
     private val apiService: Provider<QTApiService>
 ) : TorrentRepo {
+    override suspend fun apiVersion() = apiService.get().version()
+
     override fun torrents() =
         torrentDao.getAll().map { model -> model.map { it.toModel() } }
 
