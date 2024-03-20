@@ -63,7 +63,7 @@ class HomeViewModel @Inject constructor(
 
     fun refresh() {
         viewModelScope.launch {
-            currentAccount.collect { id ->
+            currentAccount.distinctUntilChanged().collect { id ->
                 id?.let {
                     _homeUiState.update {
                         it.copy(

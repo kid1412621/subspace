@@ -32,11 +32,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
     buildFeatures {
         viewBinding = true
@@ -49,7 +49,7 @@ android {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
+//    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
     implementation("androidx.core:core-ktx:1.12.0")
 //    implementation("androidx.window:window:1.2.0")
 
@@ -60,6 +60,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose")
     implementation("androidx.compose.runtime:runtime-livedata")
+    // Android Studio Preview support
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    debugImplementation("androidx.compose.ui:ui-tooling")
 
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
@@ -68,7 +71,7 @@ dependencies {
     implementation("androidx.navigation:navigation-runtime-ktx:2.7.7")
 
 //    kapt("androidx.lifecycle:lifecycle-compiler")
-    // Material Design 3 (TODO: specify the version to use PullToRefresh)
+    // Material Design 3
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material3:material3-window-size-class")
     // wait for MD3 implementation
@@ -77,13 +80,9 @@ dependencies {
 //    implementation("androidx.compose.material3:material3-adaptive:1.0.0-alpha03")
 //    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.0.0-alpha02")
 
-    // Android Studio Preview support
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    debugImplementation("androidx.compose.ui:ui-tooling")
-
     // hilt
-    implementation("com.google.dagger:hilt-android:2.50")
-    ksp("com.google.dagger:hilt-compiler:2.50")
+    implementation("com.google.dagger:hilt-android:2.51")
+    ksp("com.google.dagger:hilt-compiler:2.51")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     // room
