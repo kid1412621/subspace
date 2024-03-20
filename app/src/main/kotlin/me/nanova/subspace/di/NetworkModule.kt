@@ -55,27 +55,6 @@ object NetworkModule {
         accountRepo: AccountRepo
     ): RetrofitFactory = RetrofitFactory(okHttpClient, accountRepo)
 
-    //    @Provides
-    fun provideRetrofit(
-        httpClient: OkHttpClient,
-        accountRepo: AccountRepo
-    ): Retrofit {
-        return runBlocking { accountRepo.currentAccount.first() }?.let {
-
-            val moshi = Moshi.Builder()
-                .add(KotlinJsonAdapterFactory())
-                .build()
-
-            Retrofit.Builder()
-                .client(httpClient)
-                .addConverterFactory(ScalarsConverterFactory.create())
-                .addConverterFactory(MoshiConverterFactory.create(moshi))
-                .baseUrl(it.url)
-                .build()
-        } ?: Retrofit.Builder().baseUrl("http://xx.local").build()
-
-    }
-
 //    fun httpClientByType(type: AccountType): OkHttpClient {
 //        when (type) {
 //            AccountType.QT -> createOkHttpClient();
