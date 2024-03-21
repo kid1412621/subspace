@@ -63,6 +63,9 @@ dependencies {
     // Android Studio Preview support
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
+    // paging
+    implementation("androidx.paging:paging-runtime-ktx:3.3.0-alpha05")
+    implementation("androidx.paging:paging-compose:3.3.0-alpha05")
 
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
@@ -81,7 +84,7 @@ dependencies {
 
     // hilt
     implementation("com.google.dagger:hilt-android:2.51")
-    ksp("com.google.dagger:hilt-compiler:2.51")
+    ksp("com.google.dagger:hilt-android-compiler:2.51")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     // room
