@@ -27,6 +27,8 @@ class AccountRepoImpl @Inject constructor(
             } ?: flowOf(null)
         }
 
+    override suspend fun list() = accountDao.getAll()
+
     override suspend fun save(account: Account): Long {
         val existed = accountDao.getByUrlTypeUser(account.type, account.url, account.user)
         if (existed != null) {

@@ -39,6 +39,7 @@ fun Settings(
     val snackbarMessage by viewModel.snackbarMessage.collectAsState()
     val added by viewModel.added.collectAsState()
 
+    var name by rememberSaveable { mutableStateOf("") }
     var host by rememberSaveable { mutableStateOf("") }
     var user by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
@@ -67,6 +68,13 @@ fun Settings(
                 verticalArrangement = Arrangement.spacedBy(26.dp),
             ) {
                 TextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") },
+                    singleLine = true,
+                    placeholder = { Text("Server name") },
+                )
+                TextField(
                     value = host,
                     onValueChange = { host = it },
                     label = { Text("Host") },
@@ -94,6 +102,7 @@ fun Settings(
                 Button(onClick = {
                     viewModel.saveAccount(
                         Account(
+                            name = name,
                             url = host,
                             user = user,
                             pass = password,

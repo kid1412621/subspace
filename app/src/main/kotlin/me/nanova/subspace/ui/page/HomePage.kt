@@ -4,7 +4,6 @@ package me.nanova.subspace.ui.page
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -38,8 +37,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -64,10 +61,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
+import me.nanova.subspace.ui.Routes
+import me.nanova.subspace.ui.component.AccountMenu
+import me.nanova.subspace.ui.component.BlankAccount
 import me.nanova.subspace.ui.vm.CallState
 import me.nanova.subspace.ui.vm.HomeViewModel
-import me.nanova.subspace.ui.Routes
-import me.nanova.subspace.ui.component.BlankAccount
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -77,6 +75,7 @@ fun HomePage(
 ) {
     val uiState by homeViewModel.homeUiState.collectAsState()
     val currentAccount by homeViewModel.currentAccount.collectAsState(initial = null)
+    val accounts by homeViewModel.accounts.collectAsState(initial = emptyList())
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val sheetState = rememberModalBottomSheetState()
@@ -117,20 +116,11 @@ fun HomePage(
     DismissibleNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet {
-                Text("Drawer title", modifier = Modifier.padding(16.dp))
-                HorizontalDivider()
-                Column(
-                    modifier = Modifier.padding(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    NavigationDrawerItem(
-                        label = { Text(text = "Drawer Item") },
-                        selected = false,
-                        onClick = { navController.navigate(Routes.Settings.name) }
-                    )
-                }
-            }
+            AccountMenu(
+                currentAccountId = currentAccount?.id,
+                accounts = accounts,
+                onAccountAdding = { navController.navigate(Routes.Settings.name) },
+            )
         },
     ) {
         Scaffold(

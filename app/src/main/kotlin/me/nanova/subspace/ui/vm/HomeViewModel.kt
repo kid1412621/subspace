@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.domain.model.QTListParams
 import me.nanova.subspace.domain.model.Torrent
 import me.nanova.subspace.domain.repo.AccountRepo
@@ -38,20 +39,11 @@ class HomeViewModel @Inject constructor(
     val homeUiState: StateFlow<HomeUiState> = _homeUiState.asStateFlow()
 
     val currentAccount = accountRepo.currentAccount
+    private val _accounts = MutableStateFlow<List<Account>>(emptyList())
+    val accounts: StateFlow<List<Account>> = _accounts
 
     init {
         viewModelScope.launch {
-//            _homeUiState.update { it.copy(state = CallState.Loading) }
-//
-//            torrentRepo.torrents().collect { list ->
-//                _homeUiState.update {
-//                    it.copy(
-//                        state = CallState.Success,
-//                        list = list
-//                    )
-//                }
-//            }
-
             _homeUiState
                 .map { it.filter }
                 .distinctUntilChanged()
@@ -59,6 +51,13 @@ class HomeViewModel @Inject constructor(
                     refresh()
                 }
         }
+
+        viewModelScope.launch {
+            accountRepo.list().collect {
+                _accounts.value = it
+            }
+        }
+
     }
 
     fun refresh() {
