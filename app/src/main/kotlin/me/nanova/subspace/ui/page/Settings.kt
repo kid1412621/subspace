@@ -1,6 +1,7 @@
 package me.nanova.subspace.ui.page
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,6 +34,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
@@ -95,9 +98,6 @@ private fun AccountForm(
             .fillMaxWidth(),
 //            tonalElevation = 1.dp
     ) {
-        if (submitting) {
-            CircularProgressIndicator(modifier = Modifier.size(16.dp))
-        }
 
         Column(
             modifier = Modifier
@@ -108,17 +108,23 @@ private fun AccountForm(
         ) {
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 55.dp),
-                verticalArrangement = Arrangement.spacedBy(25.dp),
+                horizontalArrangement = Arrangement.spacedBy(15.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(30.dp, 0.dp)
+                    .padding(50.dp, 0.dp)
             ) {
                 items(AccountType.entries.toTypedArray()) {
                     Image(
-                        modifier = Modifier.size(50.dp),
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clickable { account = account.copy(type = it) },
                         alignment = Alignment.Center,
                         painter = painterResource(id = it.toIcon()),
-                        contentDescription = it.name
+                        contentDescription = it.name,
+                        colorFilter = if (it != account.type) ColorFilter
+                            .colorMatrix(ColorMatrix().apply { setToSaturation(0f) })
+                        else null
                     )
                 }
             }
@@ -139,7 +145,6 @@ private fun AccountForm(
                 placeholder = { Text("http(s)://host:port/path") },
                 leadingIcon = { Icon(Icons.Filled.Dns, contentDescription = "host") }
             )
-
             TextField(
                 value = account.user,
                 onValueChange = { account = account.copy(user = it) },
@@ -148,7 +153,6 @@ private fun AccountForm(
                 placeholder = { Text("Your username") },
                 leadingIcon = { Icon(Icons.Filled.AccountCircle, contentDescription = "user") }
             )
-
             TextField(
                 value = account.pass,
                 onValueChange = { account = account.copy(pass = it) },
@@ -166,7 +170,11 @@ private fun AccountForm(
                     onSubmit(account)
                     submitting = false
                 }) {
-                Text("Submit")
+                if (submitting) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp))
+                } else {
+                    Text("Submit")
+                }
             }
         }
     }

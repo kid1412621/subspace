@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import me.nanova.subspace.data.AccountType
 import me.nanova.subspace.data.api.QTAuthService
 import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.domain.repo.AccountRepo
@@ -26,6 +27,10 @@ class SettingsViewModel
     fun saveAccount(account: Account) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
+                if(account.type == AccountType.TRANSMISSION){
+                    snackbarMessage.update { "Transmission not supported yet." }
+                    return@launch
+                }
                 // check connection
                 val authApiService = Retrofit.Builder()
                     .baseUrl(account.url)
