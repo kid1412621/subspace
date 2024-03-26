@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Downloading
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.rounded.AccessTime
 import androidx.compose.material.icons.rounded.Add
@@ -137,13 +138,12 @@ fun HomePage(
                     }
                 )
             },
-            floatingActionButton = {
-                ExtendedFloatingActionButton(
-//                    modifier = Modifier.align()
-                    onClick = { }) {
-                    Text(text = "Extended FAB")
-                }
-            },
+//            floatingActionButton = {
+//                ExtendedFloatingActionButton(
+//                    onClick = { }) {
+//                    Text(text = "Extended FAB")
+//                }
+//            },
             bottomBar = {
                 if (menuExpanded) {
                     DropdownMenu(
@@ -280,7 +280,7 @@ fun HomePage(
                                         },
                                         leadingContent = {
                                             Icon(
-                                                Icons.Filled.Favorite,
+                                                Icons.Filled.Downloading,
                                                 contentDescription = "Localized description",
                                             )
                                         },
