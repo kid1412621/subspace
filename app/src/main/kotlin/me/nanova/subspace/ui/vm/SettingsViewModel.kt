@@ -22,12 +22,14 @@ class SettingsViewModel
 ) : ViewModel() {
 
     val snackbarMessage = MutableStateFlow<String?>(null)
+    val loading = MutableStateFlow(false)
     val added = MutableStateFlow(false)
 
     fun saveAccount(account: Account) {
         viewModelScope.launch(Dispatchers.IO) {
+            loading.update { true }
             try {
-                if(account.type == AccountType.TRANSMISSION){
+                if (account.type == AccountType.TRANSMISSION) {
                     snackbarMessage.update { "Transmission not supported yet." }
                     return@launch
                 }
@@ -53,6 +55,8 @@ class SettingsViewModel
             } catch (e: Exception) {
                 snackbarMessage.update { "Cannot connect to qt service: " + e.message }
                 return@launch
+            } finally {
+                loading.update { false }
             }
 
             try {
@@ -60,6 +64,8 @@ class SettingsViewModel
             } catch (e: Exception) {
                 snackbarMessage.update { e.message }
                 return@launch
+            } finally {
+                loading.update { false }
             }
             added.update { true }
         }
