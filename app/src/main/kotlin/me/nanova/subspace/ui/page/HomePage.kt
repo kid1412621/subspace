@@ -11,7 +11,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Downloading
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.rounded.AccessTime
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowDropDown
@@ -28,7 +27,6 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -123,6 +121,9 @@ fun HomePage(
                 currentAccountId = currentAccount?.id,
                 accounts = accounts,
                 onAccountAdding = { navController.navigate(Routes.Settings.name) },
+                onAccountSelected = {
+                    homeViewModel.switchAccount(it)
+                }
             )
         },
     ) {

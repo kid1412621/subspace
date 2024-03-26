@@ -60,6 +60,12 @@ class HomeViewModel @Inject constructor(
 
     }
 
+    fun switchAccount(account: Account) {
+        viewModelScope.launch {
+            accountRepo.switch(account.id)
+        }
+    }
+
     fun refresh() {
         viewModelScope.launch {
             currentAccount.distinctUntilChanged().collect { id ->
