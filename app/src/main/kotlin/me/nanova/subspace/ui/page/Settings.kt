@@ -75,6 +75,12 @@ fun Settings(
         }
     }
 
+    LaunchedEffect(added) {
+        if (added) {
+            navController.navigate(Routes.Home.name)
+        }
+    }
+
     Scaffold(
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
@@ -83,12 +89,7 @@ fun Settings(
         AccountForm(
             modifier = Modifier.padding(contentPadding),
             loading = loading,
-            onSubmit = {
-                viewModel.saveAccount(it)
-                if (added) {
-                    navController.navigate(Routes.Home.name)
-                }
-            }
+            onSubmit = { viewModel.saveAccount(it) }
         )
     }
 }
@@ -144,7 +145,6 @@ private fun AccountForm(
                 value = account.name,
                 leadingIcon = { Icon(Icons.Filled.Abc, contentDescription = "name") },
                 placeholder = "Server Name",
-                keyboardType = KeyboardType.Uri,
                 onChanged = { account = account.copy(name = it) },
                 onValidation = { validations["name"] = it }
             )
@@ -152,6 +152,7 @@ private fun AccountForm(
                 label = "host",
                 value = account.url,
                 placeholder = "http(s)://host:port/path",
+                keyboardType = KeyboardType.Uri,
                 leadingIcon = { Icon(Icons.Filled.Dns, contentDescription = "host") },
                 onChanged = { account = account.copy(url = it) },
                 validations = mapOf(
@@ -167,7 +168,7 @@ private fun AccountForm(
                 value = account.user,
                 placeholder = "Server account username",
                 leadingIcon = { Icon(Icons.Filled.AccountCircle, contentDescription = "user") },
-                onChanged = { account = account.copy(name = it) },
+                onChanged = { account = account.copy(user = it) },
                 onValidation = { validations["user"] = it }
             )
             ValidTextField(

@@ -29,8 +29,8 @@ class SettingsViewModel
         viewModelScope.launch(Dispatchers.IO) {
             loading.update { true }
             try {
-                if (account.type == AccountType.TRANSMISSION) {
-                    snackbarMessage.update { "Transmission not supported yet." }
+                if (account.type != AccountType.QT) {
+                    snackbarMessage.update { "${account.type} not supported yet." }
                     return@launch
                 }
                 // check connection
@@ -42,18 +42,22 @@ class SettingsViewModel
                 val call = authApiService.login(account.user, account.pass)
                 val res = call.execute()
                 if (!res.isSuccessful) {
-                    snackbarMessage.update { "Cannot connect to qt service." }
+                    if (res.code() == 403) {
+                        snackbarMessage.update { "Wrong password." }
+                    } else {
+                        snackbarMessage.update { "Cannot connect to ${account.type} service." }
+                    }
                     return@launch
                 }
                 if (res.headers()["Set-Cookie"] == null) {
-                    snackbarMessage.update { "Wrong password." }
+                    snackbarMessage.update { "Failed to retrieve cookie." }
                     return@launch
                 }
 
                 // check version
 //                val version = torrentRepo.apiVersion()
             } catch (e: Exception) {
-                snackbarMessage.update { "Cannot connect to qt service: " + e.message }
+                snackbarMessage.update { "Cannot connect to ${account.type} service: " + e.message }
                 return@launch
             } finally {
                 loading.update { false }
