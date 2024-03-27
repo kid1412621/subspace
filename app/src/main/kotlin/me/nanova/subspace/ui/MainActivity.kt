@@ -18,7 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import me.nanova.subspace.ui.page.HomePage
-import me.nanova.subspace.ui.page.Settings
+import me.nanova.subspace.ui.page.AccountPage
 import me.nanova.subspace.ui.theme.Theme
 
 @AndroidEntryPoint
@@ -54,7 +54,7 @@ fun AppContainer(
 //                    modifier = Modifier.padding(innerPadding)
     ) {
         composable(route = Routes.Settings.name) {
-            Settings(
+            AccountPage(
                 navController = navController
             )
         }

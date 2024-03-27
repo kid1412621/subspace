@@ -53,18 +53,17 @@ import me.nanova.subspace.data.AccountType
 import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.ui.Routes
 import me.nanova.subspace.ui.component.ValidTextField
-import me.nanova.subspace.ui.vm.SettingsViewModel
+import me.nanova.subspace.ui.vm.AccountViewModel
 
 @Composable
-fun Settings(
-    viewModel: SettingsViewModel = hiltViewModel(),
+fun AccountPage(
+    viewModel: AccountViewModel = hiltViewModel(),
     navController: NavHostController,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val snackbarMessage by viewModel.snackbarMessage.collectAsState()
     val added by viewModel.added.collectAsState()
     val loading by viewModel.loading.collectAsState()
-
 
     LaunchedEffect(snackbarMessage) {
         snackbarMessage?.let {

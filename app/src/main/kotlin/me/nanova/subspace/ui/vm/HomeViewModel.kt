@@ -25,7 +25,7 @@ enum class CallState {
 
 data class HomeUiState(
     val state: CallState = CallState.Loading,
-    val list: List<Torrent> = emptyList(),
+    val data: List<Torrent> = emptyList(),
     val filter: QTListParams = QTListParams()
 )
 
@@ -73,7 +73,7 @@ class HomeViewModel @Inject constructor(
                     _homeUiState.update {
                         it.copy(
                             state = CallState.Success,
-                            list = torrentRepo.fetch(_homeUiState.value.filter)
+                            data = torrentRepo.fetch(_homeUiState.value.filter)
                         )
                     }
                 }

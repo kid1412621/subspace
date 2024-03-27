@@ -2,15 +2,9 @@ package me.nanova.subspace.ui.page
 
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Downloading
 import androidx.compose.material.icons.rounded.AccessTime
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowDropDown
@@ -29,11 +23,8 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
@@ -41,8 +32,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
-import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -52,12 +41,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -66,6 +51,7 @@ import me.nanova.subspace.R
 import me.nanova.subspace.ui.Routes
 import me.nanova.subspace.ui.component.AccountMenu
 import me.nanova.subspace.ui.component.BlankAccount
+import me.nanova.subspace.ui.component.TorrentList
 import me.nanova.subspace.ui.vm.CallState
 import me.nanova.subspace.ui.vm.HomeViewModel
 
@@ -81,32 +67,23 @@ fun HomePage(
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val sheetState = rememberModalBottomSheetState()
-    var showBottomSheet by remember { mutableStateOf(false) }
-    var menuExpanded by remember { mutableStateOf(false) }
-    val refreshState = rememberPullToRefreshState()
-    val lazyListState = rememberLazyListState()
-
-
-    if (refreshState.isRefreshing) {
-        homeViewModel.refresh()
-        refreshState.endRefresh()
-    }
+    var showFilterSheet by remember { mutableStateOf(false) }
+    var showSortMenu by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
 
 
-    if (showBottomSheet) {
+    if (showFilterSheet) {
         ModalBottomSheet(
             onDismissRequest = {
-                showBottomSheet = false
+                showFilterSheet = false
             },
             sheetState = sheetState
         ) {
-            // Sheet content
             Button(onClick = {
                 scope.launch { sheetState.hide() }.invokeOnCompletion {
                     if (!sheetState.isVisible) {
-                        showBottomSheet = false
+                        showFilterSheet = false
                     }
                 }
             }) {
@@ -144,10 +121,10 @@ fun HomePage(
                 )
             },
             bottomBar = {
-                if (menuExpanded) {
+                if (showSortMenu) {
                     DropdownMenu(
                         expanded = true,
-                        onDismissRequest = { menuExpanded = false }
+                        onDismissRequest = { showSortMenu = false }
                     ) {
                         DropdownMenuItem(
                             text = { Text(text = "Name") },
@@ -177,10 +154,7 @@ fun HomePage(
                                         reverse = if (uiState.filter.sort == "name") !uiState.filter.reverse else uiState.filter.reverse
                                     )
                                 )
-                                menuExpanded = false
-                                scope.launch {
-                                    lazyListState.animateScrollToItem(0)
-                                }
+                                showSortMenu = false
                             })
                         DropdownMenuItem(
                             text = { Text(text = "Added On") },
@@ -210,10 +184,7 @@ fun HomePage(
                                         reverse = if (uiState.filter.sort == "added_on") !uiState.filter.reverse else uiState.filter.reverse
                                     )
                                 )
-                                menuExpanded = false
-                                scope.launch {
-                                    lazyListState.animateScrollToItem(0)
-                                }
+                                showSortMenu = false
                             })
                         DropdownMenuItem(text = { Text(text = "Speed") }, onClick = { /*TODO*/ })
                     }
@@ -221,16 +192,16 @@ fun HomePage(
 
                 BottomAppBar(
                     actions = {
-                        IconButton(onClick = { showBottomSheet = true }) {
-                            Icon(Icons.Rounded.Search, contentDescription = "sort")
+                        IconButton(onClick = { /* do something */ }, enabled = false) {
+                            Icon(Icons.Rounded.Search, contentDescription = "search")
                         }
-                        IconButton(onClick = { /* do something */ }) {
+                        IconButton(onClick = { showFilterSheet = true }) {
                             Icon(
                                 Icons.Rounded.FilterList,
                                 contentDescription = "filter"
                             )
                         }
-                        IconButton(onClick = { menuExpanded = true }) {
+                        IconButton(onClick = { showSortMenu = true }) {
                             Icon(
                                 Icons.Rounded.SwapVert,
                                 contentDescription = "sort"
@@ -239,11 +210,11 @@ fun HomePage(
                     },
                     floatingActionButton = {
                         FloatingActionButton(
-                            onClick = { homeViewModel.refresh() },
+                            onClick = { },
                             containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
                             elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
                         ) {
-                            Icon(Icons.Rounded.Add, "Localized description")
+                            Icon(Icons.Rounded.Add, "Add torrent")
                         }
                     }
                 )
@@ -258,72 +229,18 @@ fun HomePage(
                 if (currentAccount == null) {
                     BlankAccount(onGoSetting = { navController.navigate(Routes.Settings.name) })
                 } else {
-                    Box(
-                        Modifier.nestedScroll(refreshState.nestedScrollConnection)
-                    ) {
-                        LazyColumn(
-                            state = lazyListState,
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            if (!refreshState.isRefreshing && uiState.state == CallState.Success) {
-                                items(
-                                    uiState.list,
-                                    key = { it.hash }
-                                ) {
-                                    ListItem(
-                                        modifier = Modifier.animateItemPlacement(),
-                                        headlineContent = {
-                                            Text(
-                                                it.name,
-                                                minLines = 1,
-                                                maxLines = 2,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                        },
-                                        supportingContent = {
-                                            Text(
-                                                it.addedOn.toString(),
-                                                maxLines = 1
-                                            )
-                                        },
-                                        leadingContent = {
-                                            Icon(
-                                                Icons.Filled.Downloading,
-                                                contentDescription = it.state,
-                                            )
-                                        },
-                                        trailingContent = { Text(it.state) }
-                                    )
-
-                                    HorizontalDivider()
-                                }
+                    TorrentList(
+                        uiState = uiState,
+                        onRefresh = {
+                            if (uiState.state != CallState.Loading) {
+                                homeViewModel.refresh()
                             }
                         }
-
-                        if (refreshState.isRefreshing) {
-                            LinearProgressIndicator(progress = { refreshState.progress })
-                        }
-                        PullToRefreshContainer(
-                            modifier = Modifier.align(Alignment.TopCenter),
-                            state = refreshState,
-                        )
-                    }
+                    )
                 }
             }
         }
     }
-}
-
-
-@Composable
-@Preview
-fun LayoutPrev() {
-//    Layout(null, HomeViewModel().apply {
-//        uiState = UiState.Success(
-//            listOf(
-//            )
-//        )
-//    })
 }
 
 //fun formatUnixTimestamp(unixTimestamp: Long): String {

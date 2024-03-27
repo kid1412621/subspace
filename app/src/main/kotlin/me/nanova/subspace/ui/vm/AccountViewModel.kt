@@ -16,7 +16,7 @@ import retrofit2.converter.scalars.ScalarsConverterFactory
 import javax.inject.Inject
 
 @HiltViewModel
-class SettingsViewModel
+class AccountViewModel
 @Inject constructor(
     private val accountRepo: AccountRepo
 ) : ViewModel() {
