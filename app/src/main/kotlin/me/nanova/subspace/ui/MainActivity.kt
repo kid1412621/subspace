@@ -3,8 +3,15 @@ package me.nanova.subspace.ui
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeContent
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.view.WindowCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -20,9 +27,16 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        enableEdgeToEdge()
+
         setContent {
             Theme {
-                AppContainer()
+                AppContainer(
+                    Modifier
+                        .safeDrawingPadding()
+                        .windowInsetsPadding(WindowInsets.safeContent)
+                )
             }
         }
     }
@@ -30,6 +44,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppContainer(
+    modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
 ) {
 

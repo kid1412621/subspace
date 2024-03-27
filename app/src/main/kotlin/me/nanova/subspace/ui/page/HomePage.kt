@@ -56,6 +56,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -123,6 +124,9 @@ fun HomePage(
                 onAccountAdding = { navController.navigate(Routes.Settings.name) },
                 onAccountSelected = {
                     homeViewModel.switchAccount(it)
+                    scope.launch {
+                        drawerState.close()
+                    }
                 }
             )
         },
@@ -139,12 +143,6 @@ fun HomePage(
                     }
                 )
             },
-//            floatingActionButton = {
-//                ExtendedFloatingActionButton(
-//                    onClick = { }) {
-//                    Text(text = "Extended FAB")
-//                }
-//            },
             bottomBar = {
                 if (menuExpanded) {
                     DropdownMenu(
@@ -267,22 +265,31 @@ fun HomePage(
                             state = lazyListState,
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
-
                             if (!refreshState.isRefreshing && uiState.state == CallState.Success) {
                                 items(
                                     uiState.list,
-                                    key = { it.name }
+                                    key = { it.hash }
                                 ) {
                                     ListItem(
                                         modifier = Modifier.animateItemPlacement(),
-                                        headlineContent = { Text(it.name) },
+                                        headlineContent = {
+                                            Text(
+                                                it.name,
+                                                minLines = 1,
+                                                maxLines = 2,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        },
                                         supportingContent = {
-                                            Text(it.addedOn.toString())
+                                            Text(
+                                                it.addedOn.toString(),
+                                                maxLines = 1
+                                            )
                                         },
                                         leadingContent = {
                                             Icon(
                                                 Icons.Filled.Downloading,
-                                                contentDescription = "Localized description",
+                                                contentDescription = it.state,
                                             )
                                         },
                                         trailingContent = { Text(it.state) }

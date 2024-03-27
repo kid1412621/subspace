@@ -56,6 +56,7 @@ dependencies {
     // https://developer.android.com/jetpack/compose/bom/bom-mapping
     val composeBom = platform("androidx.compose:compose-bom:2024.02.02")
     implementation(composeBom)
+    implementation("androidx.activity:activity-ktx:1.8.2")
     implementation("androidx.activity:activity-compose")
     implementation("androidx.lifecycle:lifecycle-runtime-compose")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose")
