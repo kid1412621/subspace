@@ -139,7 +139,6 @@ private fun AccountForm(
             }
 
             ValidTextField(
-                modifier = modifier.fillMaxWidth(),
                 label = "Name",
                 value = account.name,
                 leadingIcon = { Icon(Icons.Filled.Abc, contentDescription = "name") },
