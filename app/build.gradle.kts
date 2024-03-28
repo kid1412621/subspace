@@ -42,7 +42,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
     buildFeatures {
         viewBinding = true
@@ -71,8 +71,8 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
     // paging
-    implementation("androidx.paging:paging-runtime-ktx:3.3.0-alpha05")
     implementation("androidx.paging:paging-compose:3.3.0-alpha05")
+    implementation("androidx.paging:paging-runtime-ktx:3.3.0-alpha05")
 
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
