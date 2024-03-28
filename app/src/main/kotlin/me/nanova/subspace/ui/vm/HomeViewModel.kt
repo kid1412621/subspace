@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -45,10 +46,11 @@ class HomeViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             _homeUiState
-                .map { it.filter }
+                .map { it.state }
                 .distinctUntilChanged()
+                .filter { it == CallState.Loading }
                 .collectLatest {
-                    refresh()
+                    loadData()
                 }
         }
 
@@ -67,14 +69,23 @@ class HomeViewModel @Inject constructor(
     }
 
     fun refresh() {
+        _homeUiState.update { it.copy(state = CallState.Loading) }
+    }
+
+    private fun loadData() {
         viewModelScope.launch {
             currentAccount.distinctUntilChanged().collect { id ->
                 id?.let {
                     _homeUiState.update {
-                        it.copy(
-                            state = CallState.Success,
-                            data = torrentRepo.fetch(_homeUiState.value.filter)
-                        )
+                        try {
+                            val list = torrentRepo.fetch(_homeUiState.value.filter)
+                            it.copy(
+                                state = CallState.Success,
+                                data = list
+                            )
+                        } catch (e: Exception) {
+                            it.copy(state = CallState.Error)
+                        }
                     }
                 }
             }
