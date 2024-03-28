@@ -4,12 +4,13 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Downloading
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -91,13 +92,18 @@ fun TorrentList(
             }
         }
 
-        if (refreshState.isRefreshing) {
-            LinearProgressIndicator(
+        if (uiState.state == CallState.Error) {
+            Column(
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .fillMaxWidth(),
-                progress = { refreshState.progress }
-            )
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceAround
+            ) {
+                Text(text = "Error to fetch data")
+                Button(onClick = { onRefresh() }) {
+                    Text(text = "Try Refresh")
+                }
+            }
         }
 
         PullToRefreshContainer(
@@ -107,6 +113,26 @@ fun TorrentList(
     }
 }
 
+
+@Composable
+@Preview
+fun LoadingTorrentListPrev() {
+    TorrentList(
+        HomeUiState(
+            state = CallState.Loading,
+        )
+    )
+}
+
+@Composable
+@Preview
+fun LoadErrorTorrentListPrev() {
+    TorrentList(
+        HomeUiState(
+            state = CallState.Error,
+        )
+    )
+}
 
 @Composable
 @Preview

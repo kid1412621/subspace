@@ -52,10 +52,9 @@ import me.nanova.subspace.ui.Routes
 import me.nanova.subspace.ui.component.AccountMenu
 import me.nanova.subspace.ui.component.BlankAccount
 import me.nanova.subspace.ui.component.TorrentList
-import me.nanova.subspace.ui.vm.CallState
 import me.nanova.subspace.ui.vm.HomeViewModel
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomePage(
     homeViewModel: HomeViewModel = hiltViewModel(),
@@ -230,11 +229,9 @@ fun HomePage(
                     BlankAccount(onGoSetting = { navController.navigate(Routes.Settings.name) })
                 } else {
                     TorrentList(
-                        uiState = uiState,
+                        uiState,
                         onRefresh = {
-                            if (uiState.state != CallState.Loading) {
-                                homeViewModel.refresh()
-                            }
+                            homeViewModel.refresh()
                         }
                     )
                 }
