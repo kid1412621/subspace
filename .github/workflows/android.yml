@@ -21,7 +21,11 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: testcli
-      run: pwd; echo ${{ vars.KEYSTORE_STORE_FILE_PATH }}
+      run: echo "${{ vars.KEYSTORE_STORE_FILE_PATH }}"
+    - name: testcli2
+      env:
+        KEYSTORE_STORE_FILE_PATH: ${{ vars.KEYSTORE_STORE_FILE_PATH }}
+      run: echo $KEYSTORE_STORE_FILE_PATH
     - name: Generate keystore.properties
       run: |
         cat <<EOF > keystore.properties
