@@ -27,17 +27,6 @@ android {
         }
     }
 
-    val keystorePropertiesFile = rootProject.file("keystore.properties")
-    val keystoreProperties = Properties()
-    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
-    signingConfigs {
-        create("releaseConfig") {
-            storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
-            storePassword = keystoreProperties["storePassword"] as String
-            keyAlias = keystoreProperties["keyAlias"] as String
-            keyPassword = keystoreProperties["keyPassword"] as String
-        }
-    }
     buildTypes {
         debug {
             isDebuggable = true
@@ -50,6 +39,17 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            val keystorePropertiesFile = rootProject.file("keystore.properties")
+            val keystoreProperties = Properties()
+            keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+            signingConfigs {
+                create("releaseConfig") {
+                    storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
+                    storePassword = keystoreProperties["storePassword"] as String
+                    keyAlias = keystoreProperties["keyAlias"] as String
+                    keyPassword = keystoreProperties["keyPassword"] as String
+                }
+            }
             signingConfig = signingConfigs.getByName("releaseConfig")
         }
     }
@@ -71,12 +71,12 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.core:core-ktx:1.13.0")
 
     // https://developer.android.com/jetpack/compose/bom/bom-mapping
     val composeBom = platform("androidx.compose:compose-bom:2024.02.02")
     implementation(composeBom)
-    implementation("androidx.activity:activity-ktx:1.8.2")
+    implementation("androidx.activity:activity-ktx:1.9.0")
     implementation("androidx.activity:activity-compose")
     implementation("androidx.lifecycle:lifecycle-runtime-compose")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose")
@@ -86,8 +86,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
 
     // paging
-    implementation("androidx.paging:paging-compose:3.3.0-alpha05")
-    implementation("androidx.paging:paging-runtime-ktx:3.3.0-alpha05")
+    implementation("androidx.paging:paging-compose:3.3.0-beta01")
+    implementation("androidx.paging:paging-runtime-ktx:3.3.0-beta01")
 
     // nav
     implementation("androidx.navigation:navigation-compose")
@@ -97,14 +97,14 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     // wait for MD3 implementation
     implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.compose.animation:animation:1.6.4")
+    implementation("androidx.compose.animation:animation:1.6.6")
     implementation("androidx.compose.animation:animation-graphics")
     // not ready yet
 //    implementation("androidx.compose.material3:material3-adaptive:1.0.0-alpha08")
 //    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.0.0-alpha05")
 
     // datastore
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation("androidx.datastore:datastore-preferences:1.1.0")
 
     // hilt
     implementation("com.google.dagger:hilt-android:2.51")
@@ -125,7 +125,7 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     // firebase
-    implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
+    implementation(platform("com.google.firebase:firebase-bom:32.8.1"))
     implementation("com.google.firebase:firebase-crashlytics")
     implementation("com.google.firebase:firebase-analytics")
 
