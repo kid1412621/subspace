@@ -100,7 +100,7 @@ dependencies {
     ksp("androidx.room:room-compiler:2.6.1")
 
     // retrofit
-    implementation(platform("com.squareup.retrofit2:retrofit-bom:2.10.0"))
+    implementation(platform("com.squareup.retrofit2:retrofit-bom:2.11.0"))
     implementation("com.squareup.retrofit2:retrofit")
     implementation("com.squareup.retrofit2:converter-scalars")
     implementation("com.squareup.retrofit2:converter-moshi")
