@@ -39,18 +39,21 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            val keystorePropertiesFile = rootProject.file("keystore.properties")
-            val keystoreProperties = Properties()
-            keystoreProperties.load(FileInputStream(keystorePropertiesFile))
-            signingConfigs {
-                create("releaseConfig") {
-                    storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
-                    storePassword = keystoreProperties["storePassword"] as String
-                    keyAlias = keystoreProperties["keyAlias"] as String
-                    keyPassword = keystoreProperties["keyPassword"] as String
+            val isTest = gradle.startParameter.taskNames.any { it.contains("test") }
+            if (!isTest) {
+                val keystorePropertiesFile = rootProject.file("keystore.properties")
+                val keystoreProperties = Properties()
+                keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+                signingConfigs {
+                    create("releaseConfig") {
+                        storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
+                        storePassword = keystoreProperties["storePassword"] as String
+                        keyAlias = keystoreProperties["keyAlias"] as String
+                        keyPassword = keystoreProperties["keyPassword"] as String
+                    }
                 }
+                signingConfig = signingConfigs.getByName("releaseConfig")
             }
-            signingConfig = signingConfigs.getByName("releaseConfig")
         }
     }
     compileOptions {
