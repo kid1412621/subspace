@@ -30,7 +30,7 @@ jobs:
         keyAlias:${{ secrets.KEYSTORE_KEY_ALIAS }}
         keyPassword:${{ secrets.KEYSTORE_KEY_PASSWORD }}
         EOF
-    - name: Decode keystore and create jks
+    - name: Generate keystore.jks
       run: echo "${{ secrets.KEYSTORE_JKS_BASE64 }}" | base64 --decode > keystore.jks
     - name: Build with Gradle
       run: ./gradlew bundleRelease

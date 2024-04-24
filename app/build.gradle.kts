@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -15,7 +18,7 @@ android {
         applicationId = "me.nanova.subspace"
         minSdk = 29
         targetSdk = 34
-        versionCode = 6
+        versionCode = 7
         versionName = "0.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -24,6 +27,17 @@ android {
         }
     }
 
+    val keystorePropertiesFile = rootProject.file("keystore.properties")
+    val keystoreProperties = Properties()
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+    signingConfigs {
+        create("releaseConfig") {
+            storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
+            storePassword = keystoreProperties["storePassword"] as String
+            keyAlias = keystoreProperties["keyAlias"] as String
+            keyPassword = keystoreProperties["keyPassword"] as String
+        }
+    }
     buildTypes {
         debug {
             isDebuggable = true
@@ -36,6 +50,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("releaseConfig")
         }
     }
     compileOptions {
@@ -82,8 +97,10 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     // wait for MD3 implementation
     implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.compose.animation:animation:1.6.4")
+    implementation("androidx.compose.animation:animation-graphics")
     // not ready yet
-//    implementation("androidx.compose.material3:material3-adaptive:1.0.0-alpha06")
+//    implementation("androidx.compose.material3:material3-adaptive:1.0.0-alpha08")
 //    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.0.0-alpha05")
 
     // datastore
@@ -121,4 +138,8 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+}
+
+task("printVersion") {
+    println("v" + android.defaultConfig.versionName + "(" + android.defaultConfig.versionCode + ")")
 }
