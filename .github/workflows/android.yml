@@ -19,12 +19,6 @@ jobs:
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
-    - name: testcli
-      run: echo "${{ vars.KEYSTORE_STORE_FILE_PATH }}"
-    - name: testcli2
-      env:
-        KEYSTORE_STORE_FILE_PATH: ${{ vars.KEYSTORE_STORE_FILE_PATH }}
-      run: echo $KEYSTORE_STORE_FILE_PATH
     - name: Generate keystore.properties
       run: |
         cat <<EOF > keystore.properties
@@ -35,6 +29,8 @@ jobs:
         EOF
     - name: Generate keystore.jks
       run: echo "${{ secrets.KEYSTORE_JKS_BASE64 }}" | base64 --decode > keystore.jks
+    - name: Generate google-services.json
+      run: echo "${{ secrets.GOOGLE_SERVICES_BASE64 }}" | base64 --decode > app/google-services.json
     - name: Build with Gradle
       run: ./gradlew bundleRelease
     - name: Upload AAB
