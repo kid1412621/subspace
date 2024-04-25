@@ -38,8 +38,8 @@ jobs:
         run: ./gradlew assembleRelease --no-daemon
       - name: Generate release notes
         run: |
-          echo ${{ env.GITHUB_REF }}
-          RELEASE_NOTE=$(awk -v version="${{ env.GITHUB_REF }}" '($0 ~ "^## " version "($|[[:space:]])") {p=1;next} /^## / {p=0} p && NF' CHANGELOG.md
+          echo ${{ github.ref_name }}
+          RELEASE_NOTE=$(awk -v version="${{ github.ref_name }}" '($0 ~ "^## " version "($|[[:space:]])") {p=1;next} /^## / {p=0} p && NF' CHANGELOG.md
           echo $RELEASE_NOTE
           echo RELEASE_NOTE=$RELEASE_NOTE >> $GITHUB_ENV
       - name: Publish APK on Github Release
