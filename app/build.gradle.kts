@@ -19,7 +19,7 @@ android {
         minSdk = 29
         targetSdk = 34
         versionCode = 8
-        versionName = "0.1.0"
+        versionName = "0.1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -77,7 +77,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.13.0")
 
     // https://developer.android.com/jetpack/compose/bom/bom-mapping
-    val composeBom = platform("androidx.compose:compose-bom:2024.02.02")
+    val composeBom = platform("androidx.compose:compose-bom:2024.04.01")
     implementation(composeBom)
     implementation("androidx.activity:activity-ktx:1.9.0")
     implementation("androidx.activity:activity-compose")
