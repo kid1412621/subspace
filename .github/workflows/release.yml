@@ -38,10 +38,12 @@ jobs:
         run: ./gradlew assembleRelease --no-daemon
       - name: Generate release notes
         run: |
-          echo ${{ github.ref_name }}
-          RELEASE_NOTE=$(awk -v version="${{ github.ref_name }}" '($0 ~ "^## " version "($|[[:space:]])") {p=1;next} /^## / {p=0} p && NF' CHANGELOG.md
-          echo $RELEASE_NOTE
-          echo RELEASE_NOTE=$RELEASE_NOTE >> $GITHUB_ENV
+          {
+            echo 'RELEASE_NOTE<<EOF'
+            awk -v version="${{ github.ref_name }}" '($0 ~ "^## " version "($|[[:space:]])") {p=1;next} /^## / {p=0} p && NF' CHANGELOG.md
+            echo EOF
+          } >> "$GITHUB_ENV"
+          echo ${{ env.RELEASE_NOTE }}
       - name: Publish APK on Github Release
         uses: softprops/action-gh-release@v2
         with:
