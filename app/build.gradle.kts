@@ -39,9 +39,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            val isTest = gradle.startParameter.taskNames.any { it.contains("test") }
-            if (!isTest) {
-                val keystorePropertiesFile = rootProject.file("keystore.properties")
+            // skip for tes
+            val keystorePropertiesFile = rootProject.file("keystore.properties")
+            if (keystorePropertiesFile.exists()) {
                 val keystoreProperties = Properties()
                 keystoreProperties.load(FileInputStream(keystorePropertiesFile))
                 signingConfigs {

@@ -119,103 +119,108 @@ fun HomePage(
                 )
             },
             bottomBar = {
-                if (showSortMenu) {
-                    DropdownMenu(
-                        expanded = true,
-                        onDismissRequest = { showSortMenu = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text(text = "Name") },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Rounded.SortByAlpha,
-                                    contentDescription = "Sort by name"
-                                )
-                            },
-                            trailingIcon = {
-                                if (uiState.filter.reverse) {
-                                    Icon(
-                                        Icons.Rounded.ArrowDropDown,
-                                        contentDescription = "Descending"
-                                    )
-                                } else {
-                                    Icon(
-                                        Icons.Rounded.ArrowDropUp,
-                                        contentDescription = "Ascending"
-                                    )
-                                }
-                            },
-                            onClick = {
-                                homeViewModel.updateSort(
-                                    uiState.filter.copy(
-                                        sort = "name",
-                                        reverse = if (uiState.filter.sort == "name") !uiState.filter.reverse else uiState.filter.reverse
-                                    )
-                                )
-                                showSortMenu = false
-                            })
-                        DropdownMenuItem(
-                            text = { Text(text = "Added On") },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Rounded.AccessTime,
-                                    contentDescription = "Sort by add time"
-                                )
-                            },
-                            trailingIcon = {
-                                if (uiState.filter.reverse) {
-                                    Icon(
-                                        Icons.Rounded.ArrowDropDown,
-                                        contentDescription = "Descending"
-                                    )
-                                } else {
-                                    Icon(
-                                        Icons.Rounded.ArrowDropUp,
-                                        contentDescription = "Ascending"
-                                    )
-                                }
-                            },
-                            onClick = {
-                                homeViewModel.updateSort(
-                                    uiState.filter.copy(
-                                        sort = "added_on",
-                                        reverse = if (uiState.filter.sort == "added_on") !uiState.filter.reverse else uiState.filter.reverse
-                                    )
-                                )
-                                showSortMenu = false
-                            })
-                        DropdownMenuItem(text = { Text(text = "Speed") }, onClick = { /*TODO*/ })
-                    }
-                }
-
-                BottomAppBar(
-                    actions = {
-                        IconButton(onClick = { /* do something */ }, enabled = false) {
-                            Icon(Icons.Rounded.Search, contentDescription = "search")
-                        }
-                        IconButton(onClick = { showFilterSheet = true }) {
-                            Icon(
-                                Icons.Rounded.FilterList,
-                                contentDescription = "filter"
-                            )
-                        }
-                        IconButton(onClick = { showSortMenu = true }) {
-                            Icon(
-                                Icons.Rounded.SwapVert,
-                                contentDescription = "sort"
-                            )
-                        }
-                    },
-                    floatingActionButton = {
-                        FloatingActionButton(
-                            onClick = { },
-                            containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
-                            elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
+                if (currentAccount != null) {
+                    if (showSortMenu) {
+                        DropdownMenu(
+                            expanded = true,
+                            onDismissRequest = { showSortMenu = false }
                         ) {
-                            Icon(Icons.Rounded.Add, "Add torrent")
+                            DropdownMenuItem(
+                                text = { Text(text = "Name") },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Rounded.SortByAlpha,
+                                        contentDescription = "Sort by name"
+                                    )
+                                },
+                                trailingIcon = {
+                                    if (uiState.filter.reverse) {
+                                        Icon(
+                                            Icons.Rounded.ArrowDropDown,
+                                            contentDescription = "Descending"
+                                        )
+                                    } else {
+                                        Icon(
+                                            Icons.Rounded.ArrowDropUp,
+                                            contentDescription = "Ascending"
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    homeViewModel.updateSort(
+                                        uiState.filter.copy(
+                                            sort = "name",
+                                            reverse = if (uiState.filter.sort == "name") !uiState.filter.reverse else uiState.filter.reverse
+                                        )
+                                    )
+                                    showSortMenu = false
+                                })
+                            DropdownMenuItem(
+                                text = { Text(text = "Added On") },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Rounded.AccessTime,
+                                        contentDescription = "Sort by add time"
+                                    )
+                                },
+                                trailingIcon = {
+                                    if (uiState.filter.reverse) {
+                                        Icon(
+                                            Icons.Rounded.ArrowDropDown,
+                                            contentDescription = "Descending"
+                                        )
+                                    } else {
+                                        Icon(
+                                            Icons.Rounded.ArrowDropUp,
+                                            contentDescription = "Ascending"
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    homeViewModel.updateSort(
+                                        uiState.filter.copy(
+                                            sort = "added_on",
+                                            reverse = if (uiState.filter.sort == "added_on") !uiState.filter.reverse else uiState.filter.reverse
+                                        )
+                                    )
+                                    showSortMenu = false
+                                })
+                            DropdownMenuItem(
+                                text = { Text(text = "Speed") },
+                                onClick = { /*TODO*/ })
                         }
                     }
-                )
+
+                    BottomAppBar(
+                        actions = {
+                            IconButton(onClick = { /* do something */ }, enabled = false) {
+                                Icon(Icons.Rounded.Search, contentDescription = "search")
+                            }
+                            IconButton(onClick = { showFilterSheet = true }) {
+                                Icon(
+                                    Icons.Rounded.FilterList,
+                                    contentDescription = "filter"
+                                )
+                            }
+                            IconButton(onClick = { showSortMenu = true }) {
+                                Icon(
+                                    Icons.Rounded.SwapVert,
+                                    contentDescription = "sort"
+                                )
+                            }
+                        },
+                        floatingActionButton = {
+                            FloatingActionButton(
+                                onClick = { },
+                                containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
+                                elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
+                            ) {
+                                Icon(Icons.Rounded.Add, "Add torrent")
+                            }
+                        }
+                    )
+
+                }
             },
         ) { innerPadding ->
             Surface(

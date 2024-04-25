@@ -43,7 +43,6 @@ jobs:
             awk -v version="${{ github.ref_name }}" '($0 ~ "^## " version "($|[[:space:]])") {p=1;next} /^## / {p=0} p && NF' CHANGELOG.md
             echo EOF
           } >> "$GITHUB_ENV"
-          echo ${{ env.RELEASE_NOTE }}
       - name: Publish APK on Github Release
         uses: softprops/action-gh-release@v2
         with:
