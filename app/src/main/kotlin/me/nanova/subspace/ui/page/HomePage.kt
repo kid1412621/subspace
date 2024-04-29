@@ -15,6 +15,7 @@ import androidx.compose.material.icons.rounded.SwapVert
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.Button
+import androidx.compose.material3.DismissibleDrawerSheet
 import androidx.compose.material3.DismissibleNavigationDrawer
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
@@ -93,17 +94,19 @@ fun HomePage(
     DismissibleNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            AccountMenu(
-                currentAccountId = currentAccount?.id,
-                accounts = accounts,
-                onAccountAdding = { navController.navigate(Routes.Settings.name) },
-                onAccountSelected = {
-                    homeViewModel.switchAccount(it)
-                    scope.launch {
-                        drawerState.close()
+            DismissibleDrawerSheet(drawerState) {
+                AccountMenu(
+                    currentAccountId = currentAccount?.id,
+                    accounts = accounts,
+                    onAccountAdding = { navController.navigate(Routes.Settings.name) },
+                    onAccountSelected = {
+                        homeViewModel.switchAccount(it)
+                        scope.launch {
+                            drawerState.close()
+                        }
                     }
-                }
-            )
+                )
+            }
         },
     ) {
         Scaffold(

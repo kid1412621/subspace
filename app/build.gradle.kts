@@ -97,7 +97,10 @@ dependencies {
     implementation("androidx.navigation:navigation-runtime-ktx:2.7.7")
 
     // Material Design 3
-    implementation("androidx.compose.material3:material3")
+//    implementation("androidx.compose.material3:material3")
+    // wait for https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary#DismissibleDrawerSheet(androidx.compose.material3.DrawerState,androidx.compose.ui.Modifier,androidx.compose.ui.graphics.Shape,androidx.compose.ui.graphics.Color,androidx.compose.ui.graphics.Color,androidx.compose.ui.unit.Dp,androidx.compose.foundation.layout.WindowInsets,kotlin.Function1)
+    // see: https://developer.android.com/jetpack/androidx/releases/compose-material3#1.3.0-alpha04
+    implementation("androidx.compose.material3:material3:1.3.0-alpha05")
     // wait for MD3 implementation
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.compose.animation:animation:1.6.6")
