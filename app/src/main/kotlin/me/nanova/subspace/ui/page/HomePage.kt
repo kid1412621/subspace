@@ -1,6 +1,7 @@
 package me.nanova.subspace.ui.page
 
 
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -228,6 +229,7 @@ fun HomePage(
         ) { innerPadding ->
             Surface(
                 modifier = Modifier
+                    .consumeWindowInsets(innerPadding)
                     .padding(innerPadding)
                     .fillMaxSize(),
                 tonalElevation = 1.dp

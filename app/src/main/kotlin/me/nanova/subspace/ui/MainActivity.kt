@@ -1,36 +1,27 @@
 package me.nanova.subspace.ui
 
-import androidx.compose.animation.AnimatedContent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.EaseIn
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.safeContent
-import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import dagger.hilt.android.AndroidEntryPoint
-import me.nanova.subspace.ui.page.HomePage
 import me.nanova.subspace.ui.page.AccountPage
+import me.nanova.subspace.ui.page.HomePage
 import me.nanova.subspace.ui.theme.Theme
 
 @AndroidEntryPoint
@@ -45,9 +36,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             Theme {
                 AppContainer(
-                    Modifier
-                        .safeDrawingPadding()
-                        .windowInsetsPadding(WindowInsets.safeContent)
+                    Modifier.safeContentPadding()
                 )
             }
         }
@@ -103,5 +92,5 @@ fun AppPreview() {
 //        Layout(
 //            homeViewModel = HomeViewModel().apply {  }
 //        )
-        }
     }
+}
