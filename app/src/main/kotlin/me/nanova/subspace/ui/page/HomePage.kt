@@ -1,9 +1,12 @@
 package me.nanova.subspace.ui.page
 
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccessTime
 import androidx.compose.material.icons.rounded.Add
@@ -42,16 +45,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import me.nanova.subspace.R
 import me.nanova.subspace.ui.Routes
 import me.nanova.subspace.ui.component.AccountMenu
-import me.nanova.subspace.ui.component.BlankAccount
 import me.nanova.subspace.ui.component.TorrentList
 import me.nanova.subspace.ui.vm.HomeViewModel
 
@@ -223,14 +232,12 @@ fun HomePage(
                             }
                         }
                     )
-
                 }
             },
         ) { innerPadding ->
             Surface(
                 modifier = Modifier
                     .consumeWindowInsets(innerPadding)
-                    .padding(innerPadding)
                     .fillMaxSize(),
                 tonalElevation = 1.dp
             ) {
@@ -247,6 +254,58 @@ fun HomePage(
             }
         }
     }
+}
+
+
+@Composable
+private fun BlankAccount(
+    onGoSetting: () -> Unit = {}
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceAround
+    ) {
+        Text(
+            text = "No server account available yet",
+            color = MaterialTheme.colorScheme.secondary,
+            fontSize = 20.sp
+        )
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceAround
+        ) {
+            Button(onClick = { onGoSetting() }) {
+                Text(buildAnnotatedString {
+                    withStyle(
+                        SpanStyle(fontWeight = FontWeight.ExtraBold)
+                    ) {
+                        append("Click ")
+                    }
+                    append("to add server account")
+                })
+            }
+            Spacer(Modifier.heightIn(15.dp))
+            Text(
+                text = buildAnnotatedString {
+                    append("or")
+                    withStyle(
+                        SpanStyle(fontWeight = FontWeight.Bold)
+                    ) {
+                        append(" Swipe right ")
+                    }
+                    append("for settings")
+                },
+                color = MaterialTheme.colorScheme.tertiary
+            )
+        }
+    }
+}
+
+@Composable
+@Preview
+fun BlankAccountPrev() {
+    BlankAccount()
 }
 
 //fun formatUnixTimestamp(unixTimestamp: Long): String {
