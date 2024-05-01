@@ -52,7 +52,6 @@ fun AccountMenu(
         stickyHeader {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                tonalElevation = 3.dp,
                 onClick = {
                     scope.launch {
                         lazyColumnState.animateScrollToItem(0)
@@ -90,12 +89,14 @@ fun AccountMenu(
                 label = {
                     Column {
                         Text(
+                            color = if (it.isCurrent(currentAccountId)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
                             text = it.name,
                             style = MaterialTheme.typography.titleMedium,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
                         Text(
+                            color = if (it.isCurrent(currentAccountId)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
                             text = "${it.user}@${it.url}",
                             style = MaterialTheme.typography.labelSmall,
                             maxLines = 1,
@@ -109,7 +110,7 @@ fun AccountMenu(
                         imageVector = ImageVector.vectorResource(id = it.type.toMonoIcon()),
                         contentDescription = it.user,
                         modifier = Modifier.size(33.dp),
-                        tint = if (it.isCurrent(currentAccountId)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                        tint = if (it.isCurrent(currentAccountId)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
                     )
                 },
                 modifier = Modifier.padding(10.dp, 15.dp),
