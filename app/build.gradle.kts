@@ -31,6 +31,32 @@ android {
         }
     }
 
+    flavorDimensions += listOf("distribution")
+    productFlavors {
+        val keystorePropertiesFile = rootProject.file("keystore.properties")
+        // skip for test
+        if (keystorePropertiesFile.exists()) {
+            val keystoreProperties = Properties()
+            keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+
+            signingConfigs {
+                create("releaseConfig") {
+                    storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
+                    storePassword = keystoreProperties["storePassword"] as String
+                    keyAlias = keystoreProperties["keyAlias"] as String
+                    keyPassword = keystoreProperties["keyPassword"] as String
+                }
+            }
+            create("github") {
+                dimension = "distribution"
+                signingConfig = signingConfigs.getByName("releaseConfig")
+            }
+            create("play") {
+                dimension = "distribution"
+                signingConfig = signingConfigs.getByName("releaseConfig")
+            }
+        }
+    }
     buildTypes {
         debug {
             isDebuggable = true
@@ -44,21 +70,6 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // skip for tes
-            val keystorePropertiesFile = rootProject.file("keystore.properties")
-            if (keystorePropertiesFile.exists()) {
-                val keystoreProperties = Properties()
-                keystoreProperties.load(FileInputStream(keystorePropertiesFile))
-                signingConfigs {
-                    create("releaseConfig") {
-                        storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
-                        storePassword = keystoreProperties["storePassword"] as String
-                        keyAlias = keystoreProperties["keyAlias"] as String
-                        keyPassword = keystoreProperties["keyPassword"] as String
-                    }
-                }
-                signingConfig = signingConfigs.getByName("releaseConfig")
-            }
         }
     }
     compileOptions {

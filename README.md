@@ -32,4 +32,13 @@ cat << EOF > app/google-services.json
 EOF
 ```
 
-2. Add a dummy keystore.property:
+2. Add a dummy keystore.properties to project root directory:
+
+```bash
+cat << EOF > keystore.properties
+storeFile:keystore.jks
+storePassword:fake-password
+keyAlias:fake-key-alias
+keyPassword:fake-password
+EOF
+```
