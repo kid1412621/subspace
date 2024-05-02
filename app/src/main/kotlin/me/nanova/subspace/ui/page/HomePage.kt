@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccessTime
 import androidx.compose.material.icons.rounded.Add
@@ -117,18 +118,13 @@ fun HomePage(
             Surface(
                 modifier = Modifier
                     .consumeWindowInsets(innerPadding)
+                    .padding(innerPadding)
                     .fillMaxSize(),
-                tonalElevation = 1.dp
             ) {
                 if (currentAccount == null) {
                     BlankAccount(onGoSetting = { navController.navigate(Routes.Settings.name) })
                 } else {
-                    TorrentList(
-                        uiState,
-                        onRefresh = {
-                            homeViewModel.refresh()
-                        }
-                    )
+                    TorrentList(homeViewModel)
                 }
             }
         }
@@ -318,7 +314,7 @@ private fun BlankAccount(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceAround
+        verticalArrangement = Arrangement.SpaceAround,
     ) {
         Text(
             text = "No server account available yet",

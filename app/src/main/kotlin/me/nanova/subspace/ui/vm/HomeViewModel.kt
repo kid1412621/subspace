@@ -1,5 +1,8 @@
 package me.nanova.subspace.ui.vm
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,6 +38,9 @@ class HomeViewModel @Inject constructor(
     private val torrentRepo: TorrentRepo,
     private val accountRepo: AccountRepo
 ) : ViewModel() {
+
+    var isRefreshing by mutableStateOf(false)
+        private set
 
     private val _homeUiState = MutableStateFlow(HomeUiState())
     val homeUiState: StateFlow<HomeUiState> = _homeUiState.asStateFlow()
@@ -74,6 +80,7 @@ class HomeViewModel @Inject constructor(
 
     private fun loadData() {
         viewModelScope.launch {
+            isRefreshing = true
             currentAccount.distinctUntilChanged().collect { id ->
                 id?.let {
                     _homeUiState.update {
@@ -85,6 +92,8 @@ class HomeViewModel @Inject constructor(
                             )
                         } catch (e: Exception) {
                             it.copy(state = CallState.Error)
+                        } finally {
+                            isRefreshing = false
                         }
                     }
                 }
