@@ -21,20 +21,29 @@ jobs:
         run: chmod +x gradlew
       - name: Generate fake google-services.json
         run: |
-          cat <<EOF > app/google-services.json
+          cat << EOF > app/google-services.json
           {
             "project_info": {
               "project_number": "0",
               "project_id": "id",
               "storage_bucket": "bucket"
             },
-            "client": [{
-              "client_info": {
-                "mobilesdk_app_id": "app-id",
-                "android_client_info": { "package_name": "me.nanova.subspace.debug" }
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "app-id",
+                  "android_client_info": { "package_name": "me.nanova.subspace" }
+                },
+                "api_key": [{"current_key": "key"}]
               },
-              "api_key": [{"current_key": "key"}]
-            }]
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "app-id",
+                  "android_client_info": { "package_name": "me.nanova.subspace.debug" }
+                },
+                "api_key": [{"current_key": "key"}]
+              }
+            ]
           }
           EOF
       - name: Run unit tests
