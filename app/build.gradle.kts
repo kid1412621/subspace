@@ -23,7 +23,7 @@ android {
         minSdk = 29
         targetSdk = 34
         versionCode = 8
-        versionName = "0.2.0"
+        versionName = "0.2.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -35,7 +35,8 @@ android {
     productFlavors {
         val keystorePropertiesFile = rootProject.file("keystore.properties")
         // skip for test
-        if (keystorePropertiesFile.exists()) {
+        val signKeyExists = keystorePropertiesFile.exists()
+        if (signKeyExists) {
             val keystoreProperties = Properties()
             keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 
@@ -47,12 +48,16 @@ android {
                     keyPassword = keystoreProperties["keyPassword"] as String
                 }
             }
-            create("github") {
-                dimension = "distribution"
+        }
+        create("github") {
+            dimension = "distribution"
+            if (signKeyExists) {
                 signingConfig = signingConfigs.getByName("releaseConfig")
             }
-            create("play") {
-                dimension = "distribution"
+        }
+        create("play") {
+            dimension = "distribution"
+            if (signKeyExists) {
                 signingConfig = signingConfigs.getByName("releaseConfig")
             }
         }
