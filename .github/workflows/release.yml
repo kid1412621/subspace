@@ -21,7 +21,7 @@ jobs:
       - name: Generate keystore.jks
         run: echo "${{ secrets.KEYSTORE_JKS_BASE64 }}" | base64 --decode > keystore.jks
       - name: Generate google-services.json
-        run: mkdir app && echo "${{ secrets.GOOGLE_SERVICES_BASE64 }}" | base64 --decode > app/google-services.json
+        run: echo "${{ secrets.GOOGLE_SERVICES_BASE64 }}" | base64 --decode > google-services.json
 
   build_release_github:
     needs: setup
@@ -37,6 +37,8 @@ jobs:
           cache: gradle
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+      - name: Move google-services.json
+        run: move google-services.json app/
       - name: Build release APK for Github Release
         run: ./gradlew assembleGithub --no-daemon
       - name: Generate release notes
@@ -68,6 +70,8 @@ jobs:
           cache: gradle
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+      - name: Move google-services.json
+        run: move google-services.json app/
       - name: Build Release AAB for Google Play
         run: ./gradlew bundlePlay --no-daemon
       - name: Upload AAB
