@@ -38,7 +38,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Move google-services.json
-        run: move google-services.json app/
+        run: mv google-services.json app/
       - name: Build release APK for Github Release
         run: ./gradlew assembleGithub --no-daemon
       - name: Generate release notes
@@ -71,7 +71,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Move google-services.json
-        run: move google-services.json app/
+        run: mv google-services.json app/
       - name: Build Release AAB for Google Play
         run: ./gradlew bundlePlay --no-daemon
       - name: Upload AAB
