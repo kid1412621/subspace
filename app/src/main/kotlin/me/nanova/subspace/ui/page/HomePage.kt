@@ -35,6 +35,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -42,6 +45,7 @@ import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -78,8 +82,20 @@ fun HomePage(
     val currentAccount by homeViewModel.currentAccount.collectAsState(initial = null)
     val accounts by homeViewModel.accounts.collectAsState(initial = emptyList())
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let {
+            val result = snackbarHostState.showSnackbar(it)
+            if (result == SnackbarResult.Dismissed) {
+                uiState.error = null
+            }
+        }
+    }
+
 
     DismissibleNavigationDrawer(
         drawerState = drawerState,
@@ -113,6 +129,9 @@ fun HomePage(
             },
             bottomBar = {
                 BottomBar(currentAccount != null, uiState, homeViewModel)
+            },
+            snackbarHost = {
+                SnackbarHost(hostState = snackbarHostState)
             },
         ) { innerPadding ->
             Surface(

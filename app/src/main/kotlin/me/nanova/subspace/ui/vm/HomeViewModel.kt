@@ -29,6 +29,7 @@ enum class CallState {
 
 data class HomeUiState(
     val state: CallState = CallState.Loading,
+    var error: String? = null,
     val data: List<Torrent> = emptyList(),
     val filter: QTListParams = QTListParams()
 )
@@ -91,7 +92,7 @@ class HomeViewModel @Inject constructor(
                                 data = list
                             )
                         } catch (e: Exception) {
-                            it.copy(state = CallState.Error)
+                            it.copy(state = CallState.Error, error = e.message)
                         } finally {
                             isRefreshing = false
                         }

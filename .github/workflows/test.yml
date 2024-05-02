@@ -31,7 +31,7 @@ jobs:
             "client": [{
               "client_info": {
                 "mobilesdk_app_id": "app-id",
-                "android_client_info": { "package_name": "me.nanova.subspace" }
+                "android_client_info": { "package_name": "me.nanova.subspace.debug" }
               },
               "api_key": [{"current_key": "key"}]
             }]

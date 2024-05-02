@@ -89,10 +89,16 @@ fun TorrentList(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceAround
             ) {
-                Text(text = "Error to fetch data", color = MaterialTheme.colorScheme.onError)
+                Text(text = "Failed to fetch data", color = MaterialTheme.colorScheme.error)
 
-                IconButton(onClick = { viewModel.refresh() }) {
-                    Icon(Icons.Filled.Refresh, "Try Refresh")
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.SpaceAround
+                ) {
+                    IconButton(onClick = { viewModel.refresh() }) {
+                        Icon(Icons.Filled.Refresh, "Try Refresh")
+                    }
+                    Text(text = "Try Refresh")
                 }
             }
         }
