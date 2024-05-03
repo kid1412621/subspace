@@ -31,37 +31,49 @@ android {
         }
     }
 
+    signingConfigs {
+        fun loadProperties(propertiesFile: String): Properties? {
+            val keystorePropertiesFile = rootProject.file(propertiesFile)
+            // skip for test
+            if (keystorePropertiesFile.exists()) {
+                val keystoreProperties = Properties()
+                keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+                return keystoreProperties
+            }
+            return null
+        }
+        create("githubReleaseKey") {
+            loadProperties("keystore.properties")
+                ?.let {
+                    storeFile = rootProject.file(it["storeFile"] as String)
+                    storePassword = it["storePassword"] as String
+                    keyAlias = it["keyAlias"] as String
+                    keyPassword = it["keyPassword"] as String
+                }
+        }
+        create("playUploadKey") {
+            loadProperties("keystore.properties")
+                ?.let {
+                    storeFile = rootProject.file(it["storeFile"] as String)
+                    storePassword = it["storePassword"] as String
+                    keyAlias = it["keyAlias"] as String
+                    keyPassword = it["keyPassword"] as String
+                }
+        }
+    }
+
     flavorDimensions += listOf("distribution")
     productFlavors {
-        val keystorePropertiesFile = rootProject.file("keystore.properties")
-        // skip for test
-        val signKeyExists = keystorePropertiesFile.exists()
-        if (signKeyExists) {
-            val keystoreProperties = Properties()
-            keystoreProperties.load(FileInputStream(keystorePropertiesFile))
-
-            signingConfigs {
-                create("releaseConfig") {
-                    storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
-                    storePassword = keystoreProperties["storePassword"] as String
-                    keyAlias = keystoreProperties["keyAlias"] as String
-                    keyPassword = keystoreProperties["keyPassword"] as String
-                }
-            }
-        }
         create("github") {
             dimension = "distribution"
-            if (signKeyExists) {
-                signingConfig = signingConfigs.getByName("releaseConfig")
-            }
+            signingConfig = signingConfigs.getByName("githubReleaseKey")
         }
         create("play") {
             dimension = "distribution"
-            if (signKeyExists) {
-                signingConfig = signingConfigs.getByName("releaseConfig")
-            }
+            signingConfig = signingConfigs.getByName("playUploadKey")
         }
     }
+
     buildTypes {
         debug {
             isDebuggable = true
@@ -77,6 +89,7 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
