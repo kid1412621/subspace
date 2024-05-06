@@ -6,10 +6,17 @@ on:
       - '*'
 
 jobs:
-  setup:
+  build_release_github:
     environment: production
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - name: set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
       - name: Generate keystore.properties
         run: |
           cat <<EOF > keystore.properties
@@ -21,24 +28,9 @@ jobs:
       - name: Generate keystore.jks
         run: echo "${{ secrets.KEYSTORE_JKS_BASE64 }}" | base64 --decode > keystore.jks
       - name: Generate google-services.json
-        run: echo "${{ secrets.GOOGLE_SERVICES_BASE64 }}" | base64 --decode > google-services.json
-
-  build_release_github:
-    needs: setup
-    environment: production
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: gradle
+        run: echo "${{ secrets.GOOGLE_SERVICES_BASE64 }}" | base64 --decode > app/google-services.json
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
-      - name: Move google-services.json
-        run: mv google-services.json app/
       - name: Build release APK for Github Release
         run: ./gradlew assembleGithub --no-daemon
       - name: Generate release notes
@@ -57,7 +49,6 @@ jobs:
           body: ${{ env.RELEASE_NOTE }}
 
   build_release_play:
-    needs: setup
     environment: production
     runs-on: ubuntu-latest
     steps:
@@ -68,10 +59,20 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
+      - name: Generate keystore.properties
+        run: |
+          cat <<EOF > keystore.properties
+          storeFile:${{ vars.KEYSTORE_STORE_FILE_PATH }}
+          storePassword:${{ secrets.KEYSTORE_STORE_PASSWORD }}
+          keyAlias:${{ secrets.KEYSTORE_KEY_ALIAS }}
+          keyPassword:${{ secrets.KEYSTORE_KEY_PASSWORD }}
+          EOF
+      - name: Generate keystore.jks
+        run: echo "${{ secrets.KEYSTORE_JKS_BASE64 }}" | base64 --decode > keystore.jks
+      - name: Generate google-services.json
+        run: echo "${{ secrets.GOOGLE_SERVICES_BASE64 }}" | base64 --decode > app/google-services.json
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
-      - name: Move google-services.json
-        run: mv google-services.json app/
       - name: Build Release AAB for Google Play
         run: ./gradlew bundlePlay --no-daemon
       - name: Upload AAB
