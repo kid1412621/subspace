@@ -48,7 +48,7 @@ jobs:
           append_body: true
           body: ${{ env.RELEASE_NOTE }}
 
-  build_release_play:
+  build_release_google_play:
     environment: production
     runs-on: ubuntu-latest
     steps:

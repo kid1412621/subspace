@@ -1,3 +1,5 @@
+import com.android.build.api.dsl.ApkSigningConfig
+
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -32,33 +34,28 @@ android {
     }
 
     signingConfigs {
-        fun loadProperties(propertiesFile: String): Properties? {
+        fun buildSignKey(
+            propertiesFile: String,
+            apkSigningConfig: ApkSigningConfig
+        ) {
             val keystorePropertiesFile = rootProject.file(propertiesFile)
             // skip for test
             if (keystorePropertiesFile.exists()) {
                 val keystoreProperties = Properties()
                 keystoreProperties.load(FileInputStream(keystorePropertiesFile))
-                return keystoreProperties
+                keystoreProperties.let {
+                    apkSigningConfig.storeFile = rootProject.file(it["storeFile"] as String)
+                    apkSigningConfig.storePassword = it["storePassword"] as String
+                    apkSigningConfig.keyAlias = it["keyAlias"] as String
+                    apkSigningConfig.keyPassword = it["keyPassword"] as String
+                }
             }
-            return null
         }
         create("githubReleaseKey") {
-            loadProperties("keystore.properties")
-                ?.let {
-                    storeFile = rootProject.file(it["storeFile"] as String)
-                    storePassword = it["storePassword"] as String
-                    keyAlias = it["keyAlias"] as String
-                    keyPassword = it["keyPassword"] as String
-                }
+            buildSignKey("keystore.properties", this)
         }
         create("playUploadKey") {
-            loadProperties("keystore.properties")
-                ?.let {
-                    storeFile = rootProject.file(it["storeFile"] as String)
-                    storePassword = it["storePassword"] as String
-                    keyAlias = it["keyAlias"] as String
-                    keyPassword = it["keyPassword"] as String
-                }
+            buildSignKey("keystore.properties", this)
         }
     }
 
