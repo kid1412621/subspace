@@ -90,6 +90,14 @@ android {
         }
     }
 
+    androidComponents {
+        onVariants { variant ->
+            val googleTask =
+                tasks.findByName("process${variant.name.replaceFirstChar(Char::uppercase)}GoogleServices")
+            googleTask?.enabled = "debug" != variant.buildType
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

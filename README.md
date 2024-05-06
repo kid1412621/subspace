@@ -19,13 +19,6 @@ cat << EOF > app/google-services.json
         "android_client_info": { "package_name": "me.nanova.subspace" }
       },
       "api_key": [{"current_key": "key"}]
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "app-id",
-        "android_client_info": { "package_name": "me.nanova.subspace.debug" }
-      },
-      "api_key": [{"current_key": "key"}]
     }
   ]
 }
