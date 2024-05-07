@@ -33,12 +33,12 @@ android {
         }
     }
 
-    val isProdReleaseCI = System.getenv("PROD_RELEASE_CI")?.toBoolean() ?: false
+    val isProdRelease = System.getenv("PROD_RELEASE")?.toBoolean() ?: false
 
     signingConfigs {
         fun buildSignConfig(apkSigningConfig: ApkSigningConfig) {
             val keystorePropertiesFile = rootProject.file("keystore.properties")
-            if (isProdReleaseCI) {
+            if (isProdRelease) {
                 val keystoreProperties = Properties()
                 keystoreProperties.load(FileInputStream(keystorePropertiesFile))
                 keystoreProperties.let {
@@ -89,7 +89,7 @@ android {
         onVariants { variant ->
             val googleTask =
                 tasks.findByName("process${variant.name.replaceFirstChar(Char::uppercase)}GoogleServices")
-            googleTask?.enabled = isProdReleaseCI && "debug" != variant.buildType
+            googleTask?.enabled = isProdRelease && "debug" != variant.buildType
         }
     }
 
