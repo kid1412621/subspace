@@ -48,7 +48,7 @@ jobs:
       - name: Publish APK on Github Release
         uses: softprops/action-gh-release@v2
         with:
-          files: app/build/outputs/apk/$FLAVOR/release/app-$FLAVOR-release.apk
+          files: app/build/outputs/apk/${{ env.FLAVOR }}/release/app-${{ env.FLAVOR }}-release.apk
           generate_release_notes: true
           append_body: true
           body: ${{ env.RELEASE_NOTE }}
@@ -86,5 +86,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: subspace
-          path: app/build/outputs/apk/$FLAVOR/release/app-$FLAVOR-release.aab
+          path: app/build/outputs/apk/${{ env.FLAVOR }}/release/app-${{ env.FLAVOR }}-release.aab
 
