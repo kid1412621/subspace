@@ -5,6 +5,9 @@ on:
     tags:
       - '*'
 
+env:
+  PROD_RELEASE_CI: true
+
 jobs:
   build_release_github:
     environment: production

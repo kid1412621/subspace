@@ -33,14 +33,12 @@ android {
         }
     }
 
+    val isProdReleaseCI = System.getenv("PROD_RELEASE_CI")?.toBoolean() ?: false
+
     signingConfigs {
-        fun buildSignKey(
-            propertiesFile: String,
-            apkSigningConfig: ApkSigningConfig
-        ) {
-            val keystorePropertiesFile = rootProject.file(propertiesFile)
-            // skip for test
-            if (keystorePropertiesFile.exists()) {
+        fun buildSignConfig(apkSigningConfig: ApkSigningConfig) {
+            val keystorePropertiesFile = rootProject.file("keystore.properties")
+            if (isProdReleaseCI) {
                 val keystoreProperties = Properties()
                 keystoreProperties.load(FileInputStream(keystorePropertiesFile))
                 keystoreProperties.let {
@@ -52,10 +50,10 @@ android {
             }
         }
         create("githubReleaseKey") {
-            buildSignKey("keystore.properties", this)
+            buildSignConfig(this)
         }
         create("playUploadKey") {
-            buildSignKey("keystore.properties", this)
+            buildSignConfig(this)
         }
     }
 
@@ -91,7 +89,7 @@ android {
         onVariants { variant ->
             val googleTask =
                 tasks.findByName("process${variant.name.replaceFirstChar(Char::uppercase)}GoogleServices")
-            googleTask?.enabled = "debug" != variant.buildType
+            googleTask?.enabled = isProdReleaseCI && "debug" != variant.buildType
         }
     }
 
@@ -171,7 +169,7 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     // firebase
-    implementation(platform("com.google.firebase:firebase-bom:32.8.1"))
+    implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
     implementation("com.google.firebase:firebase-crashlytics")
     implementation("com.google.firebase:firebase-analytics")
 
