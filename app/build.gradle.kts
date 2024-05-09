@@ -15,8 +15,6 @@ kotlin {
     jvmToolchain(17)
 }
 
-val isProdRelease = System.getenv("PROD_RELEASE")?.toBoolean() ?: false
-
 android {
     namespace = "me.nanova.subspace"
     compileSdk = 34
@@ -39,7 +37,7 @@ android {
         val keystoreDir = "keystore"
         fun buildSignConfig(keyStoreFile: String, apkSigningConfig: ApkSigningConfig) {
             val keystorePropertiesFile = rootProject.file(keyStoreFile)
-            if (isProdRelease) {
+            if (keystorePropertiesFile.exists()) {
                 val keystoreProperties = Properties()
                 keystoreProperties.load(FileInputStream(keystorePropertiesFile))
                 keystoreProperties.let {
@@ -106,11 +104,13 @@ android {
 }
 
 androidComponents {
+    val isCITest = System.getenv("CI_TEST")?.toBoolean() ?: false
+
     onVariants { variant ->
         // disable google service on non-prod build
         val googleTask =
             tasks.findByName("process${variant.name.replaceFirstChar(Char::uppercase)}GoogleServices")
-        googleTask?.enabled = isProdRelease && "debug" != variant.buildType
+        googleTask?.enabled = !isCITest && "release" == variant.buildType
     }
 }
 
