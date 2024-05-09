@@ -12,6 +12,7 @@ jobs:
   build_release_github:
     environment: production
     env:
+      KEYSTORE_DIR: keystore
       FLAVOR: github
     runs-on: ubuntu-latest
     steps:
@@ -24,20 +25,20 @@ jobs:
           cache: gradle
       - name: Generate keystore.properties
         run: |
-          cat <<EOF > keystore.properties
+          mkdir -p ${{ env.KEYSTORE_DIR }} && cat << EOF > "${{ env.KEYSTORE_DIR }}/${{ env.FLAVOR }}.properties"
           storeFile:${{ vars.GH_KEYSTORE_STORE_FILE_PATH }}
           storePassword:${{ secrets.GH_KEYSTORE_STORE_PASSWORD }}
           keyAlias:${{ secrets.GH_KEYSTORE_KEY_ALIAS }}
           keyPassword:${{ secrets.GH_KEYSTORE_KEY_PASSWORD }}
           EOF
       - name: Generate keystore.jks
-        run: echo "${{ secrets.GH_KEYSTORE_JKS_BASE64 }}" | base64 --decode > ${{ vars.GH_KEYSTORE_STORE_FILE_PATH }}
+        run: echo "${{ secrets.GH_KEYSTORE_JKS_BASE64 }}" | base64 --decode > "${{ env.KEYSTORE_DIR }}/${{ vars.GH_KEYSTORE_STORE_FILE_PATH }}"
       - name: Generate google-services.json
         run: echo "${{ secrets.GOOGLE_SERVICES_BASE64 }}" | base64 --decode > app/google-services.json
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Build release APK for Github Release
-        run: ./gradlew assembleGithub --no-daemon
+        run: ./gradlew assembleGithubRelease --no-daemon
       - name: Generate release notes
         run: |
           {
@@ -48,7 +49,7 @@ jobs:
       - name: Publish APK on Github Release
         uses: softprops/action-gh-release@v2
         with:
-          files: app/build/outputs/apk/${{ env.FLAVOR }}/release/app-${{ env.FLAVOR }}-release.apk
+          files: app/build/outputs/apk/${{ env.FLAVOR }}/release/*.apk
           generate_release_notes: true
           append_body: true
           body: ${{ env.RELEASE_NOTE }}
@@ -56,6 +57,7 @@ jobs:
   build_release_google_play:
     environment: production
     env:
+      KEYSTORE_DIR: keystore
       FLAVOR: play
     runs-on: ubuntu-latest
     steps:
@@ -68,23 +70,23 @@ jobs:
           cache: gradle
       - name: Generate keystore.properties
         run: |
-          cat <<EOF > keystore.properties
+          mkdir -p ${{ env.KEYSTORE_DIR }} && cat << EOF > "${{ env.KEYSTORE_DIR }}/${{ env.FLAVOR }}.properties"
           storeFile:${{ vars.PLAY_KEYSTORE_STORE_FILE_PATH }}
           storePassword:${{ secrets.PLAY_KEYSTORE_STORE_PASSWORD }}
           keyAlias:${{ secrets.PLAY_KEYSTORE_KEY_ALIAS }}
           keyPassword:${{ secrets.PLAY_KEYSTORE_KEY_PASSWORD }}
           EOF
       - name: Generate keystore.jks
-        run: echo "${{ secrets.PLAY_KEYSTORE_JKS_BASE64 }}" | base64 --decode > ${{ vars.PLAY_KEYSTORE_STORE_FILE_PATH }}
+        run: echo "${{ secrets.PLAY_KEYSTORE_JKS_BASE64 }}" | base64 --decode > "${{ env.KEYSTORE_DIR }}/${{ vars.PLAY_KEYSTORE_STORE_FILE_PATH }}"
       - name: Generate google-services.json
         run: echo "${{ secrets.GOOGLE_SERVICES_BASE64 }}" | base64 --decode > app/google-services.json
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Build Release AAB for Google Play
-        run: ./gradlew bundlePlay --no-daemon
+        run: ./gradlew bundlePlayRelease --no-daemon
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: subspace
-          path: app/build/outputs/bundle/${{ env.FLAVOR }}Release/app-${{ env.FLAVOR }}-release.aab
+          path: app/build/outputs/bundle/${{ env.FLAVOR }}Release/*.aab
 

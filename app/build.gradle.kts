@@ -1,5 +1,4 @@
 import com.android.build.api.dsl.ApkSigningConfig
-
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -16,6 +15,8 @@ kotlin {
     jvmToolchain(17)
 }
 
+val isProdRelease = System.getenv("PROD_RELEASE")?.toBoolean() ?: false
+
 android {
     namespace = "me.nanova.subspace"
     compileSdk = 34
@@ -26,6 +27,7 @@ android {
         targetSdk = 34
         versionCode = 8
         versionName = "0.2.1"
+        setProperty("archivesBaseName", "subspace-v${versionName}(${versionCode})")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -33,27 +35,27 @@ android {
         }
     }
 
-    val isProdRelease = System.getenv("PROD_RELEASE")?.toBoolean() ?: false
-
     signingConfigs {
-        fun buildSignConfig(apkSigningConfig: ApkSigningConfig) {
-            val keystorePropertiesFile = rootProject.file("keystore.properties")
+        val keystoreDir = "keystore"
+        fun buildSignConfig(keyStoreFile: String, apkSigningConfig: ApkSigningConfig) {
+            val keystorePropertiesFile = rootProject.file(keyStoreFile)
             if (isProdRelease) {
                 val keystoreProperties = Properties()
                 keystoreProperties.load(FileInputStream(keystorePropertiesFile))
                 keystoreProperties.let {
-                    apkSigningConfig.storeFile = rootProject.file(it["storeFile"] as String)
+                    apkSigningConfig.storeFile =
+                        rootProject.file("${keystoreDir}/${it["storeFile"] as String}")
                     apkSigningConfig.storePassword = it["storePassword"] as String
                     apkSigningConfig.keyAlias = it["keyAlias"] as String
                     apkSigningConfig.keyPassword = it["keyPassword"] as String
                 }
             }
         }
-        create("githubReleaseKey") {
-            buildSignConfig(this)
+        create("github") {
+            buildSignConfig("${keystoreDir}/${name}.properties", this)
         }
-        create("playUploadKey") {
-            buildSignConfig(this)
+        create("play") {
+            buildSignConfig("${keystoreDir}/${name}.properties", this)
         }
     }
 
@@ -61,11 +63,11 @@ android {
     productFlavors {
         create("github") {
             dimension = "distribution"
-            signingConfig = signingConfigs.getByName("githubReleaseKey")
+            signingConfig = signingConfigs.getByName(name)
         }
         create("play") {
             dimension = "distribution"
-            signingConfig = signingConfigs.getByName("playUploadKey")
+            signingConfig = signingConfigs.getByName(name)
         }
     }
 
@@ -85,14 +87,6 @@ android {
         }
     }
 
-    androidComponents {
-        onVariants { variant ->
-            val googleTask =
-                tasks.findByName("process${variant.name.replaceFirstChar(Char::uppercase)}GoogleServices")
-            googleTask?.enabled = isProdRelease && "debug" != variant.buildType
-        }
-    }
-
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -108,6 +102,15 @@ android {
     composeOptions {
         // https://developer.android.com/jetpack/androidx/releases/compose-kotlin#pre-release_kotlin_compatibility
         kotlinCompilerExtensionVersion = "1.5.13"
+    }
+}
+
+androidComponents {
+    onVariants { variant ->
+        // disable google service on non-prod build
+        val googleTask =
+            tasks.findByName("process${variant.name.replaceFirstChar(Char::uppercase)}GoogleServices")
+        googleTask?.enabled = isProdRelease && "debug" != variant.buildType
     }
 }
 
