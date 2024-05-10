@@ -90,7 +90,7 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
           packageName: me.nanova.subspace
           releaseFiles: app/build/outputs/bundle/${{ env.FLAVOR }}Release/*.aab
-          track: qa
+          track: internal
 #          track: production
 #          status: inProgress
 #          whatsNewDirectory: distribution/whatsnew
