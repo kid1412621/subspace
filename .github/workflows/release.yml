@@ -79,9 +79,18 @@ jobs:
         run: echo "${{ secrets.GOOGLE_SERVICES_BASE64 }}" | base64 --decode > app/google-services.json
       - name: Build Release AAB for Google Play
         run: ./gradlew bundlePlayRelease --no-daemon
-      - name: Upload AAB
-        uses: actions/upload-artifact@v4
+#      - name: Upload AAB
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: subspace.aab
+#          path: app/build/outputs/bundle/${{ env.FLAVOR }}Release/*.aab
+      - name: Release to Google Play
+        uses: r0adkll/upload-google-play@v1
         with:
-          name: subspace.aab
-          path: app/build/outputs/bundle/${{ env.FLAVOR }}Release/*.aab
-
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          packageName: me.nanova.subspace
+          releaseFiles: app/build/outputs/bundle/${{ env.FLAVOR }}Release/*.aab
+          track: qa
+#          track: production
+#          status: inProgress
+#          whatsNewDirectory: distribution/whatsnew
