@@ -25,7 +25,7 @@ android {
         targetSdk = 34
         versionCode = 8
         versionName = "0.2.1"
-        setProperty("archivesBaseName", "subspace-v${versionName}(${versionCode})")
+        setProperty("archivesBaseName", "subspace-v${versionName}-${versionCode}")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -185,8 +185,4 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-}
-
-task("printVersion") {
-    println("v" + android.defaultConfig.versionName + "(" + android.defaultConfig.versionCode + ")")
 }
