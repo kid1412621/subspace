@@ -2,7 +2,15 @@
 
 # Project setup
 
-1. Add a dummy google-services.json to app directory:
+## Local Dev
+
+TBD
+
+## Build Release
+
+1. Provide an env var: `export PROD_RELEASE=true`;
+
+2. Add `google-services.json` to app directory:
 
 ```bash
 cat << EOF > app/google-services.json
@@ -19,26 +27,27 @@ cat << EOF > app/google-services.json
         "android_client_info": { "package_name": "me.nanova.subspace" }
       },
       "api_key": [{"current_key": "key"}]
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "app-id",
-        "android_client_info": { "package_name": "me.nanova.subspace.debug" }
-      },
-      "api_key": [{"current_key": "key"}]
     }
   ]
 }
 EOF
 ```
 
-2. Add a dummy keystore.properties to project root directory:
+3. Create `keystore.jks` and `keystore.properties` to project root directory:
+
+keystore.jks:
+
+```bash
+keytool -genkey -v -keystore keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias my-alias 
+```
+
+keystore.properties:
 
 ```bash
 cat << EOF > keystore.properties
 storeFile:keystore.jks
 storePassword:fake-password
-keyAlias:fake-key-alias
+keyAlias:my-alias
 keyPassword:fake-password
 EOF
 ```

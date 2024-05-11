@@ -1,3 +1,4 @@
+import com.android.build.api.dsl.ApkSigningConfig
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -24,6 +25,7 @@ android {
         targetSdk = 34
         versionCode = 8
         versionName = "0.2.1"
+        setProperty("archivesBaseName", "subspace-v${versionName}-${versionCode}")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -31,37 +33,42 @@ android {
         }
     }
 
-    flavorDimensions += listOf("distribution")
-    productFlavors {
-        val keystorePropertiesFile = rootProject.file("keystore.properties")
-        // skip for test
-        val signKeyExists = keystorePropertiesFile.exists()
-        if (signKeyExists) {
-            val keystoreProperties = Properties()
-            keystoreProperties.load(FileInputStream(keystorePropertiesFile))
-
-            signingConfigs {
-                create("releaseConfig") {
-                    storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
-                    storePassword = keystoreProperties["storePassword"] as String
-                    keyAlias = keystoreProperties["keyAlias"] as String
-                    keyPassword = keystoreProperties["keyPassword"] as String
+    signingConfigs {
+        val keystoreDir = "keystore"
+        fun buildSignConfig(keyStoreFile: String, apkSigningConfig: ApkSigningConfig) {
+            val keystorePropertiesFile = rootProject.file(keyStoreFile)
+            if (keystorePropertiesFile.exists()) {
+                val keystoreProperties = Properties()
+                keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+                keystoreProperties.let {
+                    apkSigningConfig.storeFile =
+                        rootProject.file("${keystoreDir}/${it["storeFile"] as String}")
+                    apkSigningConfig.storePassword = it["storePassword"] as String
+                    apkSigningConfig.keyAlias = it["keyAlias"] as String
+                    apkSigningConfig.keyPassword = it["keyPassword"] as String
                 }
             }
         }
         create("github") {
+            buildSignConfig("${keystoreDir}/${name}.properties", this)
+        }
+        create("play") {
+            buildSignConfig("${keystoreDir}/${name}.properties", this)
+        }
+    }
+
+    flavorDimensions += listOf("distribution")
+    productFlavors {
+        create("github") {
             dimension = "distribution"
-            if (signKeyExists) {
-                signingConfig = signingConfigs.getByName("releaseConfig")
-            }
+            signingConfig = signingConfigs.getByName(name)
         }
         create("play") {
             dimension = "distribution"
-            if (signKeyExists) {
-                signingConfig = signingConfigs.getByName("releaseConfig")
-            }
+            signingConfig = signingConfigs.getByName(name)
         }
     }
+
     buildTypes {
         debug {
             isDebuggable = true
@@ -77,6 +84,7 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -92,6 +100,17 @@ android {
     composeOptions {
         // https://developer.android.com/jetpack/androidx/releases/compose-kotlin#pre-release_kotlin_compatibility
         kotlinCompilerExtensionVersion = "1.5.13"
+    }
+}
+
+androidComponents {
+    val isCITest = System.getenv("CI_TEST")?.toBoolean() ?: false
+
+    onVariants { variant ->
+        // disable google service on non-prod build
+        val googleTask =
+            tasks.findByName("process${variant.name.replaceFirstChar(Char::uppercase)}GoogleServices")
+        googleTask?.enabled = !isCITest && "release" == variant.buildType
     }
 }
 
@@ -153,7 +172,7 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     // firebase
-    implementation(platform("com.google.firebase:firebase-bom:32.8.1"))
+    implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
     implementation("com.google.firebase:firebase-crashlytics")
     implementation("com.google.firebase:firebase-analytics")
 
@@ -166,8 +185,4 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-}
-
-task("printVersion") {
-    println("v" + android.defaultConfig.versionName + "(" + android.defaultConfig.versionCode + ")")
 }
