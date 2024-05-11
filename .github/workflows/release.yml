@@ -77,20 +77,20 @@ jobs:
         run: echo "${{ secrets.PLAY_KEYSTORE_JKS_BASE64 }}" | base64 --decode > "${{ env.KEYSTORE_DIR }}/${{ vars.PLAY_KEYSTORE_STORE_FILE_PATH }}"
       - name: Generate google-services.json
         run: echo "${{ secrets.GOOGLE_SERVICES_BASE64 }}" | base64 --decode > app/google-services.json
+      - name: Generate release notes
+        run: |
+          mkdir -p whatsnew &&
+          {
+            awk -v version="${{ github.ref_name }}" '($0 ~ "^## " version "($|[[:space:]])") {p=1;next} /^## / {p=0} p && NF' CHANGELOG.md
+          } > whatsnew/whatsnew-en-US
       - name: Build Release AAB for Google Play
         run: ./gradlew bundlePlayRelease --no-daemon
-#      - name: Upload AAB
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: subspace.aab
-#          path: app/build/outputs/bundle/${{ env.FLAVOR }}Release/*.aab
       - name: Release to Google Play
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
           packageName: me.nanova.subspace
           releaseFiles: app/build/outputs/bundle/${{ env.FLAVOR }}Release/*.aab
+          # production,beta,alpha,internal
           track: internal
-#          track: production
-#          status: inProgress
-#          whatsNewDirectory: distribution/whatsnew
+          whatsNewDirectory: whatsnew
