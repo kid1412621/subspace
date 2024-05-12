@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import me.nanova.subspace.domain.model.Account
+import me.nanova.subspace.domain.model.Categories
 import me.nanova.subspace.domain.model.QTListParams
 import me.nanova.subspace.domain.model.Torrent
 import me.nanova.subspace.domain.repo.AccountRepo
@@ -31,6 +32,8 @@ data class HomeUiState(
     val state: CallState = CallState.Loading,
     var error: String? = null,
     val data: List<Torrent> = emptyList(),
+    val tags: List<String> = emptyList(),
+    val categories: Map<String, Categories> = emptyMap(),
     val filter: QTListParams = QTListParams()
 )
 
@@ -58,6 +61,8 @@ class HomeViewModel @Inject constructor(
                 .filter { it == CallState.Loading }
                 .collectLatest {
                     loadData()
+                    loadTags()
+                    loadCategories()
                 }
         }
 
@@ -96,6 +101,32 @@ class HomeViewModel @Inject constructor(
                         } finally {
                             isRefreshing = false
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun loadTags() {
+        viewModelScope.launch {
+            currentAccount.distinctUntilChanged().collect { id ->
+                id?.let {
+                    _homeUiState.update {
+                        val list = torrentRepo.tags()
+                        it.copy(tags = list)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun loadCategories() {
+        viewModelScope.launch {
+            currentAccount.distinctUntilChanged().collect { id ->
+                id?.let {
+                    _homeUiState.update {
+                        val list = torrentRepo.categories()
+                        it.copy(categories = list)
                     }
                 }
             }

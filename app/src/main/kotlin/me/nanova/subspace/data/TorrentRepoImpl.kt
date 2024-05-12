@@ -3,6 +3,7 @@ package me.nanova.subspace.data
 import kotlinx.coroutines.flow.map
 import me.nanova.subspace.data.api.QTApiService
 import me.nanova.subspace.data.db.TorrentDao
+import me.nanova.subspace.domain.model.Categories
 import me.nanova.subspace.domain.model.QTListParams
 import me.nanova.subspace.domain.model.Torrent
 import me.nanova.subspace.domain.model.toEntity
@@ -22,18 +23,18 @@ class TorrentRepoImpl @Inject constructor(
         torrentDao.getAll().map { model -> model.map { it.toModel() } }
 
 
-    override suspend fun refresh(params: Map<String, String?>) {
-        val list = apiService.get().getTorrents(params)
-        storage.currentAccountId.collect { id ->
-            val copy = list.map {
-                it.toEntity(id ?: throw RuntimeException("no current account"))
-            }
-            torrentDao.insertAll(copy)
-        }
-    }
+//    override suspend fun refresh(params: Map<String, String?>) {
+//        val list = apiService.get().torrents(params)
+//        storage.currentAccountId.collect { id ->
+//            val copy = list.map {
+//                it.toEntity(id ?: throw RuntimeException("no current account"))
+//            }
+//            torrentDao.insertAll(copy)
+//        }
+//    }
 
     override suspend fun fetch(params: QTListParams): List<Torrent> {
-        val list = apiService.get().list(params.toMap())
+        val list = apiService.get().torrents(params.toMap())
 
 //        storage.currentAccountId.collect { id ->
 //            val copy = list.map {
@@ -42,6 +43,14 @@ class TorrentRepoImpl @Inject constructor(
 //            torrentDao.insertAll(copy)
 //        }
         return list
+    }
+
+    override suspend fun tags(): List<String> {
+        return apiService.get().tags()
+    }
+
+    override suspend fun categories(): Map<String, Categories> {
+        return apiService.get().categories()
     }
 }
 

@@ -1,13 +1,17 @@
 package me.nanova.subspace.domain.repo
 
 import kotlinx.coroutines.flow.Flow
+import me.nanova.subspace.domain.model.Categories
 import me.nanova.subspace.domain.model.QTListParams
 import me.nanova.subspace.domain.model.Torrent
 
 interface TorrentRepo {
     suspend fun apiVersion(): String
     fun torrents(): Flow<List<Torrent>>
-    suspend fun refresh(params: Map<String, String?>)
+
+    //    suspend fun refresh(params: Map<String, String?>)
     suspend fun fetch(params: QTListParams): List<Torrent>
+    suspend fun tags(): List<String>
+    suspend fun categories(): Map<String, Categories>
 }
 

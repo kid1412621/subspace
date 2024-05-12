@@ -3,6 +3,7 @@ package me.nanova.subspace.ui.page
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -170,6 +171,26 @@ private fun BottomBar(
                 },
                 sheetState = sheetState
             ) {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(text = "Status")
+                    }
+                    Column {
+                        Text(text = "Categories")
+                        uiState.categories.forEach {
+                            Text(text = it.key)
+                        }
+                    }
+                    Column {
+                        Text(text = "Tags")
+                        uiState.tags.forEach {
+                            Text(text = it)
+                        }
+                    }
+                }
                 Button(onClick = {
                     scope.launch { sheetState.hide() }
                         .invokeOnCompletion {
