@@ -4,6 +4,8 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -28,6 +30,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import me.nanova.subspace.ui.vm.CallState
 import me.nanova.subspace.ui.vm.HomeViewModel
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -61,12 +67,18 @@ fun TorrentList(
                             )
                         },
                         supportingContent = {
-                            Column {
-                                Text(
-                                    it.addedOn.toString(),
-                                    maxLines = 1
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                LinearProgressIndicator(
+                                    progress = { it.progress },
+                                    modifier = Modifier
+                                        .padding(0.dp, 10.dp)
+                                        .fillMaxWidth()
                                 )
-                                LinearProgressIndicator(progress = { it.progress })
+                                Text(
+                                    formatUnixTimestamp(it.addedOn),
+                                    maxLines = 1,
+                                    modifier = Modifier.align(Alignment.End)
+                                )
                             }
                         },
                         leadingContent = {
@@ -75,7 +87,7 @@ fun TorrentList(
                                 contentDescription = it.state,
                             )
                         },
-                        trailingContent = { Text(it.state) }
+//                        trailingContent = { Text(it.state) }
                     )
 
                     HorizontalDivider()
@@ -104,4 +116,11 @@ fun TorrentList(
         }
 
     }
+}
+
+fun formatUnixTimestamp(unixTimestamp: Long, pattern: String = "yyyy-MM-dd HH:mm:ss"): String {
+    val instant = Instant.ofEpochSecond(unixTimestamp)
+    val localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
+    val formatter = DateTimeFormatter.ofPattern(pattern)
+    return localDateTime.format(formatter)
 }

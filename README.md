@@ -8,9 +8,7 @@ TBD
 
 ## Build Release
 
-1. Provide an env var: `export PROD_RELEASE=true`;
-
-2. Add `google-services.json` to app directory:
+1. Add `google-services.json` to app directory:
 
 ```bash
 cat << EOF > app/google-services.json
@@ -33,7 +31,7 @@ cat << EOF > app/google-services.json
 EOF
 ```
 
-3. Create `keystore.jks` and `keystore.properties` to project root directory:
+2. Create `keystore.jks` and `keystore.properties` to project root directory:
 
 keystore.jks:
 

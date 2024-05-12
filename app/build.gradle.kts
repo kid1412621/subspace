@@ -23,8 +23,8 @@ android {
         applicationId = "me.nanova.subspace"
         minSdk = 29
         targetSdk = 34
-        versionCode = 8
-        versionName = "0.2.1"
+        versionCode = 9
+        versionName = "0.2.2"
         setProperty("archivesBaseName", "subspace-v${versionName}-${versionCode}")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
