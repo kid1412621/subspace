@@ -18,13 +18,13 @@ data class TorrentDB(
     val state: String,
     val category: String?,
 )
-fun TorrentDB.toModel() = Torrent(
-    hash = this.hash,
-    name = this.name,
-    addedOn = this.addedOn,
-    size = this.size,
-    progress = this.progress,
-    eta = this.eta,
-    state = this.state,
-    category = this.category
-)
+//fun TorrentDB.toModel() = Torrent(
+//    hash = this.hash,
+//    name = this.name,
+//    addedOn = this.addedOn,
+//    size = this.size,
+//    progress = this.progress,
+//    eta = this.eta,
+//    state = this.state,
+//    category = this.category,
+//)

@@ -6,7 +6,6 @@ import me.nanova.subspace.data.db.TorrentDao
 import me.nanova.subspace.domain.model.QTListParams
 import me.nanova.subspace.domain.model.Torrent
 import me.nanova.subspace.domain.model.toEntity
-import me.nanova.subspace.domain.model.toModel
 import me.nanova.subspace.domain.repo.TorrentRepo
 import javax.inject.Inject
 import javax.inject.Provider
@@ -18,8 +17,8 @@ class TorrentRepoImpl @Inject constructor(
 ) : TorrentRepo {
     override suspend fun apiVersion() = apiService.get().version()
 
-    override fun torrents() =
-        torrentDao.getAll().map { model -> model.map { it.toModel() } }
+//    override fun torrents() =
+//        torrentDao.getAll().map { model -> model.map { it.toModel() } }
 
 
     override suspend fun refresh(params: Map<String, String?>) {

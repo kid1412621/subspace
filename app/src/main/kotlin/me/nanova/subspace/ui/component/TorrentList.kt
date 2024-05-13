@@ -1,6 +1,5 @@
 package me.nanova.subspace.ui.component
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,7 +26,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import me.nanova.subspace.domain.model.Torrent
 import me.nanova.subspace.ui.vm.CallState
 import me.nanova.subspace.ui.vm.HomeViewModel
 import java.time.Instant
@@ -36,7 +37,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 fun TorrentList(
     viewModel: HomeViewModel,
 ) {
@@ -56,38 +57,9 @@ fun TorrentList(
                     uiState.data,
                     key = { it.hash }
                 ) {
-                    ListItem(
-                        modifier = Modifier.animateItemPlacement(),
-                        headlineContent = {
-                            Text(
-                                it.name,
-                                minLines = 1,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        },
-                        supportingContent = {
-                            Column(modifier = Modifier.fillMaxWidth()) {
-                                LinearProgressIndicator(
-                                    progress = { it.progress },
-                                    modifier = Modifier
-                                        .padding(0.dp, 10.dp)
-                                        .fillMaxWidth()
-                                )
-                                Text(
-                                    formatUnixTimestamp(it.addedOn),
-                                    maxLines = 1,
-                                    modifier = Modifier.align(Alignment.End)
-                                )
-                            }
-                        },
-                        leadingContent = {
-                            Icon(
-                                Icons.Filled.Downloading,
-                                contentDescription = it.state,
-                            )
-                        },
-//                        trailingContent = { Text(it.state) }
+                    TorrentItem(
+                        modifier = Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
+                        torrent = it
                     )
 
                     HorizontalDivider()
@@ -118,9 +90,69 @@ fun TorrentList(
     }
 }
 
+@Composable
+private fun TorrentItem(modifier: Modifier = Modifier, torrent: Torrent) {
+    ListItem(
+        modifier = modifier,
+        headlineContent = {
+            Text(
+                torrent.name,
+                minLines = 1,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
+        supportingContent = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                LinearProgressIndicator(
+                    progress = { torrent.progress },
+                    modifier = Modifier
+                        .padding(0.dp, 10.dp)
+                        .fillMaxWidth()
+                )
+                Text(
+                    formatUnixTimestamp(torrent.addedOn),
+                    maxLines = 1,
+                    modifier = Modifier.align(Alignment.End)
+                )
+            }
+        },
+        leadingContent = {
+            Icon(
+                Icons.Filled.Downloading,
+                contentDescription = torrent.state,
+            )
+        },
+//                        trailingContent = { Text(it.state) }
+    )
+}
+
 fun formatUnixTimestamp(unixTimestamp: Long, pattern: String = "yyyy-MM-dd HH:mm:ss"): String {
     val instant = Instant.ofEpochSecond(unixTimestamp)
     val localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
     val formatter = DateTimeFormatter.ofPattern(pattern)
     return localDateTime.format(formatter)
+}
+
+@Composable
+@Preview
+fun TorrentItemPrev() {
+    TorrentItem(
+        torrent = Torrent(
+            hash = "0ac61951b580afec2ca492abe4d5dbc1c5eb64e9",
+            name = "Longgggggggggggggggggggggggggg name",
+            addedOn = 1709410233,
+            size = 13453865673,
+            progress = 0.9F,
+            eta = 8640000,
+            state = "pausedUP",
+            category = "movie",
+            tags = "",
+            dlspeed = 0,
+            downloaded = 13518276228,
+            upspeed = 145201,
+            uploaded = 21363476930,
+            ratio = 1.5803403F
+        )
+    )
 }

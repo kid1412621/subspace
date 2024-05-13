@@ -8,7 +8,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import me.nanova.subspace.domain.QtCookieInterceptor
+import me.nanova.subspace.data.api.QtCookieInterceptor
 import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.domain.repo.AccountRepo
 import okhttp3.OkHttpClient

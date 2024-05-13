@@ -1,4 +1,4 @@
-package me.nanova.subspace.domain
+package me.nanova.subspace.data.api
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import me.nanova.subspace.data.Storage
-import me.nanova.subspace.data.api.QTAuthService
 import me.nanova.subspace.domain.repo.AccountRepo
 import okhttp3.Interceptor
 import retrofit2.Retrofit

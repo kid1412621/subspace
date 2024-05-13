@@ -6,7 +6,7 @@ import me.nanova.subspace.domain.model.Torrent
 
 interface TorrentRepo {
     suspend fun apiVersion(): String
-    fun torrents(): Flow<List<Torrent>>
+//    fun torrents(): Flow<List<Torrent>>
     suspend fun refresh(params: Map<String, String?>)
     suspend fun fetch(params: QTListParams): List<Torrent>
 }

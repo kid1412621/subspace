@@ -8,10 +8,18 @@ data class Torrent(
     @Json(name = "added_on")
     val addedOn: Long,
     val size: Long,
+    val downloaded: Long,
+    val uploaded: Long,
     val progress: Float,
     val eta: Long,
     val state: String,
     val category: String?,
+    // comma-concatenated tag list of the torrent
+    val tags: String?,
+    // bytes/s
+    val dlspeed: Int,
+    val upspeed: Int,
+    val ratio: Float,
 )
 
 fun Torrent.toEntity(id: Long) = TorrentDB(
