@@ -5,7 +5,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -57,7 +59,7 @@ class HomeViewModel @Inject constructor(
                 .distinctUntilChanged()
                 .filter { it == CallState.Loading }
                 .collectLatest {
-                    loadData()
+//                    load()
                 }
         }
 
@@ -77,6 +79,10 @@ class HomeViewModel @Inject constructor(
 
     fun refresh() {
         _homeUiState.update { it.copy(state = CallState.Loading) }
+    }
+
+    fun load(): Flow<PagingData<Torrent>> {
+        return torrentRepo.torrents()
     }
 
     private fun loadData() {

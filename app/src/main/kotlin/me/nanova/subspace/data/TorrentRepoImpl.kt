@@ -1,8 +1,12 @@
 package me.nanova.subspace.data
 
-import kotlinx.coroutines.flow.map
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import kotlinx.coroutines.flow.Flow
 import me.nanova.subspace.data.api.QTApiService
 import me.nanova.subspace.data.db.TorrentDao
+import me.nanova.subspace.domain.TorrentPagingSource
 import me.nanova.subspace.domain.model.QTListParams
 import me.nanova.subspace.domain.model.Torrent
 import me.nanova.subspace.domain.model.toEntity
@@ -17,7 +21,20 @@ class TorrentRepoImpl @Inject constructor(
 ) : TorrentRepo {
     override suspend fun apiVersion() = apiService.get().version()
 
-//    override fun torrents() =
+    override fun torrents(): Flow<PagingData<Torrent>> {
+        return Pager(
+            config = PagingConfig(pageSize = PAGE_SIZE, enablePlaceholders = true),
+            pagingSourceFactory = { TorrentPagingSource(apiService) }
+        ).flow
+//            .cachedIn(viewModelScope)
+    }
+
+    companion object {
+        private const val PAGE_SIZE = 20
+    }
+
+    override fun torrents(params: QTListParams) =
+        apiService.get().flow(params.toMap())
 //        torrentDao.getAll().map { model -> model.map { it.toModel() } }
 
 

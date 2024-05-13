@@ -10,14 +10,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Downloading
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Timelapse
 import androidx.compose.material.icons.outlined.Update
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -38,6 +39,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.paging.LoadState
+import androidx.paging.compose.collectAsLazyPagingItems
 import me.nanova.subspace.domain.model.Torrent
 import me.nanova.subspace.ui.vm.CallState
 import me.nanova.subspace.ui.vm.HomeViewModel
@@ -54,6 +57,7 @@ fun TorrentList(
 ) {
     val lazyListState = rememberLazyListState()
     val uiState by viewModel.homeUiState.collectAsState()
+    val list = viewModel.load().collectAsLazyPagingItems()
 
     PullToRefreshBox(
         isRefreshing = viewModel.isRefreshing,
@@ -63,17 +67,31 @@ fun TorrentList(
             state = lazyListState,
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            if (!viewModel.isRefreshing && uiState.state == CallState.Success) {
+            if (!viewModel.isRefreshing
+//                && uiState.state == CallState.Success
+            ) {
                 items(
-                    uiState.data,
-                    key = { it.hash }
-                ) {
-                    TorrentItem(
-                        modifier = Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
-                        torrent = it
-                    )
+                    list.itemCount
+//                    key = { it.hash }
+                ) { idx ->
+                    list[idx]?.let {
+                        TorrentItem(
+                            modifier = Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
+                            torrent = it
+                        )
+                    }
 
                     HorizontalDivider()
+                }
+            }
+
+            if (list.loadState.append == LoadState.Loading) {
+                item {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentWidth(Alignment.CenterHorizontally)
+                    )
                 }
             }
         }
