@@ -11,6 +11,7 @@ data class Torrent(
     val downloaded: Long,
     val uploaded: Long,
     val progress: Float,
+    // seconds
     val eta: Long,
     val state: String,
     val category: String?,
