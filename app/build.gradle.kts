@@ -1,4 +1,5 @@
 import com.android.build.api.dsl.ApkSigningConfig
+import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.archivesName
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -25,7 +26,7 @@ android {
         targetSdk = 34
         versionCode = 9
         versionName = "0.2.2"
-        setProperty("archivesBaseName", "subspace-v${versionName}-${versionCode}")
+        archivesName = "subspace-v${versionName}-${versionCode}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

@@ -5,9 +5,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -16,6 +17,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Downloading
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Timelapse
 import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material3.CircularProgressIndicator
@@ -138,53 +140,53 @@ private fun TorrentItem(modifier: Modifier = Modifier, torrent: Torrent) {
                 overflow = TextOverflow.Ellipsis
             )
         },
+        overlineContent = {
+            val show =
+                torrent.category?.isNotBlank() ?: false || torrent.tags?.isNotBlank() ?: false
+            if (show) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    torrent.category?.let { Text(text = it) }
+
+                    torrent.tags?.let { Text(text = it) }
+                }
+            }
+        },
         supportingContent = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .defaultMinSize(minHeight = 80.dp),
+                    .heightIn(min = 50.dp, max = 70.dp),
                 verticalArrangement = Arrangement.Bottom
             ) {
+                val iconModifier = Modifier
+                    .padding(PaddingValues(end = 5.dp))
+                    .size(15.dp)
+
+                CentricSpaceBetweenRow(modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Outlined.Download, "ETA", modifier = iconModifier)
+                    Text(torrent.dlspeed.toString(), maxLines = 1)
+                    Text(torrent.downloaded.toString(), maxLines = 1)
+                }
+
                 LinearProgressIndicator(
                     progress = { animatedProgress },
                     modifier = Modifier
                         .padding(0.dp, 10.dp)
                         .fillMaxWidth()
                 )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Icon(
-                            Icons.Outlined.Timelapse, "Added on",
-                            modifier = Modifier
-                                .padding(PaddingValues(end = 5.dp))
-                                .size(15.dp)
-                        )
-                        Text(
-                            formatSeconds(torrent.eta),
-                            maxLines = 1,
-                        )
+
+                CentricSpaceBetweenRow(modifier = Modifier.fillMaxWidth()) {
+                    CentricSpaceBetweenRow {
+                        Icon(Icons.Outlined.Timelapse, "ETA", modifier = iconModifier)
+                        Text(formatSeconds(torrent.eta), maxLines = 1)
                     }
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Icon(
-                            Icons.Outlined.Update, "Added on",
-                            modifier = Modifier
-                                .padding(PaddingValues(end = 5.dp))
-                                .size(15.dp)
-                        )
-                        Text(
-                            formatUnixTimestamp(torrent.addedOn),
-                            maxLines = 1,
-                        )
+                    CentricSpaceBetweenRow {
+                        Icon(Icons.Outlined.Update, "Added on", modifier = iconModifier)
+                        Text(formatUnixTimestamp(torrent.addedOn), maxLines = 1)
                     }
                 }
             }
@@ -197,6 +199,18 @@ private fun TorrentItem(modifier: Modifier = Modifier, torrent: Torrent) {
         },
 //                        trailingContent = { Text(it.state) }
     )
+}
+
+@Composable
+private fun CentricSpaceBetweenRow(
+    modifier: Modifier = Modifier,
+    content: @Composable RowScope.() -> Unit
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) { content() }
 }
 
 fun formatSeconds(seconds: Long): String {
@@ -229,22 +243,45 @@ fun formatUnixTimestamp(unixTimestamp: Long, pattern: String = "yyyy-MM-dd HH:mm
 @Composable
 @Preview
 fun TorrentItemPrev() {
-    TorrentItem(
-        torrent = Torrent(
-            hash = "0ac61951b580afec2ca492abe4d5dbc1c5eb64e9",
-            name = "Longgggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg name",
-            addedOn = 1709410233,
-            size = 13453865673,
-            progress = 1.0F,
-            eta = 8640000,
-            state = "pausedUP",
-            category = "movie",
-            tags = "",
-            dlspeed = 0,
-            downloaded = 13518276228,
-            upspeed = 145201,
-            uploaded = 21363476930,
-            ratio = 1.5803403F
+    Column {
+        TorrentItem(
+            torrent = Torrent(
+                hash = "8c212779b4abde7c6bc608063a0d008b7e40ce32",
+                name = "Short name",
+                addedOn = 1709410233,
+                size = 657457152,
+                progress = 0.16108787F,
+                eta = 8640,
+                state = "downloading",
+                category = null,
+                tags = "",
+                dlspeed = 9681262,
+                downloaded = 13518,
+                upspeed = 0,
+                uploaded = 0,
+                ratio = 0F
+            )
         )
-    )
+
+        HorizontalDivider()
+
+        TorrentItem(
+            torrent = Torrent(
+                hash = "0ac61951b580afec2ca492abe4d5dbc1c5eb64e9",
+                name = "Longgggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg name",
+                addedOn = 1709410233,
+                size = 13453865673,
+                progress = 1.0F,
+                eta = 8640000,
+                state = "pausedUP",
+                category = "movie",
+                tags = "tag1,tagZ",
+                dlspeed = 0,
+                downloaded = 13518276228,
+                upspeed = 145201,
+                uploaded = 21363476930,
+                ratio = 1.5803403F
+            )
+        )
+    }
 }
