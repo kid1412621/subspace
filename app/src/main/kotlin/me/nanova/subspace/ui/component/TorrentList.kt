@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Timelapse
 import androidx.compose.material.icons.outlined.Update
+import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -158,6 +159,7 @@ private fun TorrentItem(modifier: Modifier = Modifier, torrent: Torrent) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(PaddingValues(top = 5.dp))
                     .heightIn(min = 50.dp, max = 70.dp),
                 verticalArrangement = Arrangement.Bottom
             ) {
@@ -166,15 +168,20 @@ private fun TorrentItem(modifier: Modifier = Modifier, torrent: Torrent) {
                     .size(15.dp)
 
                 CentricSpaceBetweenRow(modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Outlined.Download, "ETA", modifier = iconModifier)
+                    Icon(Icons.Outlined.Download, "DL", modifier = iconModifier)
                     Text(torrent.dlspeed.toString(), maxLines = 1)
                     Text(torrent.downloaded.toString(), maxLines = 1)
+                }
+                CentricSpaceBetweenRow(modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Outlined.Upload, "UL", modifier = iconModifier)
+                    Text(torrent.upspeed.toString(), maxLines = 1)
+                    Text(torrent.uploaded.toString(), maxLines = 1)
                 }
 
                 LinearProgressIndicator(
                     progress = { animatedProgress },
                     modifier = Modifier
-                        .padding(0.dp, 10.dp)
+                        .padding(0.dp, 5.dp)
                         .fillMaxWidth()
                 )
 
