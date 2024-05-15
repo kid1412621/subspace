@@ -7,6 +7,7 @@ data class Torrent(
     val name: String,
     @Json(name = "added_on")
     val addedOn: Long,
+    // bytes
     val size: Long,
     val downloaded: Long,
     val uploaded: Long,
@@ -18,8 +19,8 @@ data class Torrent(
     // comma-concatenated tag list of the torrent
     val tags: String?,
     // bytes/s
-    val dlspeed: Int,
-    val upspeed: Int,
+    val dlspeed: Long,
+    val upspeed: Long,
     val ratio: Float,
 )
 

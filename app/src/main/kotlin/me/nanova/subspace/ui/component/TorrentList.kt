@@ -1,19 +1,24 @@
 package me.nanova.subspace.ui.component
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Downloading
 import androidx.compose.material.icons.filled.Refresh
@@ -28,20 +33,26 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import me.nanova.subspace.domain.model.Torrent
@@ -52,6 +63,8 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
+import kotlin.math.ln
+import kotlin.math.pow
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -123,7 +136,11 @@ fun TorrentList(
 }
 
 @Composable
-private fun TorrentItem(modifier: Modifier = Modifier, torrent: Torrent) {
+private fun TorrentItem(
+    modifier: Modifier = Modifier, torrent: Torrent,
+    useSI: Boolean = false,
+    toBit: Boolean = false
+) {
     val progress by remember { mutableFloatStateOf(torrent.progress) }
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
@@ -133,6 +150,53 @@ private fun TorrentItem(modifier: Modifier = Modifier, torrent: Torrent) {
 
     ListItem(
         modifier = modifier,
+        leadingContent = {
+            Icon(
+                Icons.Filled.Downloading,
+                contentDescription = torrent.state,
+            )
+        },
+        overlineContent = {
+            val tags =
+                torrent.tags.takeUnless { it.isNullOrBlank() }?.split(",")?.toList() ?: emptyList()
+            val showCatOrTag =
+                !torrent.category.isNullOrBlank() || tags.isNotEmpty()
+            if (showCatOrTag) {
+                CentricSpaceBetweenRow(modifier = Modifier.fillMaxWidth()) {
+                    CentricSpaceBetweenRow(Modifier.weight(1F)) {
+                        torrent.category?.let {
+                            Text(
+                                text = it,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.secondary,
+                                overflow = TextOverflow.Ellipsis, maxLines = 1
+                            )
+                        }
+                    }
+
+                    Row(
+                        Modifier
+                            .weight(1F)
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        tags.forEach {
+                            Text(
+                                modifier = Modifier
+                                    .padding(horizontal = 1.dp)
+                                    .clip(MaterialTheme.shapes.extraSmall)
+                                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                                    .padding(PaddingValues(start = 2.dp)),
+                                color = MaterialTheme.colorScheme.tertiary,
+                                text = it,
+                                overflow = TextOverflow.Ellipsis,
+                                maxLines = 1
+                            )
+                        }
+                    }
+                }
+            }
+        },
         headlineContent = {
             Text(
                 torrent.name,
@@ -141,70 +205,55 @@ private fun TorrentItem(modifier: Modifier = Modifier, torrent: Torrent) {
                 overflow = TextOverflow.Ellipsis
             )
         },
-        overlineContent = {
-            val show =
-                torrent.category?.isNotBlank() ?: false || torrent.tags?.isNotBlank() ?: false
-            if (show) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    torrent.category?.let { Text(text = it) }
-
-                    torrent.tags?.let { Text(text = it) }
-                }
-            }
-        },
         supportingContent = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(PaddingValues(top = 5.dp))
-                    .heightIn(min = 50.dp, max = 70.dp),
-                verticalArrangement = Arrangement.Bottom
-            ) {
-                val iconModifier = Modifier
-                    .padding(PaddingValues(end = 5.dp))
-                    .size(15.dp)
-
-                CentricSpaceBetweenRow(modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Outlined.Download, "DL", modifier = iconModifier)
-                    Text(torrent.dlspeed.toString(), maxLines = 1)
-                    Text(torrent.downloaded.toString(), maxLines = 1)
-                }
-                CentricSpaceBetweenRow(modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Outlined.Upload, "UL", modifier = iconModifier)
-                    Text(torrent.upspeed.toString(), maxLines = 1)
-                    Text(torrent.uploaded.toString(), maxLines = 1)
-                }
-
-                LinearProgressIndicator(
-                    progress = { animatedProgress },
+            CompositionLocalProvider(LocalTextStyle provides TextStyle(fontSize = 13.sp)) {
+                Column(
                     modifier = Modifier
-                        .padding(0.dp, 5.dp)
                         .fillMaxWidth()
-                )
+                        .padding(PaddingValues(top = 5.dp))
+                        .heightIn(min = 50.dp, max = 70.dp),
+                    verticalArrangement = Arrangement.Bottom
+                ) {
+                    val iconModifier = Modifier
+                        .padding(PaddingValues(end = 3.dp))
+                        .size(14.dp)
 
-                CentricSpaceBetweenRow(modifier = Modifier.fillMaxWidth()) {
-                    CentricSpaceBetweenRow {
-                        Icon(Icons.Outlined.Timelapse, "ETA", modifier = iconModifier)
-                        Text(formatSeconds(torrent.eta), maxLines = 1)
+                    CentricSpaceBetweenRow(modifier = Modifier.fillMaxWidth()) {
+                        CentricSpaceBetweenRow {
+                            Icon(Icons.Outlined.Download, "DL", modifier = iconModifier)
+                            Text(formatBytesPerSec(torrent.dlspeed, useSI, toBit), maxLines = 1)
+                        }
+                        Text(formatBytes(torrent.downloaded, useSI, toBit), maxLines = 1)
+                    }
+                    CentricSpaceBetweenRow(modifier = Modifier.fillMaxWidth()) {
+                        CentricSpaceBetweenRow {
+                            Icon(Icons.Outlined.Upload, "UL", modifier = iconModifier)
+                            Text(formatBytesPerSec(torrent.upspeed, useSI, toBit), maxLines = 1)
+                        }
+                        Text(formatBytes(torrent.uploaded, useSI, toBit), maxLines = 1)
                     }
 
-                    CentricSpaceBetweenRow {
-                        Icon(Icons.Outlined.Update, "Added on", modifier = iconModifier)
-                        Text(formatUnixTimestamp(torrent.addedOn), maxLines = 1)
+                    Spacer(modifier = Modifier.height(5.dp))
+                    LinearProgressIndicator(
+                        progress = { animatedProgress },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(5.dp))
+
+                    CentricSpaceBetweenRow(modifier = Modifier.fillMaxWidth()) {
+                        CentricSpaceBetweenRow {
+                            Icon(Icons.Outlined.Timelapse, "ETA", modifier = iconModifier)
+                            Text(formatSeconds(torrent.eta), maxLines = 1)
+                        }
+
+                        CentricSpaceBetweenRow {
+                            Icon(Icons.Outlined.Update, "Added on", modifier = iconModifier)
+                            Text(text = formatUnixTimestamp(torrent.addedOn), maxLines = 1)
+                        }
                     }
                 }
             }
-        },
-        leadingContent = {
-            Icon(
-                Icons.Filled.Downloading,
-                contentDescription = torrent.state,
-            )
-        },
-//                        trailingContent = { Text(it.state) }
+        }
     )
 }
 
@@ -231,12 +280,12 @@ fun formatSeconds(seconds: Long): String {
     return buildString {
         if (days > 0) append("$days ")
 
-        if (days > 0 || hours > 0) append(String.format("%02d:", hours))
+        if (days > 0 || hours > 0) append("%02d:".format(hours))
 
-        if (days > 0 || hours > 0 || minutes > 0) append(String.format("%02d:", minutes))
+        if (days > 0 || hours > 0 || minutes > 0) append("%02d:".format(minutes))
         else append("0:") // Ensure minutes are shown if only seconds are non-zero
 
-        append(String.format("%02d", secs))
+        append("%02d".format(secs))
     }
 }
 
@@ -245,6 +294,30 @@ fun formatUnixTimestamp(unixTimestamp: Long, pattern: String = "yyyy-MM-dd HH:mm
     val localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
     val formatter = DateTimeFormatter.ofPattern(pattern)
     return localDateTime.format(formatter)
+}
+
+
+fun formatBytesPerSec(bytes: Long, si: Boolean = false, toBit: Boolean = false): String {
+    val sec = if (toBit) "ps" else "/s"
+    return "${formatBytes(bytes, si, toBit)}${sec}"
+}
+
+/**
+ * @param si SI(decimal) or IEC(binary)
+ * @see https://en.wikipedia.org/wiki/Data-rate_units
+ * @param toBit convert bytes to bit or not
+ */
+fun formatBytes(bytes: Long, si: Boolean = false, toBit: Boolean = false): String {
+    val unit = if (si) 1000 else 1024
+    val size = if (toBit) bytes * 8 else bytes
+    val suffix = if (toBit) "b" else "B"
+    if (size < unit) return "$size $suffix"
+
+    val exp = (ln(size.toDouble()) / ln(unit.toDouble())).toInt()
+    val prefix = if (si) "kMGTPE"[exp - 1] else arrayOf("Ki", "Mi", "Gi", "Ti", "Pi", "Ei")[exp - 1]
+    val formattedNumber = size / unit.toDouble().pow(exp.toDouble())
+
+    return "${"%.1f".format(formattedNumber)} ${prefix}${suffix}"
 }
 
 @Composable
@@ -267,7 +340,9 @@ fun TorrentItemPrev() {
                 upspeed = 0,
                 uploaded = 0,
                 ratio = 0F
-            )
+            ),
+            useSI = true,
+            toBit = true
         )
 
         HorizontalDivider()
@@ -282,7 +357,7 @@ fun TorrentItemPrev() {
                 eta = 8640000,
                 state = "pausedUP",
                 category = "movie",
-                tags = "tag1,tagZ",
+                tags = "tag1,tag2,tag3,tagZ,tag1,tag2,tag3,tagZ,tag1,tag2,tag3,tagZ",
                 dlspeed = 0,
                 downloaded = 13518276228,
                 upspeed = 145201,
