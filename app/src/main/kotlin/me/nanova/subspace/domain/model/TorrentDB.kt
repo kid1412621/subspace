@@ -33,5 +33,8 @@ fun TorrentDB.toModel() = Torrent(
     ratio = 0F,
     tags = "",
     downloaded = 0L,
-    uploaded = 0L
+    uploaded = 0L,
+    seeds = 0,
+    leechs = 0,
+    priority = 0
 )

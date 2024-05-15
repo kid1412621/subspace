@@ -21,7 +21,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Downloading
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.PauseCircleOutline
+import androidx.compose.material.icons.filled.QuestionMark
+import androidx.compose.material.icons.filled.Queue
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Timelapse
 import androidx.compose.material.icons.outlined.Update
@@ -47,6 +52,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -55,16 +61,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
+import me.nanova.subspace.domain.model.QTState
 import me.nanova.subspace.domain.model.Torrent
 import me.nanova.subspace.ui.vm.CallState
 import me.nanova.subspace.ui.vm.HomeViewModel
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.TimeUnit
-import kotlin.math.ln
-import kotlin.math.pow
+import me.nanova.subspace.util.formatBytes
+import me.nanova.subspace.util.formatBytesPerSec
+import me.nanova.subspace.util.percentage
+import me.nanova.subspace.util.round
+import me.nanova.subspace.util.sec2Time
+import me.nanova.subspace.util.unix2DateTime
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -152,7 +158,7 @@ private fun TorrentItem(
         modifier = modifier,
         leadingContent = {
             Icon(
-                Icons.Filled.Downloading,
+                state2Icon(torrent.state),
                 contentDescription = torrent.state,
             )
         },
@@ -221,16 +227,30 @@ private fun TorrentItem(
                     CentricSpaceBetweenRow(modifier = Modifier.fillMaxWidth()) {
                         CentricSpaceBetweenRow {
                             Icon(Icons.Outlined.Download, "DL", modifier = iconModifier)
-                            Text(formatBytesPerSec(torrent.dlspeed, useSI, toBit), maxLines = 1)
+                            Text(torrent.dlspeed.formatBytesPerSec(useSI, toBit), maxLines = 1)
                         }
-                        Text(formatBytes(torrent.downloaded, useSI, toBit), maxLines = 1)
+                        Text(
+                            "${torrent.progress.percentage()} of ${
+                                torrent.size.formatBytes(
+                                    useSI,
+                                    toBit
+                                )
+                            }", maxLines = 1
+                        )
                     }
                     CentricSpaceBetweenRow(modifier = Modifier.fillMaxWidth()) {
                         CentricSpaceBetweenRow {
                             Icon(Icons.Outlined.Upload, "UL", modifier = iconModifier)
-                            Text(formatBytesPerSec(torrent.upspeed, useSI, toBit), maxLines = 1)
+                            Text(torrent.upspeed.formatBytesPerSec(useSI, toBit), maxLines = 1)
                         }
-                        Text(formatBytes(torrent.uploaded, useSI, toBit), maxLines = 1)
+                        Text(
+                            "${
+                                torrent.uploaded.formatBytes(
+                                    useSI,
+                                    toBit
+                                )
+                            } (ratio: ${torrent.ratio.round()})", maxLines = 1
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(5.dp))
@@ -243,12 +263,12 @@ private fun TorrentItem(
                     CentricSpaceBetweenRow(modifier = Modifier.fillMaxWidth()) {
                         CentricSpaceBetweenRow {
                             Icon(Icons.Outlined.Timelapse, "ETA", modifier = iconModifier)
-                            Text(formatSeconds(torrent.eta), maxLines = 1)
+                            Text(torrent.eta.sec2Time(), maxLines = 1)
                         }
 
                         CentricSpaceBetweenRow {
                             Icon(Icons.Outlined.Update, "Added on", modifier = iconModifier)
-                            Text(text = formatUnixTimestamp(torrent.addedOn), maxLines = 1)
+                            Text(text = torrent.addedOn.unix2DateTime(), maxLines = 1)
                         }
                     }
                 }
@@ -269,55 +289,15 @@ private fun CentricSpaceBetweenRow(
     ) { content() }
 }
 
-fun formatSeconds(seconds: Long): String {
-    if (seconds >= 8640000) return "∞"
-
-    val days = TimeUnit.SECONDS.toDays(seconds)
-    val hours = TimeUnit.SECONDS.toHours(seconds) % 24
-    val minutes = TimeUnit.SECONDS.toMinutes(seconds) % 60
-    val secs = seconds % 60
-
-    return buildString {
-        if (days > 0) append("$days ")
-
-        if (days > 0 || hours > 0) append("%02d:".format(hours))
-
-        if (days > 0 || hours > 0 || minutes > 0) append("%02d:".format(minutes))
-        else append("0:") // Ensure minutes are shown if only seconds are non-zero
-
-        append("%02d".format(secs))
+fun state2Icon(state: String): ImageVector {
+    return when (QTState.valueOf(state)) {
+        QTState.pausedDL, QTState.pausedUP -> Icons.Filled.PauseCircleOutline
+        QTState.uploading -> Icons.Filled.Upload
+        QTState.downloading, QTState.metaDL -> Icons.Filled.Downloading
+        QTState.error -> Icons.Filled.ErrorOutline
+        QTState.queuedDL, QTState.queuedUP -> Icons.Filled.Queue
+        else -> Icons.Filled.QuestionMark
     }
-}
-
-fun formatUnixTimestamp(unixTimestamp: Long, pattern: String = "yyyy-MM-dd HH:mm:ss"): String {
-    val instant = Instant.ofEpochSecond(unixTimestamp)
-    val localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
-    val formatter = DateTimeFormatter.ofPattern(pattern)
-    return localDateTime.format(formatter)
-}
-
-
-fun formatBytesPerSec(bytes: Long, si: Boolean = false, toBit: Boolean = false): String {
-    val sec = if (toBit) "ps" else "/s"
-    return "${formatBytes(bytes, si, toBit)}${sec}"
-}
-
-/**
- * @param si SI(decimal) or IEC(binary)
- * @see https://en.wikipedia.org/wiki/Data-rate_units
- * @param toBit convert bytes to bit or not
- */
-fun formatBytes(bytes: Long, si: Boolean = false, toBit: Boolean = false): String {
-    val unit = if (si) 1000 else 1024
-    val size = if (toBit) bytes * 8 else bytes
-    val suffix = if (toBit) "b" else "B"
-    if (size < unit) return "$size $suffix"
-
-    val exp = (ln(size.toDouble()) / ln(unit.toDouble())).toInt()
-    val prefix = if (si) "kMGTPE"[exp - 1] else arrayOf("Ki", "Mi", "Gi", "Ti", "Pi", "Ei")[exp - 1]
-    val formattedNumber = size / unit.toDouble().pow(exp.toDouble())
-
-    return "${"%.1f".format(formattedNumber)} ${prefix}${suffix}"
 }
 
 @Composable
@@ -332,14 +312,17 @@ fun TorrentItemPrev() {
                 size = 657457152,
                 progress = 0.16108787F,
                 eta = 8640,
-                state = "downloading",
+                state = QTState.downloading.toString(),
                 category = null,
                 tags = "",
                 dlspeed = 9681262,
                 downloaded = 13518,
                 upspeed = 0,
                 uploaded = 0,
-                ratio = 0F
+                ratio = 0F,
+                leechs = 0,
+                seeds = 0,
+                priority = 0
             ),
             useSI = true,
             toBit = true
@@ -355,14 +338,17 @@ fun TorrentItemPrev() {
                 size = 13453865673,
                 progress = 1.0F,
                 eta = 8640000,
-                state = "pausedUP",
+                state = QTState.pausedUP.toString(),
                 category = "movie",
                 tags = "tag1,tag2,tag3,tagZ,tag1,tag2,tag3,tagZ,tag1,tag2,tag3,tagZ",
                 dlspeed = 0,
                 downloaded = 13518276228,
                 upspeed = 145201,
                 uploaded = 21363476930,
-                ratio = 1.5803403F
+                ratio = 1.5803403F,
+                leechs = 0,
+                seeds = 0,
+                priority = 0
             )
         )
     }

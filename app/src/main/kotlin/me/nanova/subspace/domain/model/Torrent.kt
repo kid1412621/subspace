@@ -22,6 +22,11 @@ data class Torrent(
     val dlspeed: Long,
     val upspeed: Long,
     val ratio: Float,
+    @Json(name = "num_leechs")
+    val leechs: Int,
+    @Json(name = "num_seeds")
+    val seeds: Int,
+    val priority: Int,
 )
 
 fun Torrent.toEntity(id: Long) = TorrentDB(
