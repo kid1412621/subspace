@@ -1,5 +1,16 @@
 package me.nanova.subspace.domain.model
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DownloadDone
+import androidx.compose.material.icons.filled.Downloading
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.HourglassTop
+import androidx.compose.material.icons.filled.MoreTime
+import androidx.compose.material.icons.filled.PauseCircleOutline
+import androidx.compose.material.icons.filled.QuestionMark
+import androidx.compose.material.icons.filled.Upload
+import androidx.compose.ui.graphics.vector.ImageVector
+
 /**
  * error	    Some error occurred, applies to paused torrents
  * missingFiles	Torrent data files is missing
@@ -22,7 +33,21 @@ package me.nanova.subspace.domain.model
  * unknown	    Unknown status
  * */
 enum class QTState {
-    error, missingFiles, uploading, pausedUP, queuedUP, stalledUP, checkingUP, forcedUP, allocating, downloading, metaDL, pausedDL, queuedDL, stalledDL, checkingDL, forcedDL, checkingResumeData, moving, unknown
+    error, missingFiles, uploading, pausedUP, queuedUP, stalledUP, checkingUP, forcedUP, allocating, downloading, metaDL, pausedDL, queuedDL, stalledDL, checkingDL, forcedDL, checkingResumeData, moving, unknown;
+
+    fun toIcon(): ImageVector {
+        return when (this) {
+            pausedUP -> Icons.Filled.DownloadDone
+            uploading, forcedUP -> Icons.Filled.Upload
+            downloading, forcedDL, metaDL -> Icons.Filled.Downloading
+            pausedDL -> Icons.Filled.PauseCircleOutline
+            stalledDL, stalledUP -> Icons.Filled.HourglassTop
+            queuedDL, queuedUP -> Icons.Filled.MoreTime
+            error -> Icons.Filled.ErrorOutline
+            else -> Icons.Filled.QuestionMark
+        }
+    }
+
 }
 
 enum class QTFilterState {

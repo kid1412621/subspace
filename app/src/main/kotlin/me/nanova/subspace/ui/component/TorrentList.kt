@@ -20,15 +20,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DownloadDone
-import androidx.compose.material.icons.filled.Downloading
-import androidx.compose.material.icons.filled.ErrorOutline
-import androidx.compose.material.icons.filled.HourglassTop
-import androidx.compose.material.icons.filled.MoreTime
-import androidx.compose.material.icons.filled.PauseCircleOutline
-import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Timelapse
 import androidx.compose.material.icons.outlined.Update
@@ -54,7 +46,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -160,7 +151,7 @@ private fun TorrentItem(
         modifier = modifier,
         leadingContent = {
             Icon(
-                state2Icon(torrent.state),
+                QTState.valueOf(torrent.state).toIcon(),
                 contentDescription = torrent.state,
             )
         },
@@ -289,19 +280,6 @@ private fun CentricSpaceBetweenRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) { content() }
-}
-
-fun state2Icon(state: String): ImageVector {
-    return when (QTState.valueOf(state)) {
-        QTState.pausedUP -> Icons.Filled.DownloadDone
-        QTState.uploading, QTState.forcedUP -> Icons.Filled.Upload
-        QTState.downloading, QTState.forcedDL, QTState.metaDL -> Icons.Filled.Downloading
-        QTState.pausedDL -> Icons.Filled.PauseCircleOutline
-        QTState.stalledDL, QTState.stalledUP -> Icons.Filled.HourglassTop
-        QTState.queuedDL, QTState.queuedUP -> Icons.Filled.MoreTime
-        QTState.error -> Icons.Filled.ErrorOutline
-        else -> Icons.Filled.QuestionMark
-    }
 }
 
 @Composable
