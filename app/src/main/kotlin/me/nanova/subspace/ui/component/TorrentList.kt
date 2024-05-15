@@ -20,11 +20,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.Downloading
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.HourglassTop
+import androidx.compose.material.icons.filled.MoreTime
 import androidx.compose.material.icons.filled.PauseCircleOutline
 import androidx.compose.material.icons.filled.QuestionMark
-import androidx.compose.material.icons.filled.Queue
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.outlined.Download
@@ -291,11 +293,13 @@ private fun CentricSpaceBetweenRow(
 
 fun state2Icon(state: String): ImageVector {
     return when (QTState.valueOf(state)) {
-        QTState.pausedDL, QTState.pausedUP -> Icons.Filled.PauseCircleOutline
-        QTState.uploading -> Icons.Filled.Upload
-        QTState.downloading, QTState.metaDL -> Icons.Filled.Downloading
+        QTState.pausedUP -> Icons.Filled.DownloadDone
+        QTState.uploading, QTState.forcedUP -> Icons.Filled.Upload
+        QTState.downloading, QTState.forcedDL, QTState.metaDL -> Icons.Filled.Downloading
+        QTState.pausedDL -> Icons.Filled.PauseCircleOutline
+        QTState.stalledDL, QTState.stalledUP -> Icons.Filled.HourglassTop
+        QTState.queuedDL, QTState.queuedUP -> Icons.Filled.MoreTime
         QTState.error -> Icons.Filled.ErrorOutline
-        QTState.queuedDL, QTState.queuedUP -> Icons.Filled.Queue
         else -> Icons.Filled.QuestionMark
     }
 }
