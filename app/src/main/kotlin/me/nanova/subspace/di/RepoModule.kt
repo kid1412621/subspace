@@ -1,5 +1,6 @@
 package me.nanova.subspace.di
 
+import androidx.paging.PagingSource
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -10,6 +11,9 @@ import me.nanova.subspace.data.TorrentRepoImpl
 import me.nanova.subspace.data.api.QTApiService
 import me.nanova.subspace.data.db.AccountDao
 import me.nanova.subspace.data.db.TorrentDao
+import me.nanova.subspace.domain.TorrentPagingSource
+import me.nanova.subspace.domain.model.QTListParams
+import me.nanova.subspace.domain.model.Torrent
 import me.nanova.subspace.domain.repo.AccountRepo
 import me.nanova.subspace.domain.repo.TorrentRepo
 import javax.inject.Provider
@@ -32,4 +36,11 @@ object RepoModule {
     ): TorrentRepo {
         return TorrentRepoImpl(torrentDao, storage, apiService)
     }
+
+//    @Provides
+//    fun providePagingSource(
+//        apiService: Provider<QTApiService>
+//    ): PagingSource<QTListParams, Torrent> {
+//        return TorrentPagingSource(apiService)
+//    }
 }

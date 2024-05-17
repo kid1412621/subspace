@@ -2,8 +2,10 @@ package me.nanova.subspace.ui.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -25,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import me.nanova.subspace.ui.vm.CallState
 import me.nanova.subspace.ui.vm.HomeViewModel
 
@@ -35,36 +38,35 @@ fun TorrentList(
 ) {
     val lazyListState = rememberLazyListState()
     val uiState by viewModel.homeUiState.collectAsState()
-    val list = viewModel.load().collectAsLazyPagingItems()
+    val list = viewModel.pagingDataFlow.collectAsLazyPagingItems()
 
     PullToRefreshBox(
         isRefreshing = viewModel.isRefreshing,
-        onRefresh = { viewModel.refresh() },
+        onRefresh = { list.refresh() },
     ) {
         LazyColumn(
             state = lazyListState,
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            if (!viewModel.isRefreshing
-//                && uiState.state == CallState.Success
-            ) {
-                items(
-                    list.itemCount
-//                    key = { it.hash }
-                ) { idx ->
-                    list[idx]?.let {
-                        TorrentItem(
-                            modifier = Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
-                            torrent = it
-                        )
-                    }
-
-                    HorizontalDivider()
+//            if (!viewModel.isRefreshing && uiState.state == CallState.Success) {
+            items(
+                list.itemCount,
+                key = list.itemKey { it.hash },
+            ) { idx ->
+                list[idx]?.let {
+                    TorrentItem(
+                        modifier = Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
+                        torrent = it
+                    )
                 }
+
+                HorizontalDivider()
             }
+//            }
 
             if (list.loadState.append == LoadState.Loading) {
                 item {
+                    Spacer(modifier = Modifier.height(5.dp))
                     CircularProgressIndicator(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -86,7 +88,7 @@ fun TorrentList(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.SpaceAround
                 ) {
-                    IconButton(onClick = { viewModel.refresh() }) {
+                    IconButton(onClick = { list.refresh() }) {
                         Icon(Icons.Filled.Refresh, "Try Refresh")
                     }
                     Text(text = "Try Refresh")

@@ -5,7 +5,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +20,8 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import me.nanova.subspace.data.TorrentRepoImpl
+import me.nanova.subspace.domain.TorrentPagingSource
 import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.domain.model.QTListParams
 import me.nanova.subspace.domain.model.Torrent
@@ -81,32 +86,9 @@ class HomeViewModel @Inject constructor(
         _homeUiState.update { it.copy(state = CallState.Loading) }
     }
 
-    fun load(): Flow<PagingData<Torrent>> {
-        return torrentRepo.torrents()
-    }
-
-    private fun loadData() {
-        viewModelScope.launch {
-            isRefreshing = true
-            currentAccount.distinctUntilChanged().collect { id ->
-                id?.let {
-                    _homeUiState.update {
-                        try {
-                            val list = torrentRepo.fetch(_homeUiState.value.filter)
-                            it.copy(
-                                state = CallState.Success,
-                                data = list
-                            )
-                        } catch (e: Exception) {
-                            it.copy(state = CallState.Error, error = e.message)
-                        } finally {
-                            isRefreshing = false
-                        }
-                    }
-                }
-            }
-        }
-    }
+    val pagingDataFlow: Flow<PagingData<Torrent>> =
+        torrentRepo.torrents()
+            .cachedIn(viewModelScope)
 
     fun updateSort(newFilter: QTListParams) {
         _homeUiState.update {
