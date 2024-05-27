@@ -9,7 +9,6 @@ import me.nanova.subspace.data.db.TorrentDao
 import me.nanova.subspace.domain.TorrentPagingSource
 import me.nanova.subspace.domain.model.QTListParams
 import me.nanova.subspace.domain.model.Torrent
-import me.nanova.subspace.domain.model.toEntity
 import me.nanova.subspace.domain.repo.TorrentRepo
 import javax.inject.Inject
 import javax.inject.Provider
@@ -21,10 +20,10 @@ class TorrentRepoImpl @Inject constructor(
 ) : TorrentRepo {
 //    override suspend fun apiVersion() = apiService.get().version()
 
-    override fun torrents(): Flow<PagingData<Torrent>> {
+    override fun torrents(filter: QTListParams): Flow<PagingData<Torrent>> {
         return Pager(
-            config = PagingConfig(pageSize = PAGE_SIZE, enablePlaceholders = true),
-            pagingSourceFactory = { TorrentPagingSource(apiService) }
+            config = PagingConfig(pageSize = PAGE_SIZE, enablePlaceholders = true, prefetchDistance = 1),
+            pagingSourceFactory = { TorrentPagingSource(apiService.get(), filter) }
         ).flow
     }
 
