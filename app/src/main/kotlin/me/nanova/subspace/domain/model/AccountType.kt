@@ -1,4 +1,4 @@
-package me.nanova.subspace.data
+package me.nanova.subspace.domain.model
 
 import me.nanova.subspace.R
 

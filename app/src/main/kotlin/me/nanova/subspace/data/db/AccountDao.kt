@@ -5,7 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
-import me.nanova.subspace.data.AccountType
+import me.nanova.subspace.domain.model.AccountType
 import me.nanova.subspace.domain.model.Account
 
 @Dao

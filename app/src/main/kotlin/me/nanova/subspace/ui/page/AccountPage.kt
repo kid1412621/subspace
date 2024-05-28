@@ -49,7 +49,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import me.nanova.subspace.data.AccountType
+import me.nanova.subspace.domain.model.AccountType
 import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.ui.Routes
 import me.nanova.subspace.ui.component.ValidTextField

@@ -2,7 +2,6 @@ package me.nanova.subspace.domain.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import me.nanova.subspace.data.AccountType
 
 @Entity
 data class Account(

@@ -1,18 +1,25 @@
 package me.nanova.subspace.data.db
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 import me.nanova.subspace.domain.model.Torrent
-import me.nanova.subspace.domain.model.TorrentDB
+import me.nanova.subspace.domain.model.TorrentEntity
 
 @Dao
 interface TorrentDao {
-    @Query("SELECT * FROM torrent")
-    fun getAll(): Flow<List<TorrentDB>>
+    @Query("SELECT * FROM torrent WHERE account_id = :accountId")
+    fun getAll(accountId: Long): Flow<List<TorrentEntity>>
+
+    @Query("SELECT * FROM torrent WHERE account_id = :accountId and category = :category and state IN (:state)")
+    fun pagingSource(accountId: Long,  category: String?, state: List<String>): PagingSource<Int, Torrent>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(torrents: List<TorrentDB>)
+    suspend fun insertAll(torrents: List<TorrentEntity>)
+
+    @Query("DELETE FROM torrent WHERE account_id = :accountId")
+    suspend fun clearAll(accountId: Long)
 }

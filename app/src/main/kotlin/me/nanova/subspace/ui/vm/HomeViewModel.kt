@@ -3,16 +3,16 @@ package me.nanova.subspace.ui.vm
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
-import androidx.paging.cachedIn
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import me.nanova.subspace.domain.model.Account
@@ -52,12 +52,15 @@ class HomeViewModel @Inject constructor(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val pagingDataFlow: Flow<PagingData<Torrent>> = _homeUiState.map { it.filter }
-        .distinctUntilChanged()
-        .flatMapLatest {
-            torrentRepo.torrents(it)
-                .cachedIn(viewModelScope)
-        }
+    val pagingDataFlow: Flow<PagingData<Torrent>> =
+        combine(
+            currentAccount.filterNotNull(),
+            _homeUiState
+        ) { account, uiState -> account to uiState.filter }
+            .distinctUntilChanged()
+            .flatMapLatest { (account, filter) ->
+                torrentRepo.torrents(account, filter)
+            }
 
     fun switchAccount(account: Account) {
         viewModelScope.launch {
