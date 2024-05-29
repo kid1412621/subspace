@@ -8,7 +8,7 @@ import androidx.room.PrimaryKey
 data class RemoteKeys(
     @PrimaryKey
     @ColumnInfo(name = "torrent_id")
-    val torrentId: Long,
+    val torrentId: String,
     @ColumnInfo(index = true, name = "account_id")
     val accountId: Long,
     @ColumnInfo(name = "last_offset")

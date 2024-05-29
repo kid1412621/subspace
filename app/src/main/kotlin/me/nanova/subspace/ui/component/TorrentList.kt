@@ -68,7 +68,7 @@ fun TorrentList(
         ) {
             items(
                 list.itemCount,
-                key = list.itemKey { it.hash },
+                key = list.itemKey { it.id },
             ) { idx ->
                 list[idx]?.let {
                     TorrentItem(

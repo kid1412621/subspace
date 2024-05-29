@@ -223,7 +223,7 @@ fun TorrentItemPrev() {
                 leechs = 0,
                 seeds = 0,
                 priority = 0,
-                id = 1
+                id = "1-8c212779b4abde7c6bc608063a0d008b7e40ce32"
             ),
             useSI = true,
             toBit = true
@@ -250,7 +250,7 @@ fun TorrentItemPrev() {
                 leechs = 0,
                 seeds = 0,
                 priority = 0,
-                id = 2
+                id = "2-0ac61951b580afec2ca492abe4d5dbc1c5eb64e9"
             )
         )
     }

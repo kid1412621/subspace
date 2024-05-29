@@ -25,32 +25,48 @@ abstract class AppDatabase : RoomDatabase() {
 
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE torrent ADD COLUMN id BIGINT PRIMARY KEY AUTO_INCREMENT;")
-                db.execSQL("ALTER TABLE torrent RENAME COLUMN addedOn TO added_on")
-                db.execSQL("ALTER TABLE torrent RENAME COLUMN accountId TO account_id")
-                db.execSQL("CREATE INDEX IF NOT EXISTS index_torrent_account_id ON torrent (account_id);")
-                db.execSQL("CREATE INDEX IF NOT EXISTS index_torrent_hash ON torrent (hash);")
-                db.execSQL("ALTER TABLE torrent ADD COLUMN tags TEXT DEFAULT NULL")
-                db.execSQL("ALTER TABLE torrent ADD COLUMN downloaded INTEGER NOT NULL")
-                db.execSQL("ALTER TABLE torrent ADD COLUMN uploaded INTEGER NOT NULL")
-                db.execSQL("ALTER TABLE torrent ADD COLUMN dlspeed INTEGER NOT NULL")
-                db.execSQL("ALTER TABLE torrent ADD COLUMN upspeed INTEGER NOT NULL")
-                db.execSQL("ALTER TABLE torrent ADD COLUMN ratio REAL NOT NULL")
-                db.execSQL("ALTER TABLE torrent ADD COLUMN leechs INTEGER NOT NULL")
-                db.execSQL("ALTER TABLE torrent ADD COLUMN seeds INTEGER NOT NULL")
-                db.execSQL("ALTER TABLE torrent ADD COLUMN priority INTEGER NOT NULL")
-
                 db.execSQL("ALTER TABLE Account RENAME TO account;")
+
+                // previous version didn't use this table
+                db.execSQL("DROP TABLE torrent;")
 
                 db.execSQL(
                     """
+                    CREATE TABLE torrent (
+                        id TEXT PRIMARY KEY NOT NULL,
+                        hash TEXT NOT NULL,
+                        account_id INTEGER NOT NULL,
+                        name TEXT NOT NULL,
+                        added_on INTEGER NOT NULL,
+                        size INTEGER NOT NULL,
+                        downloaded INTEGER NOT NULL,
+                        uploaded INTEGER NOT NULL,
+                        progress REAL NOT NULL,
+                        eta INTEGER NOT NULL,
+                        state TEXT NOT NULL,
+                        category TEXT,
+                        tags TEXT,
+                        dlspeed INTEGER NOT NULL,
+                        upspeed INTEGER NOT NULL,
+                        ratio REAL NOT NULL,
+                        leechs INTEGER NOT NULL,
+                        seeds INTEGER NOT NULL,
+                        priority INTEGER NOT NULL
+                    );
+                """
+                )
+                db.execSQL("CREATE INDEX index_torrent_hash ON torrent (hash);")
+                db.execSQL("CREATE INDEX index_torrent_account_id ON torrent (account_id);")
+                db.execSQL(
+                    """
                     CREATE TABLE remote_keys (
-                        torrent_id BIGINT PRIMARY KEY NOT NULL,
-                        account_id BIGINT
+                        torrent_id TEXT PRIMARY KEY NOT NULL,
+                        account_id INTEGER NOT NULL,
                         last_offset INTEGER
-                    )
+                    );
                     """
                 )
+                db.execSQL("CREATE INDEX index_remote_keys_account_id ON remote_keys (account_id);")
             }
         }
     }

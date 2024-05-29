@@ -55,22 +55,29 @@ class TorrentRemoteMediator(
                 }
             }
 
+            // fetch api
             val response = networkService.list(
                 query.copy(offset = offset, limit = state.config.pageSize).toMap()
             )
             val endOfPaginationReached = response.size < state.config.pageSize
 
+            // update db
             database.withTransaction {
                 if (loadType == LoadType.REFRESH) {
                     remoteKeyDao.clearRemoteKeys(currentAccountId)
                     torrentDao.clearAll(currentAccountId)
                 }
 
-                val keys = response.map { item ->
-                    RemoteKeys(torrentId = item.id, lastOffset = offset, accountId = currentAccountId)
+                val entities = response.map { it.toEntity(currentAccountId) }
+                torrentDao.insertAll(entities)
+                val keys = entities.map {
+                    RemoteKeys(
+                        torrentId = it.id,
+                        lastOffset = offset,
+                        accountId = currentAccountId
+                    )
                 }
                 remoteKeyDao.insertAll(keys)
-                torrentDao.insertAll(response.map { it.toEntity(currentAccountId) })
             }
 
             MediatorResult.Success(endOfPaginationReached = endOfPaginationReached)
