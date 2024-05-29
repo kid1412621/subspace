@@ -6,12 +6,14 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "torrent")
 data class TorrentEntity(
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
+    val id: Long,
+    @ColumnInfo(index = true)
     val hash: String,
     @ColumnInfo(index = true, name = "account_id")
     val accountId: Long,
     val name: String,
-//    @ColumnInfo(name = "added_on")
+    @ColumnInfo(name = "added_on")
     val addedOn: Long,
     val size: Long,
     val downloaded: Long,
@@ -33,6 +35,7 @@ data class TorrentEntity(
 )
 
 fun TorrentEntity.toModel() = Torrent(
+    id = this.id,
     hash = this.hash,
     name = this.name,
     addedOn = this.addedOn,

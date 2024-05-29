@@ -222,7 +222,8 @@ fun TorrentItemPrev() {
                 ratio = 0F,
                 leechs = 0,
                 seeds = 0,
-                priority = 0
+                priority = 0,
+                id = 1
             ),
             useSI = true,
             toBit = true
@@ -248,7 +249,8 @@ fun TorrentItemPrev() {
                 ratio = 1.5803403F,
                 leechs = 0,
                 seeds = 0,
-                priority = 0
+                priority = 0,
+                id = 2
             )
         )
     }

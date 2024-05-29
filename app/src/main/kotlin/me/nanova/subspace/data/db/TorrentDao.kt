@@ -5,6 +5,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.RawQuery
+import androidx.sqlite.db.SupportSQLiteQuery
 import kotlinx.coroutines.flow.Flow
 import me.nanova.subspace.domain.model.Torrent
 import me.nanova.subspace.domain.model.TorrentEntity
@@ -14,8 +16,8 @@ interface TorrentDao {
     @Query("SELECT * FROM torrent WHERE account_id = :accountId")
     fun getAll(accountId: Long): Flow<List<TorrentEntity>>
 
-    @Query("SELECT * FROM torrent WHERE account_id = :accountId and category = :category and state IN (:state)")
-    fun pagingSource(accountId: Long,  category: String?, state: List<String>): PagingSource<Int, Torrent>
+    @RawQuery(observedEntities = [TorrentEntity::class])
+    fun pagingSource(query: SupportSQLiteQuery): PagingSource<Int, Torrent>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(torrents: List<TorrentEntity>)

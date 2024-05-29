@@ -96,5 +96,14 @@ enum class QTFilterState {
     stalled,
     stalled_uploading,
     stalled_downloading,
-    errored
+    errored;
+
+    fun toQTStates(): List<QTState> {
+       return when(this){
+           all -> QTState.entries
+           downloading -> listOf(QTState.downloading, QTState.metaDL)
+           // todo
+           else -> listOf()
+       }
+    }
 }

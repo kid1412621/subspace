@@ -37,10 +37,18 @@ class TorrentRemoteMediator(
                 LoadType.REFRESH -> 0
                 // No items to prepend in offset-based APIs
                 LoadType.PREPEND -> return MediatorResult.Success(endOfPaginationReached = true)
+//                LoadType.PREPEND -> {
+//                    val firstItemId = state.firstItemOrNull()?.id
+//                    val firstItemRemoteKeys = firstItemId?.let {
+//                        remoteKeyDao.remoteKeysItemId(it)
+//                    }
+//                    firstItemRemoteKeys?.lastOffset?.minus(state.config.pageSize)
+//                        ?: return MediatorResult.Success(endOfPaginationReached = true)
+//                }
                 LoadType.APPEND -> {
-                    val lastItemId = state.lastItemOrNull()?.hash
+                    val lastItemId = state.lastItemOrNull()?.id
                     val lastItemRemoteKeys = lastItemId?.let {
-                        remoteKeyDao.remoteKeysRepoId(it)
+                        remoteKeyDao.remoteKeysItemId(it)
                     }
                     lastItemRemoteKeys?.lastOffset?.plus(state.config.pageSize)
                         ?: return MediatorResult.Success(endOfPaginationReached = true)
@@ -54,12 +62,12 @@ class TorrentRemoteMediator(
 
             database.withTransaction {
                 if (loadType == LoadType.REFRESH) {
-                    remoteKeyDao.clearRemoteKeys()
+                    remoteKeyDao.clearRemoteKeys(currentAccountId)
                     torrentDao.clearAll(currentAccountId)
                 }
 
                 val keys = response.map { item ->
-                    RemoteKeys(hash = item.hash, lastOffset = offset)
+                    RemoteKeys(torrentId = item.id, lastOffset = offset, accountId = currentAccountId)
                 }
                 remoteKeyDao.insertAll(keys)
                 torrentDao.insertAll(response.map { it.toEntity(currentAccountId) })

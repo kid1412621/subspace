@@ -3,6 +3,7 @@ package me.nanova.subspace.domain.model
 import com.squareup.moshi.Json
 
 data class Torrent(
+    val id: Long,
     val hash: String,
     val name: String,
     @Json(name = "added_on")
@@ -30,6 +31,7 @@ data class Torrent(
 )
 
 fun Torrent.toEntity(aid: Long) = TorrentEntity(
+    id = this.id,
     hash = this.hash,
     name = this.name,
     addedOn = this.addedOn,
