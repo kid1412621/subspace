@@ -26,7 +26,7 @@ abstract class AppDatabase : RoomDatabase() {
 
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.beginTransaction()
+                db.beginTransactionNonExclusive()
                 try {
                     // sqlite table name is case-insensitive, so cannot just rename
                     db.execSQL("DROP TABLE Account;")
