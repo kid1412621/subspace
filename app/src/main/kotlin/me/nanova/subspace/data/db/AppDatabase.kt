@@ -26,30 +26,16 @@ abstract class AppDatabase : RoomDatabase() {
 
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.beginTransactionNonExclusive()
                 try {
-                    // sqlite table name is case-insensitive, so cannot just rename
-                    db.execSQL("DROP TABLE Account;")
-                    db.execSQL(
-                        """
-                    CREATE TABLE account (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL ,
-                        url TEXT NOT NULL,
-                        type TEXT NOT NULL,
-                        name TEXT NOT NULL,
-                        user TEXT NOT NULL,
-                        pass TEXT NOT NULL,
-                        created INTEGER NOT NULL,
-                        use_lan_switch INTEGER NOT NULL,
-                        lan_url TEXT NOT NULL,
-                        lan_ssid TEXT NOT NULL
-                    );
-                    """
-                    )
+                    // sqlite table name is case-insensitive
+                    db.execSQL("ALTER TABLE Account RENAME TO tmp_account;")
+                    db.execSQL("ALTER TABLE tmp_account RENAME TO account;")
+                    db.execSQL("ALTER TABLE account ADD COLUMN use_lan_switch INTEGER NOT NULL;")
+                    db.execSQL("ALTER TABLE account ADD COLUMN lan_url TEXT NOT NULL;")
+                    db.execSQL("ALTER TABLE account ADD COLUMN lan_ssid TEXT NOT NULL;")
 
                     // previous version didn't use this table
                     db.execSQL("DROP TABLE torrent;")
-
                     db.execSQL(
                         """
                     CREATE TABLE torrent (
@@ -77,6 +63,7 @@ abstract class AppDatabase : RoomDatabase() {
                     )
                     db.execSQL("CREATE INDEX index_torrent_hash ON torrent (hash);")
                     db.execSQL("CREATE INDEX index_torrent_account_id ON torrent (account_id);")
+
                     db.execSQL(
                         """
                     CREATE TABLE remote_keys (
@@ -89,8 +76,6 @@ abstract class AppDatabase : RoomDatabase() {
                     db.execSQL("CREATE INDEX index_remote_keys_account_id ON remote_keys (account_id);")
                 } catch (e: Exception) {
                     Log.e("AppDatabase", "DB migration error: $e")
-                } finally {
-                    db.endTransaction()
                 }
             }
         }
