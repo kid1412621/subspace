@@ -1,5 +1,6 @@
 package me.nanova.subspace.data.db
 
+import android.util.Log
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
@@ -25,13 +26,17 @@ abstract class AppDatabase : RoomDatabase() {
 
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE Account RENAME TO account;")
+                db.beginTransaction()
+                try {
+                    // sqlite table name is case-insensitive
+                    db.execSQL("ALTER TABLE Account RENAME TO tmp_account;")
+                    db.execSQL("ALTER TABLE tmp_account RENAME TO account;")
 
-                // previous version didn't use this table
-                db.execSQL("DROP TABLE torrent;")
+                    // previous version didn't use this table
+                    db.execSQL("DROP TABLE torrent;")
 
-                db.execSQL(
-                    """
+                    db.execSQL(
+                        """
                     CREATE TABLE torrent (
                         id TEXT PRIMARY KEY NOT NULL,
                         hash TEXT NOT NULL,
@@ -54,19 +59,24 @@ abstract class AppDatabase : RoomDatabase() {
                         priority INTEGER NOT NULL
                     );
                 """
-                )
-                db.execSQL("CREATE INDEX index_torrent_hash ON torrent (hash);")
-                db.execSQL("CREATE INDEX index_torrent_account_id ON torrent (account_id);")
-                db.execSQL(
-                    """
+                    )
+                    db.execSQL("CREATE INDEX index_torrent_hash ON torrent (hash);")
+                    db.execSQL("CREATE INDEX index_torrent_account_id ON torrent (account_id);")
+                    db.execSQL(
+                        """
                     CREATE TABLE remote_keys (
                         torrent_id TEXT PRIMARY KEY NOT NULL,
                         account_id INTEGER NOT NULL,
                         last_offset INTEGER
                     );
                     """
-                )
-                db.execSQL("CREATE INDEX index_remote_keys_account_id ON remote_keys (account_id);")
+                    )
+                    db.execSQL("CREATE INDEX index_remote_keys_account_id ON remote_keys (account_id);")
+                } catch (e: Exception) {
+                    Log.e("AppDatabase", "DB migration error: $e")
+                } finally {
+                    db.endTransaction()
+                }
             }
         }
     }
