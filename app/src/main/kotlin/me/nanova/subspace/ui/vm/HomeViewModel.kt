@@ -45,7 +45,7 @@ class HomeViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             accountRepo.list().collect {
-                _accounts.value = it
+                _accounts.update { it }
             }
         }
 

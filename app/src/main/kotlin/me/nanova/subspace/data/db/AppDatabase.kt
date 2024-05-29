@@ -28,9 +28,24 @@ abstract class AppDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.beginTransaction()
                 try {
-                    // sqlite table name is case-insensitive
-                    db.execSQL("ALTER TABLE Account RENAME TO tmp_account;")
-                    db.execSQL("ALTER TABLE tmp_account RENAME TO account;")
+                    // sqlite table name is case-insensitive, so cannot just rename
+                    db.execSQL("DROP TABLE Account;")
+                    db.execSQL(
+                        """
+                    CREATE TABLE account (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL ,
+                        url TEXT NOT NULL,
+                        type TEXT NOT NULL,
+                        name TEXT NOT NULL,
+                        user TEXT NOT NULL,
+                        pass TEXT NOT NULL,
+                        created INTEGER NOT NULL,
+                        use_lan_switch INTEGER NOT NULL,
+                        lan_url TEXT NOT NULL,
+                        lan_ssid TEXT NOT NULL
+                    );
+                    """
+                    )
 
                     // previous version didn't use this table
                     db.execSQL("DROP TABLE torrent;")
@@ -57,8 +72,8 @@ abstract class AppDatabase : RoomDatabase() {
                         leechs INTEGER NOT NULL,
                         seeds INTEGER NOT NULL,
                         priority INTEGER NOT NULL
-                    );
-                """
+                        );
+                    """
                     )
                     db.execSQL("CREATE INDEX index_torrent_hash ON torrent (hash);")
                     db.execSQL("CREATE INDEX index_torrent_account_id ON torrent (account_id);")
