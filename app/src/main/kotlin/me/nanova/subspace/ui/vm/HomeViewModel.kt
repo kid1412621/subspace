@@ -65,10 +65,11 @@ class HomeViewModel @Inject constructor(
     fun switchAccount(account: Account) {
         viewModelScope.launch {
             accountRepo.switch(account.id)
+            updateSort()
         }
     }
 
-    fun updateSort(newFilter: QTListParams) {
+    fun updateSort(newFilter: QTListParams = QTListParams()) {
         _homeUiState.update {
             it.copy(filter = newFilter)
         }
