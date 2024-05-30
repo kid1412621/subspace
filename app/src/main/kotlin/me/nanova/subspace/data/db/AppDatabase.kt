@@ -27,12 +27,12 @@ abstract class AppDatabase : RoomDatabase() {
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 try {
+                    db.execSQL("ALTER TABLE Account ADD COLUMN use_lan_switch INTEGER NOT NULL DEFAULT 0;")
+                    db.execSQL("ALTER TABLE Account ADD COLUMN lan_url TEXT NOT NULL DEFAULT '';")
+                    db.execSQL("ALTER TABLE Account ADD COLUMN lan_ssid TEXT NOT NULL DEFAULT '';")
                     // sqlite table name is case-insensitive
                     db.execSQL("ALTER TABLE Account RENAME TO tmp_account;")
                     db.execSQL("ALTER TABLE tmp_account RENAME TO account;")
-                    db.execSQL("ALTER TABLE account ADD COLUMN use_lan_switch INTEGER NOT NULL;")
-                    db.execSQL("ALTER TABLE account ADD COLUMN lan_url TEXT NOT NULL;")
-                    db.execSQL("ALTER TABLE account ADD COLUMN lan_ssid TEXT NOT NULL;")
 
                     // previous version didn't use this table
                     db.execSQL("DROP TABLE torrent;")
@@ -58,7 +58,7 @@ abstract class AppDatabase : RoomDatabase() {
                         leechs INTEGER NOT NULL,
                         seeds INTEGER NOT NULL,
                         priority INTEGER NOT NULL
-                        );
+                    );
                     """
                     )
                     db.execSQL("CREATE INDEX index_torrent_hash ON torrent (hash);")
