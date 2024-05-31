@@ -29,7 +29,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import me.nanova.subspace.data.AccountType
+import me.nanova.subspace.domain.model.AccountType
 import me.nanova.subspace.domain.model.Account
 
 @OptIn(ExperimentalFoundationApi::class)

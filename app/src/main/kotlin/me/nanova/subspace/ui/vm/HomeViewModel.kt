@@ -1,18 +1,18 @@
 package me.nanova.subspace.ui.vm
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import me.nanova.subspace.domain.model.Account
@@ -23,12 +23,7 @@ import me.nanova.subspace.domain.repo.TorrentRepo
 import javax.inject.Inject
 
 
-enum class CallState {
-    Success, Error, Loading
-}
-
 data class HomeUiState(
-    val state: CallState = CallState.Loading,
     var error: String? = null,
     val data: List<Torrent> = emptyList(),
     val filter: QTListParams = QTListParams()
@@ -40,9 +35,6 @@ class HomeViewModel @Inject constructor(
     private val accountRepo: AccountRepo
 ) : ViewModel() {
 
-    var isRefreshing by mutableStateOf(false)
-        private set
-
     private val _homeUiState = MutableStateFlow(HomeUiState())
     val homeUiState: StateFlow<HomeUiState> = _homeUiState.asStateFlow()
 
@@ -52,16 +44,6 @@ class HomeViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            _homeUiState
-                .map { it.state }
-                .distinctUntilChanged()
-                .filter { it == CallState.Loading }
-                .collectLatest {
-                    loadData()
-                }
-        }
-
-        viewModelScope.launch {
             accountRepo.list().collect {
                 _accounts.value = it
             }
@@ -69,45 +51,27 @@ class HomeViewModel @Inject constructor(
 
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val pagingDataFlow: Flow<PagingData<Torrent>> =
+        combine(
+            currentAccount.filterNotNull(),
+            _homeUiState
+        ) { account, uiState -> account to uiState.filter }
+            .distinctUntilChanged()
+            .flatMapLatest { (account, filter) ->
+                torrentRepo.torrents(account, filter)
+            }
+
     fun switchAccount(account: Account) {
         viewModelScope.launch {
             accountRepo.switch(account.id)
+            updateSort()
         }
     }
 
-    fun refresh() {
-        _homeUiState.update { it.copy(state = CallState.Loading) }
-    }
-
-    private fun loadData() {
-        viewModelScope.launch {
-            isRefreshing = true
-            currentAccount.distinctUntilChanged().collect { id ->
-                id?.let {
-                    _homeUiState.update {
-                        try {
-                            val list = torrentRepo.fetch(_homeUiState.value.filter)
-                            it.copy(
-                                state = CallState.Success,
-                                data = list
-                            )
-                        } catch (e: Exception) {
-                            it.copy(state = CallState.Error, error = e.message)
-                        } finally {
-                            isRefreshing = false
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    fun updateSort(newFilter: QTListParams) {
+    fun updateSort(newFilter: QTListParams = QTListParams()) {
         _homeUiState.update {
-            it.copy(
-                state = CallState.Loading,
-                filter = newFilter
-            )
+            it.copy(filter = newFilter)
         }
     }
 }

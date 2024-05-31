@@ -9,6 +9,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import me.nanova.subspace.data.db.AccountDao
 import me.nanova.subspace.data.db.AppDatabase
+import me.nanova.subspace.data.db.AppDatabase.Companion.DATABASE_NAME
+import me.nanova.subspace.data.db.AppDatabase.Companion.MIGRATION_1_2
+import me.nanova.subspace.data.db.RemoteKeyDao
 import me.nanova.subspace.data.db.TorrentDao
 import javax.inject.Singleton
 
@@ -16,21 +19,23 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
 
-    private const val DB_NAME = "subspace.db"
-
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext appContext: Context): AppDatabase {
-        return Room.databaseBuilder(
-            appContext,
-            AppDatabase::class.java,
-            DB_NAME
-        ).build()
+        return Room
+            .databaseBuilder(appContext, AppDatabase::class.java, DATABASE_NAME)
+            .addMigrations(MIGRATION_1_2)
+            .build()
     }
 
     @Provides
     fun provideAccountDao(database: AppDatabase): AccountDao {
         return database.accountDao()
+    }
+
+    @Provides
+    fun provideRemoteKeyDao(database: AppDatabase): RemoteKeyDao {
+        return database.remoteKeyDao()
     }
 
     @Provides

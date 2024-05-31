@@ -1,5 +1,7 @@
 package me.nanova.subspace.domain.model
 
+import me.nanova.subspace.data.TorrentRepoImpl.Companion.PAGE_SIZE
+
 data class QTListParams(
 
     var filter: String = "all",
@@ -7,9 +9,9 @@ data class QTListParams(
     var tag: String? = null,
     var sort: String? = null,
     var reverse: Boolean = false,
-    var limit: Int = 20,
-    var offset: Int = 0,
     var hashes: String? = null,
+    var limit: Int = PAGE_SIZE,
+    var offset: Int = 0,
 ) {
     fun toMap(): Map<String, String?> {
 //        val queryParamsMap = this::class.memberProperties

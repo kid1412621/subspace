@@ -1,4 +1,5 @@
 import com.android.build.api.dsl.ApkSigningConfig
+import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.archivesName
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -25,7 +26,7 @@ android {
         targetSdk = 34
         versionCode = 9
         versionName = "0.2.2"
-        setProperty("archivesBaseName", "subspace-v${versionName}-${versionCode}")
+        archivesName = "subspace-v${versionName}-${versionCode}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -130,8 +131,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
 
     // paging
-    implementation("androidx.paging:paging-compose:3.3.0-rc01")
-    implementation("androidx.paging:paging-runtime-ktx:3.3.0-rc01")
+    implementation("androidx.paging:paging-compose:3.3.0")
+    implementation("androidx.paging:paging-runtime-ktx:3.3.0")
 
     // nav
     implementation("androidx.navigation:navigation-compose")
@@ -141,7 +142,7 @@ dependencies {
 //    implementation("androidx.compose.material3:material3")
     // wait for https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary#DismissibleDrawerSheet(androidx.compose.material3.DrawerState,androidx.compose.ui.Modifier,androidx.compose.ui.graphics.Shape,androidx.compose.ui.graphics.Color,androidx.compose.ui.graphics.Color,androidx.compose.ui.unit.Dp,androidx.compose.foundation.layout.WindowInsets,kotlin.Function1)
     // see: https://developer.android.com/jetpack/androidx/releases/compose-material3#1.3.0-alpha04
-    implementation("androidx.compose.material3:material3:1.3.0-alpha06")
+    implementation("androidx.compose.material3:material3:1.3.0-beta01")
     // wait for MD3 implementation
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.compose.animation:animation:1.6.7")
@@ -161,6 +162,7 @@ dependencies {
     // room
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
+    implementation("androidx.room:room-paging:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
 
     // retrofit

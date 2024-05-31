@@ -9,6 +9,7 @@ import me.nanova.subspace.data.Storage
 import me.nanova.subspace.data.TorrentRepoImpl
 import me.nanova.subspace.data.api.QTApiService
 import me.nanova.subspace.data.db.AccountDao
+import me.nanova.subspace.data.db.AppDatabase
 import me.nanova.subspace.data.db.TorrentDao
 import me.nanova.subspace.domain.repo.AccountRepo
 import me.nanova.subspace.domain.repo.TorrentRepo
@@ -18,7 +19,6 @@ import javax.inject.Provider
 @InstallIn(SingletonComponent::class)
 object RepoModule {
 
-
     @Provides
     fun provideAccountRepo(accountDao: AccountDao, storage: Storage): AccountRepo {
         return AccountRepoImpl(accountDao, storage)
@@ -26,10 +26,11 @@ object RepoModule {
 
     @Provides
     fun provideTorrentRepo(
+        appDatabase: AppDatabase,
         torrentDao: TorrentDao,
-        storage: Storage,
         apiService: Provider<QTApiService>
     ): TorrentRepo {
-        return TorrentRepoImpl(torrentDao, storage, apiService)
+        return TorrentRepoImpl(appDatabase, torrentDao, apiService)
     }
+
 }
