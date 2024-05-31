@@ -24,8 +24,8 @@ android {
         applicationId = "me.nanova.subspace"
         minSdk = 29
         targetSdk = 34
-        versionCode = 9
-        versionName = "0.2.2"
+        versionCode = 10
+        versionName = "0.3.0"
         archivesName = "subspace-v${versionName}-${versionCode}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
