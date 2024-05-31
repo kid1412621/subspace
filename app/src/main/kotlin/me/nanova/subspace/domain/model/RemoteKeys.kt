@@ -11,6 +11,8 @@ data class RemoteKeys(
     val torrentId: String,
     @ColumnInfo(index = true, name = "account_id")
     val accountId: Long,
-    @ColumnInfo(name = "last_offset")
-    val lastOffset: Int?
+    @ColumnInfo(name = "prev_offset")
+    val prevOffset: Int?,
+    @ColumnInfo(name = "next_offset")
+    val nextOffset: Int?
 )

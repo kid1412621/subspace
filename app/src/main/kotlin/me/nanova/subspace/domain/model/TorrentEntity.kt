@@ -33,6 +33,8 @@ data class TorrentEntity(
     val leechs: Int,
     val seeds: Int,
     val priority: Int,
+    @ColumnInfo(name = "last_updated")
+    val lastUpdated: Long = System.currentTimeMillis()
 )
 
 fun TorrentEntity.toModel() = Torrent(

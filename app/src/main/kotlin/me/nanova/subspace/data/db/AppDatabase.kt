@@ -57,7 +57,8 @@ abstract class AppDatabase : RoomDatabase() {
                         ratio REAL NOT NULL,
                         leechs INTEGER NOT NULL,
                         seeds INTEGER NOT NULL,
-                        priority INTEGER NOT NULL
+                        priority INTEGER NOT NULL,
+                        last_updated INTEGER NOT NULL
                     );
                     """
                     )
@@ -69,7 +70,8 @@ abstract class AppDatabase : RoomDatabase() {
                     CREATE TABLE remote_keys (
                         torrent_id TEXT PRIMARY KEY NOT NULL,
                         account_id INTEGER NOT NULL,
-                        last_offset INTEGER
+                        prev_offset INTEGER,
+                        next_offset INTEGER
                     );
                     """
                     )

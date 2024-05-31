@@ -35,23 +35,21 @@ class TorrentRemoteMediator(
         return try {
             val offset = when (loadType) {
                 LoadType.REFRESH -> 0
-                // No items to prepend in offset-based APIs
-                LoadType.PREPEND -> return MediatorResult.Success(endOfPaginationReached = true)
-//                LoadType.PREPEND -> {
-//                    val firstItemId = state.firstItemOrNull()?.id
-//                    val firstItemRemoteKeys = firstItemId?.let {
-//                        remoteKeyDao.remoteKeysItemId(it)
-//                    }
-//                    firstItemRemoteKeys?.lastOffset?.minus(state.config.pageSize)
-//                        ?: return MediatorResult.Success(endOfPaginationReached = true)
-//                }
                 LoadType.APPEND -> {
-                    val lastItemId = state.lastItemOrNull()?.id
-                    val lastItemRemoteKeys = lastItemId?.let {
-                        remoteKeyDao.remoteKeysItemId(it)
-                    }
-                    lastItemRemoteKeys?.lastOffset?.plus(state.config.pageSize)
-                        ?: return MediatorResult.Success(endOfPaginationReached = true)
+                    val remoteKeys = state.pages
+                        .lastOrNull() { it.data.isNotEmpty() } // Find the first page with items
+                        ?.data?.lastOrNull() // Get the first item in that page
+                        ?.let { remoteKeyDao.remoteKeysItemId(it.id) }
+                    remoteKeys?.nextOffset
+                        ?: return MediatorResult.Success(endOfPaginationReached = remoteKeys != null)
+                }
+                LoadType.PREPEND -> {
+                    val remoteKeys = state.pages
+                        .firstOrNull { it.data.isNotEmpty() }
+                        ?.data?.firstOrNull()
+                        ?.let { remoteKeyDao.remoteKeysItemId(it.id) }
+                    remoteKeys?.prevOffset
+                        ?: return MediatorResult.Success(endOfPaginationReached = remoteKeys != null)
                 }
             }
 
@@ -70,10 +68,14 @@ class TorrentRemoteMediator(
 
                 val entities = response.map { it.toEntity(currentAccountId) }
                 torrentDao.insertAll(entities)
+                val prevOffset = if (offset == 0) null else offset - state.config.pageSize
+                val nextOffset =
+                    if (endOfPaginationReached) null else offset + state.config.pageSize
                 val keys = entities.map {
                     RemoteKeys(
                         torrentId = it.id,
-                        lastOffset = offset,
+                        prevOffset = prevOffset,
+                        nextOffset = nextOffset,
                         accountId = currentAccountId
                     )
                 }
@@ -82,6 +84,7 @@ class TorrentRemoteMediator(
 
             MediatorResult.Success(endOfPaginationReached = endOfPaginationReached)
         } catch (e: Exception) {
+            // might display db data when network is unavailable, but not sure the user case, let decide in future
             MediatorResult.Error(e)
         }
     }
