@@ -1,11 +1,12 @@
 import com.android.build.api.dsl.ApkSigningConfig
-import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.archivesName
+//import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.archivesName
 import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
     id("com.google.gms.google-services")
@@ -26,7 +27,8 @@ android {
         targetSdk = 34
         versionCode = 10
         versionName = "0.3.0"
-        archivesName = "subspace-v${versionName}-${versionCode}"
+        // FIXME
+//        archivesName = "subspace-v${versionName}-${versionCode}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -98,10 +100,10 @@ android {
         compose = true
         buildConfig = true
     }
-    composeOptions {
-        // https://developer.android.com/jetpack/androidx/releases/compose-kotlin#pre-release_kotlin_compatibility
-        kotlinCompilerExtensionVersion = "1.5.13"
-    }
+}
+
+composeCompiler {
+    enableStrongSkippingMode = true
 }
 
 androidComponents {
@@ -119,7 +121,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
 
     // https://developer.android.com/jetpack/compose/bom/bom-mapping
-    val composeBom = platform("androidx.compose:compose-bom:2024.05.00")
+    val composeBom = platform("androidx.compose:compose-bom:2024.06.00")
     implementation(composeBom)
     implementation("androidx.activity:activity-ktx:1.9.0")
     implementation("androidx.activity:activity-compose")
@@ -140,12 +142,12 @@ dependencies {
 
     // Material Design 3
 //    implementation("androidx.compose.material3:material3")
-    // wait for https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary#DismissibleDrawerSheet(androidx.compose.material3.DrawerState,androidx.compose.ui.Modifier,androidx.compose.ui.graphics.Shape,androidx.compose.ui.graphics.Color,androidx.compose.ui.graphics.Color,androidx.compose.ui.unit.Dp,androidx.compose.foundation.layout.WindowInsets,kotlin.Function1)
+    // TODO: wait for https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary#DismissibleDrawerSheet(androidx.compose.material3.DrawerState,androidx.compose.ui.Modifier,androidx.compose.ui.graphics.Shape,androidx.compose.ui.graphics.Color,androidx.compose.ui.graphics.Color,androidx.compose.ui.unit.Dp,androidx.compose.foundation.layout.WindowInsets,kotlin.Function1)
     // see: https://developer.android.com/jetpack/androidx/releases/compose-material3#1.3.0-alpha04
-    implementation("androidx.compose.material3:material3:1.3.0-beta01")
+    implementation("androidx.compose.material3:material3:1.3.0-beta03")
     // wait for MD3 implementation
     implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.compose.animation:animation:1.6.7")
+    implementation("androidx.compose.animation:animation:1.6.8")
     implementation("androidx.compose.animation:animation-graphics")
     // not ready yet
 //    implementation("androidx.compose.material3:material3-adaptive:1.0.0-alpha08")
@@ -174,7 +176,7 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     // firebase
-    implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
+    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
     implementation("com.google.firebase:firebase-crashlytics")
     implementation("com.google.firebase:firebase-analytics")
 
