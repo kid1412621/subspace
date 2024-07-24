@@ -1,5 +1,4 @@
 import com.android.build.api.dsl.ApkSigningConfig
-//import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.archivesName
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -25,10 +24,9 @@ android {
         applicationId = "me.nanova.subspace"
         minSdk = 29
         targetSdk = 34
-        versionCode = 10
-        versionName = "0.3.0"
-        // FIXME
-//        archivesName = "subspace-v${versionName}-${versionCode}"
+        versionCode = 11
+        versionName = "0.4.0"
+        setProperty("archivesBaseName", "subspace-v${versionName}-${versionCode}")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -144,7 +142,7 @@ dependencies {
 //    implementation("androidx.compose.material3:material3")
     // TODO: wait for https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary#DismissibleDrawerSheet(androidx.compose.material3.DrawerState,androidx.compose.ui.Modifier,androidx.compose.ui.graphics.Shape,androidx.compose.ui.graphics.Color,androidx.compose.ui.graphics.Color,androidx.compose.ui.unit.Dp,androidx.compose.foundation.layout.WindowInsets,kotlin.Function1)
     // see: https://developer.android.com/jetpack/androidx/releases/compose-material3#1.3.0-alpha04
-    implementation("androidx.compose.material3:material3:1.3.0-beta03")
+    implementation("androidx.compose.material3:material3:1.3.0-beta04")
     // wait for MD3 implementation
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.compose.animation:animation:1.6.8")
@@ -176,7 +174,7 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     // firebase
-    implementation(platform("com.google.firebase:firebase-bom:33.1.1"))
+    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
     implementation("com.google.firebase:firebase-crashlytics")
     implementation("com.google.firebase:firebase-analytics")
 
@@ -187,6 +185,6 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
 }
