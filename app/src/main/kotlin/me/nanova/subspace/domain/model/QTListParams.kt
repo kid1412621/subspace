@@ -8,7 +8,7 @@ data class QTListParams(
     var category: String? = null,
     var tag: String? = null,
     var sort: String? = null,
-    var reverse: Boolean? = null,
+    var reverse: Boolean = false,
     var hashes: String? = null,
     var limit: Int = PAGE_SIZE,
     var offset: Int = 0,

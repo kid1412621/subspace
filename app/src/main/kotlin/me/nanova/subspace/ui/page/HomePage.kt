@@ -10,14 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AccessTime
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.ArrowDropDown
-import androidx.compose.material.icons.rounded.ArrowDropUp
 import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.SortByAlpha
-import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.SwapVert
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
@@ -25,13 +20,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.DismissibleDrawerSheet
 import androidx.compose.material3.DismissibleNavigationDrawer
 import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.ModalBottomSheet
@@ -70,6 +65,7 @@ import kotlinx.coroutines.launch
 import me.nanova.subspace.R
 import me.nanova.subspace.ui.Routes
 import me.nanova.subspace.ui.component.AccountMenu
+import me.nanova.subspace.ui.component.SortMenu
 import me.nanova.subspace.ui.component.TorrentList
 import me.nanova.subspace.ui.vm.HomeUiState
 import me.nanova.subspace.ui.vm.HomeViewModel
@@ -186,110 +182,10 @@ private fun BottomBar(
         }
 
         if (showSortMenu) {
-            DropdownMenu(
-                expanded = true,
-                onDismissRequest = { showSortMenu = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text(text = "Name") },
-                    colors = if (uiState.filter.sort == "name")
-                        MenuDefaults.itemColors(MaterialTheme.colorScheme.primary)
-                    else MenuDefaults.itemColors(),
-                    leadingIcon = {
-                        Icon(
-                            Icons.Rounded.SortByAlpha,
-                            contentDescription = "Sort by name"
-                        )
-                    },
-                    trailingIcon = {
-                        if (uiState.filter.sort == "name") {
-                            Icon(
-                                if (uiState.filter.reverse) Icons.Rounded.ArrowDropDown
-                                else Icons.Rounded.ArrowDropUp,
-                                contentDescription = if (uiState.filter.reverse) "Descending" else "Ascending"
-                            )
-                        }
-                    },
-                    onClick = {
-                        homeViewModel.updateSort(
-                            uiState.filter.copy(
-                                sort = "name",
-                                reverse = if (uiState.filter.sort == "name") !uiState.filter.reverse else uiState.filter.reverse
-                            )
-                        )
-                        showSortMenu = false
-                    })
-                DropdownMenuItem(
-                    text = { Text(text = "Added On") },
-                    colors = if (uiState.filter.sort == "added_on")
-                        MenuDefaults.itemColors(MaterialTheme.colorScheme.primary)
-                    else MenuDefaults.itemColors(),
-                    leadingIcon = {
-                        Icon(
-                            Icons.Rounded.AccessTime,
-                            contentDescription = "Sort by add time"
-                        )
-                    },
-                    trailingIcon = {
-                        if (uiState.filter.sort == "added_on") {
-                            if (uiState.filter.reverse) {
-                                Icon(
-                                    Icons.Rounded.ArrowDropDown,
-                                    contentDescription = "Descending"
-                                )
-                            } else {
-                                Icon(
-                                    Icons.Rounded.ArrowDropUp,
-                                    contentDescription = "Ascending"
-                                )
-                            }
-                        }
-                    },
-                    onClick = {
-                        homeViewModel.updateSort(
-                            uiState.filter.copy(
-                                sort = "added_on",
-                                reverse = if (uiState.filter.sort == "added_on") !uiState.filter.reverse else uiState.filter.reverse
-                            )
-                        )
-                        showSortMenu = false
-                    })
-                DropdownMenuItem(
-                    text = { Text(text = "Download Speed") },
-                    colors = if (uiState.filter.sort == "dlspeed")
-                        MenuDefaults.itemColors(MaterialTheme.colorScheme.primary)
-                    else MenuDefaults.itemColors(),
-                    leadingIcon = {
-                        Icon(
-                            Icons.Rounded.Speed,
-                            contentDescription = "Sort by download speed"
-                        )
-                    },
-                    trailingIcon = {
-                        if (uiState.filter.sort == "dlspeed") {
-                            if (uiState.filter.reverse) {
-                                Icon(
-                                    Icons.Rounded.ArrowDropDown,
-                                    contentDescription = "Descending"
-                                )
-                            } else {
-                                Icon(
-                                    Icons.Rounded.ArrowDropUp,
-                                    contentDescription = "Ascending"
-                                )
-                            }
-                        }
-                    },
-                    onClick = {
-                        homeViewModel.updateSort(
-                            uiState.filter.copy(
-                                sort = "dlspeed",
-                                reverse = if (uiState.filter.sort == "dlspeed") !uiState.filter.reverse else uiState.filter.reverse
-                            )
-                        )
-                        showSortMenu = false
-                    })
-            }
+            SortMenu(
+                uiState.filter,
+                onClose = { showSortMenu = false },
+                onSort = { homeViewModel.updateSort(it) })
         }
 
         BottomAppBar(
@@ -304,11 +200,15 @@ private fun BottomBar(
                     )
                 }
                 IconButton(onClick = { showSortMenu = true },
+                    colors = if (uiState.filter.sort != null)
+                        IconButtonDefaults.iconButtonColors(MaterialTheme.colorScheme.primary)
+                    else IconButtonDefaults.iconButtonColors(),
                     modifier = Modifier.pointerInput(Unit) {
                         detectTapGestures(
-                            onPress = {
-                                uiState.filter.sort = null
-                                uiState.filter.reverse = null
+                            onLongPress = {
+                                homeViewModel.updateSort(
+                                    uiState.filter.copy(sort = null, reverse = false)
+                                )
                             }
                         )
                     }) {
