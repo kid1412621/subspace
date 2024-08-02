@@ -121,7 +121,7 @@ dependencies {
     // https://developer.android.com/jetpack/compose/bom/bom-mapping
     val composeBom = platform("androidx.compose:compose-bom:2024.06.00")
     implementation(composeBom)
-    implementation("androidx.activity:activity-ktx:1.9.0")
+    implementation("androidx.activity:activity-ktx:1.9.1")
     implementation("androidx.activity:activity-compose")
     implementation("androidx.lifecycle:lifecycle-runtime-compose")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose")
@@ -131,8 +131,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
 
     // paging
-    implementation("androidx.paging:paging-compose:3.3.0")
-    implementation("androidx.paging:paging-runtime-ktx:3.3.0")
+    implementation("androidx.paging:paging-compose:3.3.1")
+    implementation("androidx.paging:paging-runtime-ktx:3.3.1")
 
     // nav
     implementation("androidx.navigation:navigation-compose")
@@ -142,7 +142,7 @@ dependencies {
 //    implementation("androidx.compose.material3:material3")
     // TODO: wait for https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary#DismissibleDrawerSheet(androidx.compose.material3.DrawerState,androidx.compose.ui.Modifier,androidx.compose.ui.graphics.Shape,androidx.compose.ui.graphics.Color,androidx.compose.ui.graphics.Color,androidx.compose.ui.unit.Dp,androidx.compose.foundation.layout.WindowInsets,kotlin.Function1)
     // see: https://developer.android.com/jetpack/androidx/releases/compose-material3#1.3.0-alpha04
-    implementation("androidx.compose.material3:material3:1.3.0-beta04")
+    implementation("androidx.compose.material3:material3:1.3.0-beta05")
     // wait for MD3 implementation
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.compose.animation:animation:1.6.8")

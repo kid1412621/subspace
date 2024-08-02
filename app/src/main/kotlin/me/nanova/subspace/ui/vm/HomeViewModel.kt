@@ -48,7 +48,6 @@ class HomeViewModel @Inject constructor(
                 _accounts.value = it
             }
         }
-
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)

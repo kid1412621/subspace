@@ -1,6 +1,7 @@
 package me.nanova.subspace.ui.page
 
 
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -54,6 +55,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -201,17 +203,11 @@ private fun BottomBar(
                     },
                     trailingIcon = {
                         if (uiState.filter.sort == "name") {
-                            if (uiState.filter.reverse) {
-                                Icon(
-                                    Icons.Rounded.ArrowDropDown,
-                                    contentDescription = "Descending"
-                                )
-                            } else {
-                                Icon(
-                                    Icons.Rounded.ArrowDropUp,
-                                    contentDescription = "Ascending"
-                                )
-                            }
+                            Icon(
+                                if (uiState.filter.reverse) Icons.Rounded.ArrowDropDown
+                                else Icons.Rounded.ArrowDropUp,
+                                contentDescription = if (uiState.filter.reverse) "Descending" else "Ascending"
+                            )
                         }
                     },
                     onClick = {
@@ -307,7 +303,15 @@ private fun BottomBar(
                         contentDescription = "filter"
                     )
                 }
-                IconButton(onClick = { showSortMenu = true }) {
+                IconButton(onClick = { showSortMenu = true },
+                    modifier = Modifier.pointerInput(Unit) {
+                        detectTapGestures(
+                            onPress = {
+                                uiState.filter.sort = null
+                                uiState.filter.reverse = null
+                            }
+                        )
+                    }) {
                     Icon(
                         Icons.Rounded.SwapVert,
                         contentDescription = "sort"
