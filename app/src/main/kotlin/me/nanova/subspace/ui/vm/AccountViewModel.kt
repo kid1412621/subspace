@@ -7,9 +7,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import me.nanova.subspace.domain.model.AccountType
 import me.nanova.subspace.data.api.QTAuthService
 import me.nanova.subspace.domain.model.Account
+import me.nanova.subspace.domain.model.AccountType
 import me.nanova.subspace.domain.repo.AccountRepo
 import retrofit2.Retrofit
 import retrofit2.converter.scalars.ScalarsConverterFactory

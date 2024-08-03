@@ -30,4 +30,8 @@ data class QTListParams(
             "hashes" to hashes
         ).filterValues { it != null } as Map<String, String>
     }
+
+    fun hasFiltered(): Boolean {
+        return this.filter != "all" || this.category != null || this.tag != null || this.sort != null || this.hashes != null
+    }
 }

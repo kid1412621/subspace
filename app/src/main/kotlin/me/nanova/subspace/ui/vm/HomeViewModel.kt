@@ -73,4 +73,10 @@ class HomeViewModel @Inject constructor(
             it.copy(filter = newFilter)
         }
     }
+
+    fun resetFilter() {
+        _homeUiState.update {
+            it.copy(filter = QTListParams())
+        }
+    }
 }

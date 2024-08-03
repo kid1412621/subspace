@@ -99,11 +99,11 @@ enum class QTFilterState {
     errored;
 
     fun toQTStates(): List<QTState> {
-       return when(this){
-           all -> QTState.entries
-           downloading -> listOf(QTState.downloading, QTState.metaDL)
-           // todo
-           else -> listOf()
-       }
+        return when (this) {
+            all -> QTState.entries
+            downloading -> listOf(QTState.downloading, QTState.metaDL)
+            // todo
+            else -> listOf()
+        }
     }
 }

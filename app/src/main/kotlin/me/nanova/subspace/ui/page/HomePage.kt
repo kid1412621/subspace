@@ -1,7 +1,7 @@
 package me.nanova.subspace.ui.page
 
 
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.CleaningServices
 import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.SwapVert
@@ -25,10 +26,8 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -50,7 +49,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -148,7 +146,7 @@ fun HomePage(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun BottomBar(
     show: Boolean = false,
@@ -199,23 +197,25 @@ private fun BottomBar(
                         contentDescription = "filter"
                     )
                 }
-                IconButton(onClick = { showSortMenu = true },
+                IconButton(
+                    onClick = { showSortMenu = true },
                     colors = if (uiState.filter.sort != null)
-                        IconButtonDefaults.iconButtonColors(MaterialTheme.colorScheme.primary)
+                        IconButtonDefaults.iconButtonColors(MaterialTheme.colorScheme.primaryContainer)
                     else IconButtonDefaults.iconButtonColors(),
-                    modifier = Modifier.pointerInput(Unit) {
-                        detectTapGestures(
-                            onLongPress = {
-                                homeViewModel.updateSort(
-                                    uiState.filter.copy(sort = null, reverse = false)
-                                )
-                            }
-                        )
-                    }) {
+                ) {
                     Icon(
                         Icons.Rounded.SwapVert,
                         contentDescription = "sort"
                     )
+                }
+                // IconButton no built-in longPress support
+                if (uiState.filter.hasFiltered()) {
+                    IconButton(onClick = { homeViewModel.resetFilter() }) {
+                        Icon(
+                            Icons.Rounded.CleaningServices,
+                            contentDescription = "clear filter"
+                        )
+                    }
                 }
             },
             floatingActionButton = {

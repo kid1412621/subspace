@@ -43,6 +43,7 @@ class TorrentRemoteMediator(
                     remoteKeys?.nextOffset
                         ?: return MediatorResult.Success(endOfPaginationReached = remoteKeys != null)
                 }
+
                 LoadType.PREPEND -> {
                     val remoteKeys = state.pages
                         .firstOrNull { it.data.isNotEmpty() }

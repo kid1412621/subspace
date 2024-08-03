@@ -4,15 +4,12 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
-import androidx.sqlite.db.SimpleSQLiteQuery
-import androidx.sqlite.db.SupportSQLiteQuery
 import kotlinx.coroutines.flow.Flow
 import me.nanova.subspace.data.api.QTApiService
 import me.nanova.subspace.data.db.AppDatabase
 import me.nanova.subspace.data.db.TorrentDao
 import me.nanova.subspace.data.db.TorrentDao.Companion.buildQuery
 import me.nanova.subspace.domain.model.Account
-import me.nanova.subspace.domain.model.QTFilterState
 import me.nanova.subspace.domain.model.QTListParams
 import me.nanova.subspace.domain.model.Torrent
 import me.nanova.subspace.domain.repo.TorrentRepo
