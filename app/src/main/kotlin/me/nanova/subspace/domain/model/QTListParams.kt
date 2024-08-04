@@ -32,6 +32,10 @@ data class QTListParams(
     }
 
     fun hasFiltered(): Boolean {
-        return this.filter != "all" || this.category != null || this.tag != null || this.sort != null || this.hashes != null
+        return this.filter != "all" || this.category != null || this.tag != null || this.hashes != null
+    }
+
+    fun hasSorted(): Boolean {
+        return this.sort != null
     }
 }

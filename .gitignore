@@ -2,6 +2,9 @@
 .gradle/
 build/
 
+# Ignore Kotlin cache directory
+.kotlin/
+
 # Local configuration file (sdk path, etc)
 local.properties
 

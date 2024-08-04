@@ -1,7 +1,6 @@
 package me.nanova.subspace.ui.page
 
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -28,7 +27,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -38,7 +36,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.material3.rememberDrawerState
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -63,6 +60,7 @@ import kotlinx.coroutines.launch
 import me.nanova.subspace.R
 import me.nanova.subspace.ui.Routes
 import me.nanova.subspace.ui.component.AccountMenu
+import me.nanova.subspace.ui.component.FilterMenu
 import me.nanova.subspace.ui.component.SortMenu
 import me.nanova.subspace.ui.component.TorrentList
 import me.nanova.subspace.ui.vm.HomeUiState
@@ -146,7 +144,6 @@ fun HomePage(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun BottomBar(
     show: Boolean = false,
@@ -155,35 +152,21 @@ private fun BottomBar(
 ) {
     var showSortMenu by remember { mutableStateOf(false) }
     var showFilterSheet by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState()
-    val scope = rememberCoroutineScope()
 
     if (show) {
         if (showFilterSheet) {
-            ModalBottomSheet(
-                onDismissRequest = {
-                    showFilterSheet = false
-                },
-                sheetState = sheetState
-            ) {
-                Button(onClick = {
-                    scope.launch { sheetState.hide() }
-                        .invokeOnCompletion {
-                            if (!sheetState.isVisible) {
-                                showFilterSheet = false
-                            }
-                        }
-                }) {
-                    Text("Hide bottom sheet")
-                }
-            }
+            FilterMenu(
+                uiState.filter,
+                onClose = { showFilterSheet = false },
+                onFilter = { homeViewModel.updateFilter(it) }
+            )
         }
 
         if (showSortMenu) {
             SortMenu(
                 uiState.filter,
                 onClose = { showSortMenu = false },
-                onSort = { homeViewModel.updateSort(it) })
+                onSort = { homeViewModel.updateFilter(it) })
         }
 
         BottomAppBar(
@@ -191,7 +174,12 @@ private fun BottomBar(
                 IconButton(onClick = { /* do something */ }, enabled = false) {
                     Icon(Icons.Rounded.Search, contentDescription = "search")
                 }
-                IconButton(onClick = { showFilterSheet = true }) {
+                IconButton(
+                    onClick = { showFilterSheet = true },
+                    colors = if (uiState.filter.hasFiltered())
+                        IconButtonDefaults.iconButtonColors(MaterialTheme.colorScheme.primaryContainer)
+                    else IconButtonDefaults.iconButtonColors(),
+                ) {
                     Icon(
                         Icons.Rounded.FilterList,
                         contentDescription = "filter"
@@ -199,7 +187,7 @@ private fun BottomBar(
                 }
                 IconButton(
                     onClick = { showSortMenu = true },
-                    colors = if (uiState.filter.sort != null)
+                    colors = if (uiState.filter.hasSorted())
                         IconButtonDefaults.iconButtonColors(MaterialTheme.colorScheme.primaryContainer)
                     else IconButtonDefaults.iconButtonColors(),
                 ) {
@@ -209,7 +197,7 @@ private fun BottomBar(
                     )
                 }
                 // IconButton no built-in longPress support
-                if (uiState.filter.hasFiltered()) {
+                if (uiState.filter.hasFiltered() || uiState.filter.hasSorted()) {
                     IconButton(onClick = { homeViewModel.resetFilter() }) {
                         Icon(
                             Icons.Rounded.CleaningServices,

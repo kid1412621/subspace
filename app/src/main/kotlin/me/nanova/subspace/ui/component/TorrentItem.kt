@@ -32,10 +32,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -64,14 +68,31 @@ fun TorrentItem(
         animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,
         label = "progressAnimation"
     )
+    var overlineHeight by remember { mutableIntStateOf(0) }
+    var headlineHeight by remember { mutableIntStateOf(0) }
+    var supportingHeight by remember { mutableIntStateOf(0) }
+    val totalHeight = overlineHeight + headlineHeight + supportingHeight
 
     ListItem(
         modifier = modifier,
         leadingContent = {
-            Icon(
-                QTState.valueOf(torrent.state).toIcon(),
-                contentDescription = torrent.state,
-            )
+            Column(
+                modifier =
+                Modifier
+                    .height(with(LocalDensity.current) { totalHeight.toDp() })
+                    .fillMaxWidth(0.15f),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    QTState.valueOf(torrent.state).toIcon(),
+                    contentDescription = torrent.state,
+                )
+                Text(
+                    text = torrent.state,
+                    fontSize = 11.sp
+                )
+            }
         },
         overlineContent = {
             val tags =
@@ -79,7 +100,9 @@ fun TorrentItem(
             val showCatOrTag =
                 !torrent.category.isNullOrBlank() || tags.isNotEmpty()
             if (showCatOrTag) {
-                CentricSpaceBetweenRow(modifier = Modifier.fillMaxWidth()) {
+                CentricSpaceBetweenRow(modifier = Modifier
+                    .fillMaxWidth()
+                    .onGloballyPositioned { overlineHeight = it.size.height }) {
                     CentricSpaceBetweenRow(Modifier.weight(1F)) {
                         torrent.category?.let {
                             Text(
@@ -117,6 +140,7 @@ fun TorrentItem(
         headlineContent = {
             Text(
                 torrent.name,
+                Modifier.onGloballyPositioned { headlineHeight = it.size.height },
                 minLines = 1,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -126,6 +150,7 @@ fun TorrentItem(
             CompositionLocalProvider(LocalTextStyle provides TextStyle(fontSize = 13.sp)) {
                 Column(
                     modifier = Modifier
+                        .onGloballyPositioned { supportingHeight = it.size.height }
                         .fillMaxWidth()
                         .padding(PaddingValues(top = 5.dp))
                         .heightIn(min = 50.dp, max = 70.dp),
