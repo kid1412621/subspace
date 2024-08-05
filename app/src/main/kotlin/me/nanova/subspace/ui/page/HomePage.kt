@@ -152,11 +152,15 @@ private fun BottomBar(
 ) {
     var showSortMenu by remember { mutableStateOf(false) }
     var showFilterSheet by remember { mutableStateOf(false) }
+    val category by homeViewModel.categories.collectAsState(initial = emptyMap())
+    val tags by homeViewModel.tags.collectAsState(initial = emptyList())
 
     if (show) {
         if (showFilterSheet) {
             FilterMenu(
                 uiState.filter,
+                category,
+                tags,
                 onClose = { showFilterSheet = false },
                 onFilter = { homeViewModel.updateFilter(it) }
             )

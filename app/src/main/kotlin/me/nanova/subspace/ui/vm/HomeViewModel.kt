@@ -26,7 +26,7 @@ import javax.inject.Inject
 data class HomeUiState(
     var error: String? = null,
     val data: List<Torrent> = emptyList(),
-    val filter: QTListParams = QTListParams()
+    val filter: QTListParams = QTListParams(),
 )
 
 @HiltViewModel
@@ -49,6 +49,9 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
+
+    val categories = torrentRepo.categories()
+    val tags = torrentRepo.tags()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val pagingDataFlow: Flow<PagingData<Torrent>> =
