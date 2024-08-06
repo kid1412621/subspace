@@ -40,17 +40,27 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import kotlinx.coroutines.launch
 import me.nanova.subspace.domain.model.QTCategories
+import me.nanova.subspace.domain.model.QTCategory
 import me.nanova.subspace.domain.model.QTListParams
 
-private enum class Filters {
-    Status, Category, Tag;
+private enum class FilterType(val icon: ImageVector, val showCondition: (QTListParams) -> Boolean) {
+    Status(Icons.Filled.QuestionMark, { it.filter != "all" }),
+    Category(Icons.Filled.Category, { it.category != null }),
+    Tag(Icons.AutoMirrored.Filled.Label, { it.tag != null });
 }
+
+private data class QTFilters(
+    var filter: String = "all",
+    var category: String? = null,
+    var tag: String? = null,
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,6 +73,7 @@ fun FilterMenu(
 ) {
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
+    var tmp = QTFilters(filter = filter.filter, tag = filter.tag, category = filter.category)
 
     ModalBottomSheet(
         onDismissRequest = {
@@ -70,7 +81,6 @@ fun FilterMenu(
         },
         sheetState = sheetState
     ) {
-
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceAround,
@@ -78,17 +88,16 @@ fun FilterMenu(
                 .fillMaxWidth()
                 .padding(15.dp)
         ) {
-            AllFilterMenu(categories = categories, tags = tags)
-            Button(
-                onClick = {
-//                    onFilter(filter.copy(filter = ))
-                    scope.launch { sheetState.hide() }
-                        .invokeOnCompletion {
-                            if (!sheetState.isVisible) {
-                                onClose()
-                            }
+            AllFilterMenu(filter = filter, categories = categories, tags = tags, tmp = tmp)
+            Button(onClick = {
+                onFilter(filter.copy(tag = tmp.tag, filter = tmp.filter, category = tmp.category))
+                scope.launch { sheetState.hide() }
+                    .invokeOnCompletion {
+                        if (!sheetState.isVisible) {
+                            onClose()
                         }
-                }) {
+                    }
+            }) {
                 Text("Confirm")
             }
         }
@@ -97,30 +106,26 @@ fun FilterMenu(
 
 @Composable
 private fun AllFilterMenu(
-    defaultFilters: List<Filters> = emptyList(),
+    filter: QTListParams,
+    tmp: QTFilters,
+    filterTypes: List<FilterType> = emptyList(),
     categories: QTCategories = emptyMap(),
     tags: List<String> = emptyList(),
 ) {
-    val options = Filters.entries.map { it.name }.toList()
-    val checkedList = remember { mutableStateListOf(*defaultFilters.toTypedArray()) }
-    val icons =
-        listOf(
-            Icons.Filled.QuestionMark,
-            Icons.Filled.Category,
-            Icons.AutoMirrored.Filled.Label
-        )
+    val checkedList = remember {
+        mutableStateListOf(*filterTypes.filter { it.showCondition(filter) }.toTypedArray())
+    }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceAround
     ) {
         MultiChoiceSegmentedButtonRow {
-            options.forEachIndexed { index, label ->
-                val filter = Filters.valueOf(label)
+            FilterType.entries.forEachIndexed { index, filter ->
                 SegmentedButton(
                     shape = SegmentedButtonDefaults.itemShape(
                         index = index,
-                        count = options.size
+                        count = FilterType.entries.size
                     ),
                     colors = if (filter in checkedList)
                         SegmentedButtonDefaults.colors(MaterialTheme.colorScheme.primaryContainer)
@@ -129,7 +134,7 @@ private fun AllFilterMenu(
                     icon = {
                         SegmentedButtonDefaults.Icon(active = filter in checkedList) {
                             Icon(
-                                imageVector = icons[index],
+                                imageVector = filter.icon,
                                 contentDescription = null,
                                 modifier = Modifier.size(SegmentedButtonDefaults.IconSize)
                             )
@@ -142,16 +147,16 @@ private fun AllFilterMenu(
                     },
                     checked = filter in checkedList
                 ) {
-                    Text(label)
+                    Text(filter.name)
                 }
             }
         }
 
-        checkedList.asReversed().forEach {
-            when (it) {
-                Filters.Status -> StatusFilterMenu()
-                Filters.Category -> CategoryFilterMenu(categories)
-                Filters.Tag -> TagFilterMenu(tags)
+        checkedList.asReversed().forEach { type ->
+            when (type) {
+                FilterType.Status -> StatusFilterMenu()
+                FilterType.Category -> CategoryFilterMenu(filter, tmp, categories)
+                FilterType.Tag -> TagFilterMenu(filter, tags) { tmp.tag = it }
             }
         }
     }
@@ -162,6 +167,12 @@ private fun StatusFilterMenu() {
     val radioOptions = listOf("Active", "Downloading", "Seeding", "Paused", "Completed")
     val (selectedOption, onOptionSelected) = remember { mutableStateOf(radioOptions[0]) }
 
+    HorizontalDivider(Modifier.padding(vertical = 5.dp))
+    Text(
+        "Status",
+        fontSize = MaterialTheme.typography.labelSmall.fontSize,
+        color = MaterialTheme.colorScheme.outline
+    )
     Column(modifier = Modifier.selectableGroup()) {
         radioOptions.forEach { text ->
             Row(
@@ -187,69 +198,107 @@ private fun StatusFilterMenu() {
                 )
             }
         }
-
-        HorizontalDivider(Modifier.padding(vertical = 5.dp))
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun CategoryFilterMenu(categories: QTCategories) {
-    var selected by remember { mutableStateOf(false) }
-    Column {
-        FlowRow(
-            Modifier
-                .fillMaxWidth(1f)
-                .wrapContentHeight(align = Alignment.Top),
-            horizontalArrangement = Arrangement.Start,
-        ) {
-            categories.map { it.key }.fastForEach {
-                FilterChip(
-                    selected = selected,
-                    onClick = { selected = !selected },
-                    label = { Text(it) },
-                    modifier =
-                    Modifier
-                        .padding(horizontal = 4.dp)
-                        .align(alignment = Alignment.CenterVertically),
-                    leadingIcon = {
-                        if (selected)
-                            Icon(
-                                imageVector = Icons.Filled.Done,
-                                contentDescription = "Localized Description",
-                                modifier = Modifier.size(FilterChipDefaults.IconSize)
-                            )
-                    }
-                )
-            }
+private fun CategoryFilterMenu(
+    filter: QTListParams,
+    tmp: QTFilters,
+    categories: QTCategories
+) {
+    var selected by remember { mutableStateOf(filter.category) }
+
+    HorizontalDivider(Modifier.padding(vertical = 5.dp))
+    Text(
+        "Category",
+        fontSize = MaterialTheme.typography.labelSmall.fontSize,
+        color = MaterialTheme.colorScheme.outline
+    )
+    FlowRow(
+        Modifier
+            .fillMaxWidth(1f)
+            .wrapContentHeight(align = Alignment.Top),
+        horizontalArrangement = Arrangement.Start,
+    ) {
+        categories.map { it.key }.fastForEach {
+            FilterChip(
+                selected = it == selected,
+                onClick = {
+                    selected = if (it == selected) null else it
+                    tmp.category = selected
+                },
+                label = { Text(it) },
+                modifier = Modifier
+                    .padding(horizontal = 5.dp)
+                    .align(alignment = Alignment.CenterVertically),
+                leadingIcon = {
+                    if (it == selected)
+                        Icon(
+                            imageVector = Icons.Filled.Done,
+                            contentDescription = it,
+                            modifier = Modifier.size(FilterChipDefaults.IconSize)
+                        )
+                }
+            )
         }
     }
-    HorizontalDivider(Modifier.padding(vertical = 5.dp))
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TagFilterMenu(
+    filter: QTListParams,
     tags: List<String> = emptyList(),
+    onUpdate: (String?) -> Unit
 ) {
-    Column {
-        FlowRow(
-            Modifier
-                .fillMaxWidth(1f)
-                .wrapContentHeight(align = Alignment.Top),
-            horizontalArrangement = Arrangement.Start,
-        ) {
-            tags.fastForEach {
-                Text(text = it)
-            }
-        }
-    }
+    var selected by remember { mutableStateOf(filter.tag) }
 
     HorizontalDivider(Modifier.padding(vertical = 5.dp))
+    Text(
+        "Tag",
+        fontSize = MaterialTheme.typography.labelSmall.fontSize,
+        color = MaterialTheme.colorScheme.outline
+    )
+    FlowRow(
+        Modifier
+            .fillMaxWidth(1f)
+            .wrapContentHeight(align = Alignment.Top),
+        horizontalArrangement = Arrangement.Start,
+    ) {
+        tags.fastForEach {
+            FilterChip(
+                selected = it == selected,
+                onClick = {
+                    selected = if (it == selected) null else it
+                    onUpdate(selected)
+                },
+                label = { Text(it) },
+                modifier = Modifier
+                    .padding(horizontal = 5.dp)
+                    .align(alignment = Alignment.CenterVertically),
+                leadingIcon = {
+                    if (it == selected)
+                        Icon(
+                            imageVector = Icons.Filled.Done,
+                            contentDescription = it,
+                            modifier = Modifier.size(FilterChipDefaults.IconSize)
+                        )
+                }
+            )
+        }
+    }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun AllFilterMenuPreview() {
-    AllFilterMenu(Filters.entries)
+    AllFilterMenu(
+        QTListParams(filter = "downloading", category = "cat1", tag = "tagA"),
+        QTFilters(),
+        FilterType.entries,
+        categories = listOf(QTCategory("cat1"), QTCategory("cat2")).associateBy { it.name },
+        tags = listOf("tag1", "tagA")
+    )
 }
