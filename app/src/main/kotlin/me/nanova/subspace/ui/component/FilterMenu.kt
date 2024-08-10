@@ -74,6 +74,12 @@ fun FilterMenu(
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
     val tmp = QTFilters(filter = filter.filter, tag = filter.tag, category = filter.category)
+    val checkedList = remember {
+        mutableStateListOf(*FilterType.entries
+            .filter { it.showCondition(filter) }
+            .toTypedArray()
+        )
+    }
 
     ModalBottomSheet(
         onDismissRequest = {
@@ -81,7 +87,6 @@ fun FilterMenu(
         },
         sheetState = sheetState
     ) {
-
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceAround,
@@ -89,7 +94,49 @@ fun FilterMenu(
                 .fillMaxWidth()
                 .padding(15.dp)
         ) {
-            AllFilterMenu(filter = filter, categories = categories, tags = tags, tmp = tmp)
+            MultiChoiceSegmentedButtonRow {
+                FilterType.entries.forEachIndexed { index, filter ->
+                    SegmentedButton(
+                        shape = SegmentedButtonDefaults.itemShape(
+                            index = index,
+                            count = FilterType.entries.size
+                        ),
+                        colors = if (filter in checkedList)
+                            SegmentedButtonDefaults.colors(MaterialTheme.colorScheme.primaryContainer)
+                        else
+                            SegmentedButtonDefaults.colors(),
+                        icon = {
+                            SegmentedButtonDefaults.Icon(active = filter in checkedList) {
+                                Icon(
+                                    imageVector = filter.icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(SegmentedButtonDefaults.IconSize)
+                                )
+                            }
+                        },
+                        onCheckedChange = {
+                            if (!checkedList.remove(filter)) {
+                                checkedList.add(filter)
+                            }
+                        },
+                        checked = filter in checkedList
+                    ) {
+                        Text(filter.name)
+                    }
+                }
+            }
+
+            checkedList.asReversed().forEach { type ->
+                when (type) {
+                    FilterType.Status -> StatusFilterMenu(filter)
+                    FilterType.Category -> CategoryFilterMenu(filter, categories) {
+                        tmp.category = it
+                    }
+
+                    FilterType.Tag -> TagFilterMenu(filter, tags) { tmp.tag = it }
+                }
+            }
+
             Button(onClick = {
                 onFilter(filter.copy(tag = tmp.tag, filter = tmp.filter, category = tmp.category))
                 scope.launch { sheetState.hide() }
@@ -106,67 +153,10 @@ fun FilterMenu(
 }
 
 @Composable
-private fun AllFilterMenu(
+private fun StatusFilterMenu(
     filter: QTListParams,
-    tmp: QTFilters,
-    categories: QTCategories = emptyMap(),
-    tags: List<String> = emptyList(),
+    onUpdate: (String?) -> Unit = {}
 ) {
-    val checkedList = remember {
-        mutableStateListOf(*FilterType.entries
-            .filter { it.showCondition(filter) }
-            .toTypedArray()
-        )
-    }
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceAround
-    ) {
-        MultiChoiceSegmentedButtonRow {
-            FilterType.entries.forEachIndexed { index, filter ->
-                SegmentedButton(
-                    shape = SegmentedButtonDefaults.itemShape(
-                        index = index,
-                        count = FilterType.entries.size
-                    ),
-                    colors = if (filter in checkedList)
-                        SegmentedButtonDefaults.colors(MaterialTheme.colorScheme.primaryContainer)
-                    else
-                        SegmentedButtonDefaults.colors(),
-                    icon = {
-                        SegmentedButtonDefaults.Icon(active = filter in checkedList) {
-                            Icon(
-                                imageVector = filter.icon,
-                                contentDescription = null,
-                                modifier = Modifier.size(SegmentedButtonDefaults.IconSize)
-                            )
-                        }
-                    },
-                    onCheckedChange = {
-                        if (!checkedList.remove(filter)) {
-                            checkedList.add(filter)
-                        }
-                    },
-                    checked = filter in checkedList
-                ) {
-                    Text(filter.name)
-                }
-            }
-        }
-
-        checkedList.asReversed().forEach { type ->
-            when (type) {
-                FilterType.Status -> StatusFilterMenu()
-                FilterType.Category -> CategoryFilterMenu(filter, tmp, categories)
-                FilterType.Tag -> TagFilterMenu(filter, tags) { tmp.tag = it }
-            }
-        }
-    }
-}
-
-@Composable
-private fun StatusFilterMenu() {
     val radioOptions = listOf("Active", "Downloading", "Seeding", "Paused", "Completed")
     val (selectedOption, onOptionSelected) = remember { mutableStateOf(radioOptions[0]) }
 
@@ -177,25 +167,28 @@ private fun StatusFilterMenu() {
         color = MaterialTheme.colorScheme.outline
     )
     Column(modifier = Modifier.selectableGroup()) {
-        radioOptions.forEach { text ->
+        radioOptions.forEach {
             Row(
                 Modifier
                     .fillMaxWidth()
                     .height(50.dp)
                     .selectable(
-                        selected = (text == selectedOption),
-                        onClick = { onOptionSelected(text) },
+                        selected = (it == selectedOption),
+                        onClick = {
+                            onOptionSelected(it)
+                            onUpdate(it)
+                        },
                         role = Role.RadioButton
                     )
                     .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 RadioButton(
-                    selected = (text == selectedOption),
+                    selected = (it == selectedOption),
                     onClick = null // null recommended for accessibility with screenreaders
                 )
                 Text(
-                    text = text,
+                    text = it,
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(start = 16.dp)
                 )
@@ -208,8 +201,8 @@ private fun StatusFilterMenu() {
 @Composable
 private fun CategoryFilterMenu(
     filter: QTListParams,
-    tmp: QTFilters,
-    categories: QTCategories
+    categories: QTCategories,
+    onUpdate: (String?) -> Unit = {}
 ) {
     var selected by remember { mutableStateOf(filter.category) }
 
@@ -230,7 +223,7 @@ private fun CategoryFilterMenu(
                 selected = it == selected,
                 onClick = {
                     selected = if (it == selected) null else it
-                    tmp.category = selected
+                    onUpdate(selected)
                 },
                 label = { Text(it) },
                 modifier = Modifier
@@ -254,7 +247,7 @@ private fun CategoryFilterMenu(
 private fun TagFilterMenu(
     filter: QTListParams,
     tags: List<String> = emptyList(),
-    onUpdate: (String?) -> Unit
+    onUpdate: (String?) -> Unit = {}
 ) {
     var selected by remember { mutableStateOf(filter.tag) }
 
@@ -294,13 +287,29 @@ private fun TagFilterMenu(
     }
 }
 
+
 @Preview(showBackground = true)
 @Composable
-fun AllFilterMenuPreview() {
-    AllFilterMenu(
-        QTListParams(filter = "downloading", category = "cat1", tag = "tagA"),
-        QTFilters(category = "cat1", tag = "tagA"),
+fun StatusFilterMenuPreview() {
+    StatusFilterMenu(
+        filter = QTListParams(filter = "downloading", category = "cat1", tag = "tagA"),
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CategoryFilterMenuPreview() {
+    CategoryFilterMenu(
+        filter = QTListParams(filter = "downloading", category = "cat1", tag = "tagA"),
         categories = listOf(QTCategory("cat1"), QTCategory("cat2")).associateBy { it.name },
-        tags = listOf("tag1", "tagA")
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TagFilterMenuPreview() {
+    TagFilterMenu(
+        filter = QTListParams(filter = "downloading", category = "cat1", tag = "tagA"),
+        tags = listOf("tagA", "tagC")
     )
 }
