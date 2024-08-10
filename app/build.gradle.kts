@@ -131,8 +131,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
 
     // paging
-    implementation("androidx.paging:paging-compose:3.3.1")
-    implementation("androidx.paging:paging-runtime-ktx:3.3.1")
+    implementation("androidx.paging:paging-compose:3.3.2")
+    implementation("androidx.paging:paging-runtime-ktx:3.3.2")
 
     // nav
     implementation("androidx.navigation:navigation-compose")

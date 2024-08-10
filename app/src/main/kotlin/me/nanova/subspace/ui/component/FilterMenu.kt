@@ -73,7 +73,7 @@ fun FilterMenu(
 ) {
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
-    var tmp = QTFilters(filter = filter.filter, tag = filter.tag, category = filter.category)
+    val tmp = QTFilters(filter = filter.filter, tag = filter.tag, category = filter.category)
 
     ModalBottomSheet(
         onDismissRequest = {
@@ -81,6 +81,7 @@ fun FilterMenu(
         },
         sheetState = sheetState
     ) {
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceAround,
@@ -108,12 +109,14 @@ fun FilterMenu(
 private fun AllFilterMenu(
     filter: QTListParams,
     tmp: QTFilters,
-    filterTypes: List<FilterType> = emptyList(),
     categories: QTCategories = emptyMap(),
     tags: List<String> = emptyList(),
 ) {
     val checkedList = remember {
-        mutableStateListOf(*filterTypes.filter { it.showCondition(filter) }.toTypedArray())
+        mutableStateListOf(*FilterType.entries
+            .filter { it.showCondition(filter) }
+            .toTypedArray()
+        )
     }
 
     Column(
@@ -296,8 +299,7 @@ private fun TagFilterMenu(
 fun AllFilterMenuPreview() {
     AllFilterMenu(
         QTListParams(filter = "downloading", category = "cat1", tag = "tagA"),
-        QTFilters(),
-        FilterType.entries,
+        QTFilters(category = "cat1", tag = "tagA"),
         categories = listOf(QTCategory("cat1"), QTCategory("cat2")).associateBy { it.name },
         tags = listOf("tag1", "tagA")
     )
