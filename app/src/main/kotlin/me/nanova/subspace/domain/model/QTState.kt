@@ -11,6 +11,9 @@ import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.ui.graphics.vector.ImageVector
 
+/**
+ * @link https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)#get-torrent-list
+ */
 enum class QTState {
     // Some error occurred, applies to paused torrents
     error,
@@ -66,13 +69,26 @@ enum class QTState {
 
 }
 
+/**
+ * @link https://github.com/transmission/transmission/blob/main/docs/rpc-spec.md
+ */
+enum class TRState(value: Int) {
+    STOPPED(0),
+    QUEUED_TO_VERIFY(1),
+    VERIFYING(2),
+    QUEUED_TO_DOWNLOAD(3),
+    DOWNLOADING(4),
+    QUEUED_TO_SEED(5),
+    SEEDING(6)
+}
+
 enum class QTFilterState {
     all,
+    active,
     downloading,
     seeding,
     completed,
     paused,
-    active,
     inactive,
     resumed,
     stalled,
@@ -83,10 +99,33 @@ enum class QTFilterState {
     fun toQTStates(): List<QTState> {
         return when (this) {
             all -> QTState.entries
-            downloading -> listOf(QTState.downloading, QTState.metaDL)
+            active -> listOf(QTState.downloading, QTState.uploading)
+            downloading -> listOf(
+                QTState.downloading,
+                QTState.metaDL,
+                QTState.checkingDL,
+                QTState.forcedDL
+            )
             seeding -> listOf(QTState.uploading)
+            completed -> listOf(QTState.pausedUP, QTState.checkingUP)
+            paused -> listOf(QTState.pausedDL, QTState.pausedUP)
+            stalled -> listOf(QTState.stalledDL, QTState.stalledUP)
+            errored -> listOf(QTState.error)
             // todo
             else -> listOf()
         }
     }
+}
+
+enum class FilterState {
+    all,
+    active,
+    downloading,
+    seeding,
+    completed,
+    paused,
+
+    // queue ?
+    stalled,
+    errored;
 }

@@ -46,6 +46,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import kotlinx.coroutines.launch
+import me.nanova.subspace.domain.model.FilterState
 import me.nanova.subspace.domain.model.QTCategories
 import me.nanova.subspace.domain.model.QTCategory
 import me.nanova.subspace.domain.model.QTListParams
@@ -128,12 +129,12 @@ fun FilterMenu(
 
             checkedList.asReversed().forEach { type ->
                 when (type) {
-                    FilterType.Status -> StatusFilterMenu(filter)
-                    FilterType.Category -> CategoryFilterMenu(filter, categories) {
+                    FilterType.Status -> StatusFilterMenu(filter.filter) { tmp.filter = it }
+                    FilterType.Category -> CategoryFilterMenu(filter.category, categories) {
                         tmp.category = it
                     }
 
-                    FilterType.Tag -> TagFilterMenu(filter, tags) { tmp.tag = it }
+                    FilterType.Tag -> TagFilterMenu(filter.tag, tags) { tmp.tag = it }
                 }
             }
 
@@ -154,11 +155,11 @@ fun FilterMenu(
 
 @Composable
 private fun StatusFilterMenu(
-    filter: QTListParams,
-    onUpdate: (String?) -> Unit = {}
+    initial: String,
+    onUpdate: (String) -> Unit = {}
 ) {
-    val radioOptions = listOf("Active", "Downloading", "Seeding", "Paused", "Completed")
-    val (selectedOption, onOptionSelected) = remember { mutableStateOf(radioOptions[0]) }
+    val radioOptions = FilterState.entries.map { it.toString() }
+    val (selectedOption, onOptionSelected) = remember { mutableStateOf(initial) }
 
     HorizontalDivider(Modifier.padding(vertical = 5.dp))
     Text(
@@ -200,11 +201,11 @@ private fun StatusFilterMenu(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CategoryFilterMenu(
-    filter: QTListParams,
+    initial: String?,
     categories: QTCategories,
     onUpdate: (String?) -> Unit = {}
 ) {
-    var selected by remember { mutableStateOf(filter.category) }
+    var selected by remember { mutableStateOf(initial) }
 
     HorizontalDivider(Modifier.padding(vertical = 5.dp))
     Text(
@@ -245,11 +246,11 @@ private fun CategoryFilterMenu(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TagFilterMenu(
-    filter: QTListParams,
+    initial: String?,
     tags: List<String> = emptyList(),
     onUpdate: (String?) -> Unit = {}
 ) {
-    var selected by remember { mutableStateOf(filter.tag) }
+    var selected by remember { mutableStateOf(initial) }
 
     HorizontalDivider(Modifier.padding(vertical = 5.dp))
     Text(
@@ -292,7 +293,7 @@ private fun TagFilterMenu(
 @Composable
 fun StatusFilterMenuPreview() {
     StatusFilterMenu(
-        filter = QTListParams(filter = "downloading", category = "cat1", tag = "tagA"),
+        initial = "downloading",
     )
 }
 
@@ -300,7 +301,7 @@ fun StatusFilterMenuPreview() {
 @Composable
 fun CategoryFilterMenuPreview() {
     CategoryFilterMenu(
-        filter = QTListParams(filter = "downloading", category = "cat1", tag = "tagA"),
+        initial = "cat1",
         categories = listOf(QTCategory("cat1"), QTCategory("cat2")).associateBy { it.name },
     )
 }
@@ -309,7 +310,7 @@ fun CategoryFilterMenuPreview() {
 @Composable
 fun TagFilterMenuPreview() {
     TagFilterMenu(
-        filter = QTListParams(filter = "downloading", category = "cat1", tag = "tagA"),
+        initial = "tagA",
         tags = listOf("tagA", "tagC")
     )
 }

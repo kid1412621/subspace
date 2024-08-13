@@ -38,6 +38,10 @@ interface TorrentDao {
                 query += " AND category = '${filter.category}'"
             }
 
+            if (filter.category != null) {
+                query += " AND ',' || tags || ',' LIKE '%,' || ${filter.tag} || ',%'"
+            }
+
             if (filter.filter.isNotBlank()) {
                 val state = QTFilterState.valueOf(filter.filter).toQTStates()
                 if (state.isNotEmpty()) {
