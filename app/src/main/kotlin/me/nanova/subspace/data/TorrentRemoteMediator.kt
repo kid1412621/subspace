@@ -37,8 +37,8 @@ class TorrentRemoteMediator(
                 LoadType.REFRESH -> 0
                 LoadType.APPEND -> {
                     val remoteKeys = state.pages
-                        .lastOrNull() { it.data.isNotEmpty() } // Find the first page with items
-                        ?.data?.lastOrNull() // Get the first item in that page
+                        .lastOrNull { it.data.isNotEmpty() }
+                        ?.data?.lastOrNull()
                         ?.let { remoteKeyDao.remoteKeysItemId(it.id) }
                     remoteKeys?.nextOffset
                         ?: return MediatorResult.Success(endOfPaginationReached = remoteKeys != null)
@@ -58,6 +58,7 @@ class TorrentRemoteMediator(
             val response = networkService.list(
                 query.copy(offset = offset, limit = state.config.pageSize).toMap()
             )
+            // fixme
             val endOfPaginationReached = response.size < state.config.pageSize
 
             // update db
