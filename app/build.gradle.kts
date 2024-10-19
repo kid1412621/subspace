@@ -121,7 +121,7 @@ dependencies {
     // https://developer.android.com/jetpack/compose/bom/bom-mapping
     val composeBom = platform("androidx.compose:compose-bom:2024.09.03")
     implementation(composeBom)
-    implementation("androidx.activity:activity-ktx:1.9.2")
+    implementation("androidx.activity:activity-ktx:1.9.3")
     implementation("androidx.activity:activity-compose")
     implementation("androidx.lifecycle:lifecycle-runtime-compose")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose")
@@ -136,7 +136,7 @@ dependencies {
 
     // nav
     implementation("androidx.navigation:navigation-compose")
-    implementation("androidx.navigation:navigation-runtime-ktx:2.8.2")
+    implementation("androidx.navigation:navigation-runtime-ktx:2.8.3")
 
     // Material Design 3
 //    implementation("androidx.compose.material3:material3")
@@ -145,7 +145,7 @@ dependencies {
     implementation("androidx.compose.material3:material3:1.3.0")
     // wait for MD3 implementation
     implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.compose.animation:animation:1.7.3")
+    implementation("androidx.compose.animation:animation:1.7.4")
     implementation("androidx.compose.animation:animation-graphics")
     // not ready yet
 //    implementation("androidx.compose.material3:material3-adaptive:1.0.0-alpha08")
