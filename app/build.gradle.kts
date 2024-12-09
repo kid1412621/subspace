@@ -170,7 +170,7 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit")
     implementation("com.squareup.retrofit2:converter-scalars")
     implementation("com.squareup.retrofit2:converter-moshi")
-    implementation("com.squareup.moshi:moshi-kotlin:1.15.1")
+    implementation("com.squareup.moshi:moshi-kotlin:1.15.2")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     // firebase
