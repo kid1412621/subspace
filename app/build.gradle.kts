@@ -18,14 +18,14 @@ kotlin {
 
 android {
     namespace = "me.nanova.subspace"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "me.nanova.subspace"
         minSdk = 29
-        targetSdk = 34
-        versionCode = 11
-        versionName = "0.4.0"
+        targetSdk = 35
+        versionCode = 12
+        versionName = "0.5.0"
         setProperty("archivesBaseName", "subspace-v${versionName}-${versionCode}")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -116,12 +116,12 @@ androidComponents {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.core:core-ktx:1.15.0")
 
     // https://developer.android.com/jetpack/compose/bom/bom-mapping
-    val composeBom = platform("androidx.compose:compose-bom:2024.06.00")
+    val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
     implementation(composeBom)
-    implementation("androidx.activity:activity-ktx:1.9.0")
+    implementation("androidx.activity:activity-ktx:1.9.3")
     implementation("androidx.activity:activity-compose")
     implementation("androidx.lifecycle:lifecycle-runtime-compose")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose")
@@ -131,21 +131,18 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
 
     // paging
-    implementation("androidx.paging:paging-compose:3.3.0")
-    implementation("androidx.paging:paging-runtime-ktx:3.3.0")
+    implementation("androidx.paging:paging-compose:3.3.5")
+    implementation("androidx.paging:paging-runtime-ktx:3.3.5")
 
     // nav
     implementation("androidx.navigation:navigation-compose")
-    implementation("androidx.navigation:navigation-runtime-ktx:2.7.7")
+    implementation("androidx.navigation:navigation-runtime-ktx:2.8.5")
 
     // Material Design 3
-//    implementation("androidx.compose.material3:material3")
-    // TODO: wait for https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary#DismissibleDrawerSheet(androidx.compose.material3.DrawerState,androidx.compose.ui.Modifier,androidx.compose.ui.graphics.Shape,androidx.compose.ui.graphics.Color,androidx.compose.ui.graphics.Color,androidx.compose.ui.unit.Dp,androidx.compose.foundation.layout.WindowInsets,kotlin.Function1)
-    // see: https://developer.android.com/jetpack/androidx/releases/compose-material3#1.3.0-alpha04
-    implementation("androidx.compose.material3:material3:1.3.0-beta04")
+    implementation("androidx.compose.material3:material3")
     // wait for MD3 implementation
     implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.compose.animation:animation:1.6.8")
+    implementation("androidx.compose.animation:animation")
     implementation("androidx.compose.animation:animation-graphics")
     // not ready yet
 //    implementation("androidx.compose.material3:material3-adaptive:1.0.0-alpha08")
@@ -155,8 +152,8 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
     // hilt
-    implementation("com.google.dagger:hilt-android:2.52")
-    ksp("com.google.dagger:hilt-android-compiler:2.52")
+    implementation("com.google.dagger:hilt-android:2.53.1")
+    ksp("com.google.dagger:hilt-android-compiler:2.53.1")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     // room
@@ -170,11 +167,11 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit")
     implementation("com.squareup.retrofit2:converter-scalars")
     implementation("com.squareup.retrofit2:converter-moshi")
-    implementation("com.squareup.moshi:moshi-kotlin:1.15.1")
+    implementation("com.squareup.moshi:moshi-kotlin:1.15.2")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     // firebase
-    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-crashlytics")
     implementation("com.google.firebase:firebase-analytics")
 
