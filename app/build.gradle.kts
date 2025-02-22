@@ -101,7 +101,7 @@ android {
 }
 
 androidComponents {
-    val isCITest = System.getenv("CI_TEST")?.toBoolean() ?: false
+    val isCITest = System.getenv("CI_TEST")?.toBoolean() == true
 
     onVariants { variant ->
         // disable google service on non-prod build
@@ -136,13 +136,14 @@ dependencies {
 
     // Material Design 3
     implementation("androidx.compose.material3:material3")
-    // wait for MD3 implementation
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.compose.animation:animation")
     implementation("androidx.compose.animation:animation-graphics")
-    // not ready yet
-//    implementation("androidx.compose.material3:material3-adaptive:1.0.0-alpha08")
-//    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.0.0-alpha05")
+    // https://developer.android.com/jetpack/androidx/releases/compose-material3-adaptive
+//    implementation("androidx.compose.material3.adaptive:adaptive:1.0.0")
+//    implementation("androidx.compose.material3.adaptive:adaptive-layout:1.0.0")
+//    implementation("androidx.compose.material3.adaptive:adaptive-navigation:1.0.0")
+//    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.3.1")
 
     // datastore
     implementation("androidx.datastore:datastore-preferences:1.1.2")
