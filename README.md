@@ -1,5 +1,7 @@
 [![Test](https://github.com/kid1412621/subspace/actions/workflows/test.yml/badge.svg)](https://github.com/kid1412621/subspace/actions/workflows/test.yml)
 
+[![Build, Release](https://github.com/kid1412621/subspace/actions/workflows/release.yml/badge.svg)](https://github.com/kid1412621/subspace/actions/workflows/release.yml)
+
 # Project setup
 
 ## Local Dev
