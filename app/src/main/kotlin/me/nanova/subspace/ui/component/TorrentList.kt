@@ -1,6 +1,5 @@
 package me.nanova.subspace.ui.component
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -30,7 +29,7 @@ import androidx.paging.compose.itemKey
 import me.nanova.subspace.ui.vm.HomeViewModel
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 fun TorrentList(
     viewModel: HomeViewModel,
 ) {
@@ -72,7 +71,7 @@ fun TorrentList(
             ) { idx ->
                 list[idx]?.let {
                     TorrentItem(
-                        modifier = Modifier.animateItemPlacement(),
+                        modifier = Modifier.animateItem(),
                         torrent = it
                     )
                 }

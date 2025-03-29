@@ -12,42 +12,42 @@ TBD
 
 1. Add `google-services.json` to app directory:
 
-```bash
-cat << EOF > app/google-services.json
-{
-  "project_info": {
-    "project_number": "0",
-    "project_id": "id",
-    "storage_bucket": "bucket"
-  },
-  "client": [
+    ```bash
+    cat << EOF > app/google-services.json
     {
-      "client_info": {
-        "mobilesdk_app_id": "app-id",
-        "android_client_info": { "package_name": "me.nanova.subspace" }
+      "project_info": {
+        "project_number": "0",
+        "project_id": "id",
+        "storage_bucket": "bucket"
       },
-      "api_key": [{"current_key": "key"}]
+      "client": [
+        {
+          "client_info": {
+            "mobilesdk_app_id": "app-id",
+            "android_client_info": { "package_name": "me.nanova.subspace" }
+          },
+          "api_key": [{"current_key": "key"}]
+        }
+      ]
     }
-  ]
-}
-EOF
-```
+    EOF
+    ```
 
 2. Create `keystore.jks` and `keystore.properties` to project root directory:
 
-keystore.jks:
+   keystore.jks:
 
-```bash
-keytool -genkey -v -keystore keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias my-alias 
-```
+    ```bash
+    keytool -genkey -v -keystore keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias my-alias 
+    ```
 
-keystore.properties:
+   keystore.properties:
 
-```bash
-cat << EOF > keystore.properties
-storeFile:keystore.jks
-storePassword:fake-password
-keyAlias:my-alias
-keyPassword:fake-password
-EOF
-```
+    ```bash
+    cat << EOF > keystore.properties
+    storeFile:keystore.jks
+    storePassword:fake-password
+    keyAlias:my-alias
+    keyPassword:fake-password
+    EOF
+    ```
