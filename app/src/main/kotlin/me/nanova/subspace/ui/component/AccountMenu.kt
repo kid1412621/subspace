@@ -1,7 +1,14 @@
 package me.nanova.subspace.ui.component
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,16 +18,24 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -29,8 +44,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import me.nanova.subspace.domain.model.AccountType
 import me.nanova.subspace.domain.model.Account
+import me.nanova.subspace.domain.model.AccountType
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -85,45 +100,123 @@ fun AccountMenu(
         }
 
         items(accounts, key = { it.id }) {
-            NavigationDrawerItem(
-                label = {
-                    Column {
-                        Text(
-                            color = if (it.isCurrent(currentAccountId)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
-                            text = it.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
+            val isCurrent = it.isCurrent(currentAccountId)
+            var showOverlay by remember { mutableStateOf(false) }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .combinedClickable(
+                        onClick = { onAccountSelected(it) },
+                        onLongClick = { showOverlay = true }
+                    ))
+            {
+                NavigationDrawerItem(
+                    label = {
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.weight(1f, fill = true)) {
+                                Text(
+                                    color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
+                                    text = it.name,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Text(
+                                    color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
+                                    text = "${it.user}@${it.url}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.padding(0.dp, 2.dp)
+                                )
+                            }
+                            Icon(
+                                Icons.Outlined.MoreVert, "Edit Account",
+                                modifier = Modifier.clickable { showOverlay = !showOverlay })
+                        }
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(id = it.type.toMonoIcon()),
+                            contentDescription = it.user,
+                            modifier = Modifier.size(33.dp),
+                            tint = if (it.isCurrent(currentAccountId)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
                         )
-                        Text(
-                            color = if (it.isCurrent(currentAccountId)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
-                            text = "${it.user}@${it.url}",
-                            style = MaterialTheme.typography.labelSmall,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(0.dp, 2.dp)
-                        )
-                    }
-                },
-                icon = {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(id = it.type.toMonoIcon()),
-                        contentDescription = it.user,
-                        modifier = Modifier.size(33.dp),
-                        tint = if (it.isCurrent(currentAccountId)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
-                    )
-                },
-                modifier = Modifier.padding(10.dp, 15.dp),
-                selected = it.isCurrent(currentAccountId),
-                onClick = { onAccountSelected(it) }
-            )
+                    },
+                    selected = isCurrent,
+                    modifier = Modifier
+                        .padding(10.dp, 15.dp)
+                        .fillMaxWidth(),
+                    onClick = { },
+                )
+
+                OverlayActionButtons(showOverlay, onDismiss = { showOverlay = false })
+            }
 
             HorizontalDivider()
         }
     }
+
 }
 
 private fun Account.isCurrent(id: Long?) = id?.equals(this.id) ?: false
+
+@Composable
+private fun OverlayActionButtons(showOverlay: Boolean, onDismiss: () -> Unit) {
+    AnimatedVisibility(
+        visible = showOverlay,
+        enter = fadeIn(),
+        exit = fadeOut()
+    ) {
+        Row {
+            Button(
+                onClick = {
+                    onDismiss()
+                },
+                modifier = Modifier
+                    .padding(vertical = 4.dp)
+            ) {
+                Text("Edit")
+            }
+
+            Button(
+                onClick = {
+                    onDismiss()
+                },
+                modifier = Modifier
+                    .padding(vertical = 4.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Text("Delete")
+            }
+
+            OutlinedButton(
+                onClick = {
+                    onDismiss()
+                },
+                modifier = Modifier
+                    .padding(vertical = 4.dp)
+            ) {
+                Text("Cancel")
+            }
+
+        }
+    }
+
+    // Handle back press
+    if (showOverlay) {
+        BackHandler {
+            onDismiss()
+        }
+    }
+
+}
 
 @Composable
 @Preview
