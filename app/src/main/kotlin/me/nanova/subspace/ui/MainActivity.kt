@@ -16,9 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import dagger.hilt.android.AndroidEntryPoint
 import me.nanova.subspace.ui.page.AccountPage
 import me.nanova.subspace.ui.page.HomePage
@@ -56,6 +58,9 @@ fun AppContainer(
     ) {
         composable(
             route = Routes.Settings.name,
+//            arguments = listOf(
+//                navArgument("accountId") { type = NavType.StringType }
+//            ),
             enterTransition = {
                 fadeIn(
                     animationSpec = tween(

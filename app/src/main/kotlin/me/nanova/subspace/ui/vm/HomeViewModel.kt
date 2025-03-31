@@ -69,6 +69,12 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun deleteAccount(account: Account) {
+        viewModelScope.launch {
+            accountRepo.delete(account.id)
+        }
+    }
+
     fun updateSort(newFilter: QTListParams = QTListParams()) {
         _homeUiState.update {
             it.copy(filter = newFilter)

@@ -60,14 +60,14 @@ fun AccountPage(
     viewModel: AccountViewModel = hiltViewModel(),
     navController: NavHostController,
 ) {
-    val snackbarHostState = remember { SnackbarHostState() }
-    val snackbarMessage by viewModel.snackbarMessage.collectAsState()
+    val snackBarHostState = remember { SnackbarHostState() }
+    val snackBarMessage by viewModel.snackbarMessage.collectAsState()
     val added by viewModel.added.collectAsState()
     val loading by viewModel.loading.collectAsState()
 
-    LaunchedEffect(snackbarMessage) {
-        snackbarMessage?.let {
-            val result = snackbarHostState.showSnackbar(it)
+    LaunchedEffect(snackBarMessage) {
+        snackBarMessage?.let {
+            val result = snackBarHostState.showSnackbar(it)
             if (result == SnackbarResult.Dismissed) {
                 viewModel.snackbarMessage.value = null
             }
@@ -82,7 +82,7 @@ fun AccountPage(
 
     Scaffold(
         snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
+            SnackbarHost(hostState = snackBarHostState)
         },
     ) { contentPadding ->
         AccountForm(

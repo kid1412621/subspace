@@ -82,14 +82,14 @@ fun HomePage(
     val currentAccount by homeViewModel.currentAccount.collectAsState(initial = null)
     val accounts by homeViewModel.accounts.collectAsState(initial = emptyList())
 
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
-            val result = snackbarHostState.showSnackbar(it)
+            val result = snackBarHostState.showSnackbar(it)
             if (result == SnackbarResult.Dismissed) {
                 uiState.error = null
             }
@@ -107,9 +107,13 @@ fun HomePage(
                     onAccountAdding = { navController.navigate(Routes.Settings.name) },
                     onAccountSelected = {
                         homeViewModel.switchAccount(it)
-                        scope.launch {
-                            drawerState.close()
-                        }
+                        scope.launch { drawerState.close() }
+                    },
+                    onAccountEditing = {
+                        navController.navigate(Routes.Settings.name)
+                    },
+                    onAccountDeleting = {
+                        homeViewModel.deleteAccount(it)
                     }
                 )
             }
@@ -131,7 +135,7 @@ fun HomePage(
                 BottomBar(currentAccount != null, uiState, homeViewModel)
             },
             snackbarHost = {
-                SnackbarHost(hostState = snackbarHostState)
+                SnackbarHost(hostState = snackBarHostState)
             },
         ) { innerPadding ->
             Surface(

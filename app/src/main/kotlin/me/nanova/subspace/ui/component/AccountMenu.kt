@@ -2,32 +2,35 @@ package me.nanova.subspace.ui.component
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.shrinkOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,6 +41,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -54,6 +58,8 @@ fun AccountMenu(
     accounts: List<Account> = emptyList(),
     onAccountSelected: (Account) -> Unit = {},
     onAccountAdding: () -> Unit = {},
+    onAccountEditing: (Account) -> Unit = {},
+    onAccountDeleting: (Account) -> Unit = {},
 ) {
 
     val lazyColumnState = rememberLazyListState()
@@ -102,60 +108,46 @@ fun AccountMenu(
         items(accounts, key = { it.id }) {
             val isCurrent = it.isCurrent(currentAccountId)
             var showOverlay by remember { mutableStateOf(false) }
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .combinedClickable(
-                        onClick = { onAccountSelected(it) },
-                        onLongClick = { showOverlay = true }
-                    ))
-            {
-                NavigationDrawerItem(
-                    label = {
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(modifier = Modifier.weight(1f, fill = true)) {
-                                Text(
-                                    color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
-                                    text = it.name,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                                Text(
-                                    color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
-                                    text = "${it.user}@${it.url}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.padding(0.dp, 2.dp)
-                                )
-                            }
-                            Icon(
-                                Icons.Outlined.MoreVert, "Edit Account",
-                                modifier = Modifier.clickable { showOverlay = !showOverlay })
-                        }
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = ImageVector.vectorResource(id = it.type.toMonoIcon()),
-                            contentDescription = it.user,
-                            modifier = Modifier.size(33.dp),
-                            tint = if (it.isCurrent(currentAccountId)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
-                        )
-                    },
-                    selected = isCurrent,
-                    modifier = Modifier
-                        .padding(10.dp, 15.dp)
-                        .fillMaxWidth(),
-                    onClick = { },
-                )
 
-                OverlayActionButtons(showOverlay, onDismiss = { showOverlay = false })
-            }
+            NavigationDrawerItem(
+                label = {
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(60.dp)
+                    ) {
+                        Column(modifier = Modifier.weight(1f, fill = true)) {
+                            NavItemInfoLabels(!showOverlay, isCurrent, it)
+
+                            NavItemActionButtons(
+                                showOverlay,
+                                onDismiss = { showOverlay = false },
+                                onEditing = { onAccountEditing(it) },
+                                onDeleting = { onAccountDeleting(it) }
+                            )
+                        }
+
+                        Icon(
+                            Icons.Outlined.MoreVert, "Actions on account",
+                            modifier = Modifier.clickable { showOverlay = !showOverlay })
+                    }
+                },
+                icon = {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = it.type.toMonoIcon()),
+                        contentDescription = it.user,
+                        modifier = Modifier.size(40.dp),
+                        tint = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+                    )
+                },
+                selected = isCurrent,
+                modifier = Modifier
+                    .padding(10.dp, 15.dp)
+                    .fillMaxWidth(),
+                onClick = { onAccountSelected(it) },
+            )
 
             HorizontalDivider()
         }
@@ -163,48 +155,81 @@ fun AccountMenu(
 
 }
 
-private fun Account.isCurrent(id: Long?) = id?.equals(this.id) ?: false
+private fun Account.isCurrent(id: Long?) = id?.equals(this.id) == true
 
 @Composable
-private fun OverlayActionButtons(showOverlay: Boolean, onDismiss: () -> Unit) {
+private fun NavItemInfoLabels(showLabel: Boolean, isCurrent: Boolean, account: Account) {
+    AnimatedVisibility(
+        visible = showLabel,
+        enter = slideInVertically(),
+        exit = slideOutVertically()
+    ) {
+        Column {
+            Text(
+                color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
+                text = account.name,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
+                text = "${account.user}@${account.url}",
+                style = MaterialTheme.typography.labelSmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(0.dp, 2.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun NavItemActionButtons(
+    showOverlay: Boolean, onDismiss: () -> Unit,
+    onEditing: () -> Unit,
+    onDeleting: () -> Unit
+) {
     AnimatedVisibility(
         visible = showOverlay,
-        enter = fadeIn(),
-        exit = fadeOut()
+        enter = slideInVertically(initialOffsetY = { it * 3 })
+                + scaleIn(initialScale = 1f, transformOrigin = TransformOrigin(0f, 1f))
+//                + expandVertically(expandFrom = Alignment.Bottom)
+        ,
+        exit = slideOutVertically() + shrinkOut()
     ) {
-        Row {
-            Button(
+        Row(
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            FilledIconButton(
                 onClick = {
+                    onEditing()
                     onDismiss()
-                },
-                modifier = Modifier
-                    .padding(vertical = 4.dp)
-            ) {
-                Text("Edit")
+                }) {
+                Icon(Icons.Outlined.Edit, "Edit account")
             }
 
-            Button(
-                onClick = {
-                    onDismiss()
-                },
-                modifier = Modifier
-                    .padding(vertical = 4.dp),
-                colors = ButtonDefaults.buttonColors(
+            FilledIconButton(
+                colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Text("Delete")
+                ),
+                onClick = {
+                    onDeleting()
+                    onDismiss()
+                }) {
+                Icon(Icons.Outlined.Delete, "Delete account")
             }
 
-            OutlinedButton(
-                onClick = {
-                    onDismiss()
-                },
-                modifier = Modifier
-                    .padding(vertical = 4.dp)
-            ) {
-                Text("Cancel")
+            FilledIconButton(
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary
+                ),
+                onClick = { onDismiss() }) {
+                Icon(Icons.Outlined.PushPin, "Pin account on the top")
             }
+
 
         }
     }
