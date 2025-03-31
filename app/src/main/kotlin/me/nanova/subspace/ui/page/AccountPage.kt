@@ -50,26 +50,29 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import me.nanova.subspace.domain.model.AccountType
-import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.ui.Routes
 import me.nanova.subspace.ui.component.ValidTextField
 import me.nanova.subspace.ui.vm.AccountViewModel
 
 @Composable
 fun AccountPage(
+    id: Long? = null,
     viewModel: AccountViewModel = hiltViewModel(),
     navController: NavHostController,
 ) {
-    val snackbarHostState = remember { SnackbarHostState() }
-    val snackbarMessage by viewModel.snackbarMessage.collectAsState()
-    val added by viewModel.added.collectAsState()
-    val loading by viewModel.loading.collectAsState()
+    val snackBarHostState = remember { SnackbarHostState() }
+    val snackBarMessage by viewModel.snackBarMessage.collectAsState()
+    val added by viewModel.submitted.collectAsState()
 
-    LaunchedEffect(snackbarMessage) {
-        snackbarMessage?.let {
-            val result = snackbarHostState.showSnackbar(it)
+    LaunchedEffect(id) {
+        id?.let { viewModel.initData(it) }
+    }
+
+    LaunchedEffect(snackBarMessage) {
+        snackBarMessage?.let {
+            val result = snackBarHostState.showSnackbar(it)
             if (result == SnackbarResult.Dismissed) {
-                viewModel.snackbarMessage.value = null
+                viewModel.snackBarMessage.value = null
             }
         }
     }
@@ -82,27 +85,23 @@ fun AccountPage(
 
     Scaffold(
         snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
+            SnackbarHost(hostState = snackBarHostState)
         },
     ) { contentPadding ->
-        AccountForm(
-            modifier = Modifier.padding(contentPadding),
-            loading = loading,
-            onSubmit = { viewModel.saveAccount(it) }
-        )
+        AccountForm(modifier = Modifier.padding(contentPadding), viewModel)
     }
 }
 
 @Composable
 private fun AccountForm(
     modifier: Modifier = Modifier,
-    loading: Boolean = false,
-    onSubmit: (Account) -> Unit = {},
+    viewModel: AccountViewModel,
 ) {
 
     val focusManager = LocalFocusManager.current
 
-    var account by remember { mutableStateOf(Account(type = AccountType.QT)) }
+    val loading by viewModel.loading.collectAsState()
+    val account by viewModel.account.collectAsState()
     val validations = remember { mutableStateMapOf<String, Boolean>() }
     var passwordHidden by rememberSaveable { mutableStateOf(true) }
 
@@ -127,7 +126,7 @@ private fun AccountForm(
                     Image(
                         modifier = Modifier
                             .size(50.dp)
-                            .clickable { account = account.copy(type = it) },
+                            .clickable { viewModel.updateAccount(account.copy(type = it)) },
                         alignment = Alignment.Center,
                         painter = painterResource(id = it.toIcon()),
                         contentDescription = it.name,
@@ -143,7 +142,7 @@ private fun AccountForm(
                 value = account.name,
                 leadingIcon = { Icon(Icons.Filled.Abc, contentDescription = "name") },
                 placeholder = "Server Name",
-                onChanged = { account = account.copy(name = it) },
+                onChanged = { viewModel.updateAccount(account.copy(name = it)) },
                 onValidation = { validations["name"] = it }
             )
             ValidTextField(
@@ -152,7 +151,7 @@ private fun AccountForm(
                 placeholder = "http(s)://host:port/path",
                 keyboardType = KeyboardType.Uri,
                 leadingIcon = { Icon(Icons.Filled.Dns, contentDescription = "host") },
-                onChanged = { account = account.copy(url = it) },
+                onChanged = { viewModel.updateAccount(account.copy(url = it)) },
                 validations = mapOf(
                     { it: String ->
                         """\bhttps?://\S+""".toRegex(RegexOption.IGNORE_CASE).matches(it)
@@ -166,13 +165,13 @@ private fun AccountForm(
                 value = account.user,
                 placeholder = "Server account username",
                 leadingIcon = { Icon(Icons.Filled.AccountCircle, contentDescription = "user") },
-                onChanged = { account = account.copy(user = it) },
+                onChanged = { viewModel.updateAccount(account.copy(user = it)) },
                 onValidation = { validations["user"] = it }
             )
             ValidTextField(
                 label = "password",
                 value = account.pass,
-                onChanged = { account = account.copy(pass = it) },
+                onChanged = { viewModel.updateAccount(account.copy(pass = it)) },
                 placeholder = "Server account password",
                 leadingIcon = { Icon(Icons.Filled.Password, contentDescription = "password") },
                 last = true,
@@ -193,7 +192,7 @@ private fun AccountForm(
                 enabled = !loading && validations.isNotEmpty() && validations.values.all { it },
                 onClick = {
                     focusManager.clearFocus()
-                    onSubmit(account)
+                    viewModel.saveAccount(account)
                 }
             ) {
                 if (loading) {
@@ -210,5 +209,5 @@ private fun AccountForm(
 @Composable
 @Preview
 fun NewAccountFormPrev() {
-    AccountForm()
+    AccountForm(viewModel = hiltViewModel())
 }

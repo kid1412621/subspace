@@ -1,6 +1,7 @@
 package me.nanova.subspace.ui.page
 
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -82,14 +83,14 @@ fun HomePage(
     val currentAccount by homeViewModel.currentAccount.collectAsState(initial = null)
     val accounts by homeViewModel.accounts.collectAsState(initial = emptyList())
 
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
-            val result = snackbarHostState.showSnackbar(it)
+            val result = snackBarHostState.showSnackbar(it)
             if (result == SnackbarResult.Dismissed) {
                 uiState.error = null
             }
@@ -104,12 +105,21 @@ fun HomePage(
                 AccountMenu(
                     currentAccountId = currentAccount?.id,
                     accounts = accounts,
-                    onAccountAdding = { navController.navigate(Routes.Settings.name) },
+                    onAccountAdding = {
+                        // TODO
+                        navController.navigate(Routes.AccountCreation.name) {
+                            launchSingleTop = true
+                        }
+                    },
                     onAccountSelected = {
                         homeViewModel.switchAccount(it)
-                        scope.launch {
-                            drawerState.close()
-                        }
+                        scope.launch { drawerState.close() }
+                    },
+                    onAccountEditing = {
+                        navController.navigate(route = "${Routes.AccountDetails.name}/${it.id}")
+                    },
+                    onAccountDeleting = {
+                        homeViewModel.deleteAccount(it)
                     }
                 )
             }
@@ -131,7 +141,7 @@ fun HomePage(
                 BottomBar(currentAccount != null, uiState, homeViewModel)
             },
             snackbarHost = {
-                SnackbarHost(hostState = snackbarHostState)
+                SnackbarHost(hostState = snackBarHostState)
             },
         ) { innerPadding ->
             Surface(
@@ -140,8 +150,9 @@ fun HomePage(
                     .padding(innerPadding)
                     .fillMaxSize(),
             ) {
+                Log.d("ACCOUNT", currentAccount.toString())
                 if (currentAccount == null) {
-                    BlankAccount(onGoSetting = { navController.navigate(Routes.Settings.name) })
+                    BlankAccount(onGoSetting = { navController.navigate(Routes.AccountCreation.name) })
                 } else {
                     TorrentList(homeViewModel)
                 }

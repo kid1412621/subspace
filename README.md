@@ -2,6 +2,12 @@
 
 [![Build, Release](https://github.com/kid1412621/subspace/actions/workflows/release.yml/badge.svg)](https://github.com/kid1412621/subspace/actions/workflows/release.yml)
 
+Subspace is an android app which is able to
+remote
+control [BitTorrent clients](https://en.wikipedia.org/wiki/Glossary_of_BitTorrent_terms#Client)
+includes [qBittorrent](https://www.qbittorrent.org/) (
+wip), [Transmission](https://transmissionbt.com/) (planned).
+
 # Project setup
 
 ## Local Dev

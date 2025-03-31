@@ -64,6 +64,7 @@ fun TorrentList(
         LazyColumn(
             state = lazyListState,
             verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.fillMaxSize(),
         ) {
             items(
                 list.itemCount,

@@ -112,10 +112,10 @@ androidComponents {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.15.0")
+    implementation("androidx.core:core-ktx:1.16.0")
 
     // https://developer.android.com/jetpack/compose/bom/bom-mapping
-    implementation(platform("androidx.compose:compose-bom:2025.03.01"))
+    implementation(platform("androidx.compose:compose-bom:2025.04.01"))
     implementation("androidx.activity:activity-ktx:1.10.1")
     implementation("androidx.activity:activity-compose")
     implementation("androidx.lifecycle:lifecycle-runtime-compose")
@@ -148,15 +148,15 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.1.4")
 
     // hilt
-    implementation("com.google.dagger:hilt-android:2.56.1")
-    ksp("com.google.dagger:hilt-android-compiler:2.56.1")
+    implementation("com.google.dagger:hilt-android:2.56.2")
+    ksp("com.google.dagger:hilt-android-compiler:2.56.2")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     // room
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
-    implementation("androidx.room:room-paging:2.6.1")
-    ksp("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.room:room-runtime:2.7.1")
+    implementation("androidx.room:room-ktx:2.7.1")
+    implementation("androidx.room:room-paging:2.7.1")
+    ksp("androidx.room:room-compiler:2.7.1")
 
     // retrofit
     implementation(platform("com.squareup.retrofit2:retrofit-bom:2.11.0"))
@@ -167,12 +167,12 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     // firebase
-    implementation(platform("com.google.firebase:firebase-bom:33.11.0"))
+    implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
     implementation("com.google.firebase:firebase-crashlytics")
     implementation("com.google.firebase:firebase-analytics")
 
 
-    androidTestImplementation(platform("androidx.compose:compose-bom:2025.03.01"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2025.04.01"))
     // UI Tests
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
