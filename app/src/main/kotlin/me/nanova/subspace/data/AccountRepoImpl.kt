@@ -27,6 +27,8 @@ class AccountRepoImpl @Inject constructor(
             } ?: flowOf(null)
         }
 
+    override suspend fun get(accountId: Long) = accountDao.getById(accountId)
+
     override suspend fun list() = accountDao.getAll()
 
     override suspend fun save(account: Account): Long {

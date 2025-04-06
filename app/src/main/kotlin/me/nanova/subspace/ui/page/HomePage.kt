@@ -104,13 +104,18 @@ fun HomePage(
                 AccountMenu(
                     currentAccountId = currentAccount?.id,
                     accounts = accounts,
-                    onAccountAdding = { navController.navigate(Routes.Settings.name) },
+                    onAccountAdding = {
+                        // TODO
+                        navController.navigate(Routes.AccountCreation.name) {
+                            launchSingleTop = true
+                        }
+                    },
                     onAccountSelected = {
                         homeViewModel.switchAccount(it)
                         scope.launch { drawerState.close() }
                     },
                     onAccountEditing = {
-                        navController.navigate(Routes.Settings.name)
+                        navController.navigate(route = "${Routes.AccountDetails.name}/${it.id}")
                     },
                     onAccountDeleting = {
                         homeViewModel.deleteAccount(it)
@@ -145,7 +150,7 @@ fun HomePage(
                     .fillMaxSize(),
             ) {
                 if (currentAccount == null) {
-                    BlankAccount(onGoSetting = { navController.navigate(Routes.Settings.name) })
+                    BlankAccount(onGoSetting = { navController.navigate(Routes.AccountCreation.name) })
                 } else {
                     TorrentList(homeViewModel)
                 }

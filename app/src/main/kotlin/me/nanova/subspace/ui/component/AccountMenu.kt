@@ -2,8 +2,8 @@ package me.nanova.subspace.ui.component
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.shrinkOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -11,7 +11,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -41,7 +40,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -61,14 +59,12 @@ fun AccountMenu(
     onAccountEditing: (Account) -> Unit = {},
     onAccountDeleting: (Account) -> Unit = {},
 ) {
-
     val lazyColumnState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
     LazyColumn(
         state = lazyColumnState,
         modifier = Modifier.fillMaxWidth(),
-//            verticalArrangement = Arrangement.spacedBy(15.dp),
     ) {
         stickyHeader {
             Surface(
@@ -89,19 +85,14 @@ fun AccountMenu(
                         modifier = Modifier.padding(10.dp),
                         style = MaterialTheme.typography.titleLarge,
                     )
-
                     FilledIconButton(
                         onClick = { onAccountAdding() },
                         modifier = Modifier.padding(10.dp),
                     ) {
-                        Icon(
-                            Icons.Rounded.Add,
-                            contentDescription = "add new server"
-                        )
+                        Icon(Icons.Rounded.Add, contentDescription = "add new server")
                     }
                 }
             }
-
             HorizontalDivider()
         }
 
@@ -114,55 +105,62 @@ fun AccountMenu(
                     Row(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(60.dp)
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.weight(1f, fill = true)) {
-                            NavItemInfoLabels(!showOverlay, isCurrent, it)
-
+                            NavItemInfoLabels(
+                                !showOverlay, isCurrent, it,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
                             NavItemActionButtons(
                                 showOverlay,
                                 onDismiss = { showOverlay = false },
                                 onEditing = { onAccountEditing(it) },
-                                onDeleting = { onAccountDeleting(it) }
+                                onDeleting = { onAccountDeleting(it) },
+                                modifier = Modifier.padding(vertical = 8.dp)
                             )
                         }
-
                         Icon(
-                            Icons.Outlined.MoreVert, "Actions on account",
-                            modifier = Modifier.clickable { showOverlay = !showOverlay })
+                            Icons.Outlined.MoreVert,
+                            "Actions on account",
+                            modifier = Modifier.clickable { showOverlay = !showOverlay }
+                        )
                     }
                 },
                 icon = {
                     Icon(
                         imageVector = ImageVector.vectorResource(id = it.type.toMonoIcon()),
                         contentDescription = it.user,
-                        modifier = Modifier.size(40.dp),
+                        modifier = Modifier.size(43.dp),
                         tint = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
                     )
                 },
                 selected = isCurrent,
                 modifier = Modifier
                     .padding(10.dp, 15.dp)
+                    .height(60.dp)
                     .fillMaxWidth(),
                 onClick = { onAccountSelected(it) },
             )
-
             HorizontalDivider()
         }
     }
-
 }
 
 private fun Account.isCurrent(id: Long?) = id?.equals(this.id) == true
 
 @Composable
-private fun NavItemInfoLabels(showLabel: Boolean, isCurrent: Boolean, account: Account) {
+private fun NavItemInfoLabels(
+    showLabel: Boolean,
+    isCurrent: Boolean,
+    account: Account,
+    modifier: Modifier = Modifier
+) {
     AnimatedVisibility(
         visible = showLabel,
-        enter = slideInVertically(),
-        exit = slideOutVertically()
+        enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
+        exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
+        modifier = modifier
     ) {
         Column {
             Text(
@@ -178,7 +176,7 @@ private fun NavItemInfoLabels(showLabel: Boolean, isCurrent: Boolean, account: A
                 style = MaterialTheme.typography.labelSmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(0.dp, 2.dp)
+                modifier = Modifier.padding(bottom = 2.dp)
             )
         }
     }
@@ -186,31 +184,32 @@ private fun NavItemInfoLabels(showLabel: Boolean, isCurrent: Boolean, account: A
 
 @Composable
 private fun NavItemActionButtons(
-    showOverlay: Boolean, onDismiss: () -> Unit,
+    showOverlay: Boolean,
+    onDismiss: () -> Unit,
     onEditing: () -> Unit,
-    onDeleting: () -> Unit
+    onDeleting: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     AnimatedVisibility(
         visible = showOverlay,
-        enter = slideInVertically(initialOffsetY = { it * 3 })
-                + scaleIn(initialScale = 1f, transformOrigin = TransformOrigin(0f, 1f))
-//                + expandVertically(expandFrom = Alignment.Bottom)
-        ,
-        exit = slideOutVertically() + shrinkOut()
+        enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+        exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+        modifier = modifier
     ) {
+
         Row(
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxWidth()
         ) {
             FilledIconButton(
                 onClick = {
                     onEditing()
                     onDismiss()
-                }) {
+                }
+            ) {
                 Icon(Icons.Outlined.Edit, "Edit account")
             }
-
             FilledIconButton(
                 colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = MaterialTheme.colorScheme.error
@@ -218,29 +217,26 @@ private fun NavItemActionButtons(
                 onClick = {
                     onDeleting()
                     onDismiss()
-                }) {
+                }
+            ) {
                 Icon(Icons.Outlined.Delete, "Delete account")
             }
-
             FilledIconButton(
                 colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = MaterialTheme.colorScheme.secondary
                 ),
-                onClick = { onDismiss() }) {
+                onClick = { onDismiss() }
+            ) {
                 Icon(Icons.Outlined.PushPin, "Pin account on the top")
             }
-
-
         }
     }
 
-    // Handle back press
     if (showOverlay) {
         BackHandler {
             onDismiss()
         }
     }
-
 }
 
 @Composable
@@ -266,7 +262,7 @@ fun AccountMenuPrev() {
             created = 123412
         ),
     )
-    accounts += (3..12).toList().map {
+    accounts += (3..12).map {
         Account(
             id = it.toLong(),
             type = AccountType.QT,

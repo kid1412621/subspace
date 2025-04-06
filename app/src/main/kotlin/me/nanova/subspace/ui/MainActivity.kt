@@ -57,10 +57,7 @@ fun AppContainer(
 //                    modifier = Modifier.padding(innerPadding)
     ) {
         composable(
-            route = Routes.Settings.name,
-//            arguments = listOf(
-//                navArgument("accountId") { type = NavType.StringType }
-//            ),
+            route = Routes.AccountCreation.name,
             enterTransition = {
                 fadeIn(
                     animationSpec = tween(
@@ -78,7 +75,33 @@ fun AppContainer(
                 )
             }
         ) {
+            AccountPage(navController = navController)
+        }
+        composable(
+            route = "${Routes.AccountDetails.name}/{accountId}",
+            arguments = listOf(
+                navArgument("accountId") { type = NavType.LongType }
+            ),
+            enterTransition = {
+                fadeIn(
+                    animationSpec = tween(
+                        300, easing = LinearEasing
+                    )
+                ) + slideIntoContainer(
+                    animationSpec = tween(300, easing = EaseIn),
+                    towards = AnimatedContentTransitionScope.SlideDirection.Start
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    animationSpec = tween(300, easing = EaseOut),
+                    towards = AnimatedContentTransitionScope.SlideDirection.End
+                )
+            }
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getLong("accountId")
             AccountPage(
+                id = id,
                 navController = navController
             )
         }
