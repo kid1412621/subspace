@@ -41,6 +41,7 @@ fun Long.sec2Time(): String {
 }
 
 fun Long.unix2DateTime(pattern: String = "yyyy-MM-dd HH:mm:ss"): String {
+    if (this <= 0) return "Unknown"
     val instant = Instant.ofEpochSecond(this)
     val localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
     val formatter = DateTimeFormatter.ofPattern(pattern)
