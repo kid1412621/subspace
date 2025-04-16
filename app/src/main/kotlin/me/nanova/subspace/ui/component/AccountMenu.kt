@@ -9,6 +9,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -107,17 +108,22 @@ fun AccountMenu(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(modifier = Modifier.weight(1f, fill = true)) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(52.dp) // Fixed height for the animation container
+                        ) {
                             NavItemInfoLabels(
                                 !showOverlay, isCurrent, it,
-                                modifier = Modifier.padding(vertical = 8.dp)
+                                modifier = Modifier.padding(vertical = 4.dp)
                             )
+
                             NavItemActionButtons(
                                 showOverlay,
                                 onDismiss = { showOverlay = false },
                                 onEditing = { onAccountEditing(it) },
                                 onDeleting = { onAccountDeleting(it) },
-                                modifier = Modifier.padding(vertical = 8.dp)
+                                modifier = Modifier.padding(vertical = 4.dp)
                             )
                         }
                         Icon(
@@ -138,7 +144,6 @@ fun AccountMenu(
                 selected = isCurrent,
                 modifier = Modifier
                     .padding(10.dp, 15.dp)
-                    .height(60.dp)
                     .fillMaxWidth(),
                 onClick = { onAccountSelected(it) },
             )
@@ -158,8 +163,8 @@ private fun NavItemInfoLabels(
 ) {
     AnimatedVisibility(
         visible = showLabel,
-        enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
-        exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
+        enter = fadeIn() + slideInVertically { -it },
+        exit = fadeOut() + slideOutVertically { -it },
         modifier = modifier
     ) {
         Column {
@@ -192,8 +197,8 @@ private fun NavItemActionButtons(
 ) {
     AnimatedVisibility(
         visible = showOverlay,
-        enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-        exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+        enter = fadeIn() + slideInVertically { it },
+        exit = fadeOut() + slideOutVertically { it },
         modifier = modifier
     ) {
 
