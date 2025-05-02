@@ -76,9 +76,10 @@ fun FilterMenu(
     val sheetState = rememberModalBottomSheetState()
     val tmp = QTFilters(filter = filter.filter, tag = filter.tag, category = filter.category)
     val checkedList = remember {
-        mutableStateListOf(*FilterType.entries
-            .filter { it.showCondition(filter) }
-            .toTypedArray()
+        mutableStateListOf(
+            *FilterType.entries
+                .filter { it.showCondition(filter) }
+                .toTypedArray()
         )
     }
 
@@ -139,7 +140,13 @@ fun FilterMenu(
             }
 
             Button(onClick = {
-                onFilter(filter.copy(tag = tmp.tag, filter = tmp.filter, category = tmp.category))
+                onFilter(
+                    filter.copy(
+                        filter = tmp.filter,
+                        tag = if (checkedList.contains(FilterType.Tag)) tmp.tag else null,
+                        category = if (checkedList.contains(FilterType.Category)) tmp.category else null
+                    )
+                )
                 scope.launch { sheetState.hide() }
                     .invokeOnCompletion {
                         if (!sheetState.isVisible) {
