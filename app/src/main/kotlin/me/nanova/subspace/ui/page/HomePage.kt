@@ -1,6 +1,7 @@
 package me.nanova.subspace.ui.page
 
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -149,6 +150,7 @@ fun HomePage(
                     .padding(innerPadding)
                     .fillMaxSize(),
             ) {
+                Log.d("ACCOUNT", currentAccount.toString())
                 if (currentAccount == null) {
                     BlankAccount(onGoSetting = { navController.navigate(Routes.AccountCreation.name) })
                 } else {

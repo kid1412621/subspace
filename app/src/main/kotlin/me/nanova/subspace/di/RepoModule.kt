@@ -20,8 +20,12 @@ import javax.inject.Provider
 object RepoModule {
 
     @Provides
-    fun provideAccountRepo(accountDao: AccountDao, storage: Storage): AccountRepo {
-        return AccountRepoImpl(accountDao, storage)
+    fun provideAccountRepo(
+        accountDao: AccountDao,
+        torrentDao: TorrentDao,
+        storage: Storage
+    ): AccountRepo {
+        return AccountRepoImpl(accountDao, torrentDao, storage)
     }
 
     @Provides

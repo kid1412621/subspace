@@ -46,12 +46,13 @@ class AccountViewModel
 
     fun saveAccount(account: Account) {
         viewModelScope.launch(Dispatchers.IO) {
+            if (account.type != AccountType.QT) {
+                snackBarMessage.update { "${account.type} not supported yet." }
+                return@launch
+            }
+
             loading.update { true }
             try {
-                if (account.type != AccountType.QT) {
-                    snackBarMessage.update { "${account.type} not supported yet." }
-                    return@launch
-                }
                 // check connection
                 val authApiService = Retrofit.Builder()
                     .baseUrl(account.url)
@@ -73,8 +74,16 @@ class AccountViewModel
                     return@launch
                 }
 
-                // check version
+                // TODO: check version
 //                val version = torrentRepo.apiVersion()
+
+                val existed = accountRepo.get(account.id)
+                // simplest solution for update, since user might change to another instance and no way to know
+                if (existed != null) {
+                    accountRepo.delete(account.id)
+                }
+                accountRepo.save(account)
+                submitted.update { true }
             } catch (e: Exception) {
                 snackBarMessage.update { "Cannot connect to ${account.type} service: " + e.message }
                 return@launch
@@ -82,20 +91,6 @@ class AccountViewModel
                 loading.update { false }
             }
 
-            try {
-                val existed = accountRepo.get(account.id)
-                // simplest solution for update, since user might change to another instance and no way to know
-                if (existed != null) {
-                    accountRepo.delete(account.id)
-                }
-                accountRepo.save(account)
-            } catch (e: Exception) {
-                snackBarMessage.update { e.message }
-                return@launch
-            } finally {
-                loading.update { false }
-            }
-            submitted.update { true }
         }
     }
 

@@ -4,9 +4,9 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
-import androidx.paging.PagingSource
-import androidx.paging.PagingState
+import androidx.paging.map
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import me.nanova.subspace.data.api.QTApiService
 import me.nanova.subspace.data.db.AppDatabase
 import me.nanova.subspace.data.db.TorrentDao
@@ -14,7 +14,6 @@ import me.nanova.subspace.data.db.TorrentDao.Companion.buildQuery
 import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.domain.model.QTListParams
 import me.nanova.subspace.domain.model.Torrent
-import me.nanova.subspace.domain.model.TorrentEntity
 import me.nanova.subspace.domain.model.toModel
 import me.nanova.subspace.domain.repo.TorrentRepo
 import javax.inject.Inject
@@ -42,31 +41,11 @@ class TorrentRepoImpl @Inject constructor(
                 apiService.get()
             ),
             pagingSourceFactory = {
-                val pagingSource = torrentDao.pagingSource(buildQuery(account.id, filter))
-                object : PagingSource<Int, Torrent>() {
-                    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Torrent> {
-                        val result = pagingSource.load(params)
-                        return when (result) {
-                            is LoadResult.Page -> {
-                                LoadResult.Page(
-                                    data = result.data.map { it.toModel() },
-                                    prevKey = result.prevKey,
-                                    nextKey = result.nextKey
-                                )
-                            }
-
-                            is LoadResult.Error -> LoadResult.Error(result.throwable)
-                            is LoadResult.Invalid -> LoadResult.Invalid()
-                        }
-                    }
-
-                    override fun getRefreshKey(state: PagingState<Int, Torrent>): Int? {
-                        val stateEntity = state as PagingState<Int, TorrentEntity> //fixme
-                        return pagingSource.getRefreshKey(stateEntity)
-                    }
-                }
+                torrentDao.pagingSource(buildQuery(account.id, filter))
             }
-        ).flow
+        ).flow.map { pagingData ->
+            pagingData.map { entity -> entity.toModel() }
+        }
     }
 
     companion object {
