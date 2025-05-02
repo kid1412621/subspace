@@ -10,14 +10,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AccessTime
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.ArrowDropDown
-import androidx.compose.material.icons.rounded.ArrowDropUp
+import androidx.compose.material.icons.rounded.CleaningServices
 import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.SortByAlpha
-import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.SwapVert
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
@@ -25,16 +21,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.DismissibleDrawerSheet
 import androidx.compose.material3.DismissibleNavigationDrawer
 import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuDefaults
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -44,7 +37,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.material3.rememberDrawerState
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -69,6 +61,8 @@ import kotlinx.coroutines.launch
 import me.nanova.subspace.R
 import me.nanova.subspace.ui.Routes
 import me.nanova.subspace.ui.component.AccountMenu
+import me.nanova.subspace.ui.component.FilterMenu
+import me.nanova.subspace.ui.component.SortMenu
 import me.nanova.subspace.ui.component.TorrentList
 import me.nanova.subspace.ui.vm.HomeUiState
 import me.nanova.subspace.ui.vm.HomeViewModel
@@ -161,181 +155,83 @@ fun HomePage(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BottomBar(
     show: Boolean = false,
     uiState: HomeUiState,
     homeViewModel: HomeViewModel,
 ) {
+    if (!show) return
+
     var showSortMenu by remember { mutableStateOf(false) }
     var showFilterSheet by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState()
-    val scope = rememberCoroutineScope()
+    val category by homeViewModel.categories.collectAsState(initial = emptyMap())
+    val tags by homeViewModel.tags.collectAsState(initial = emptyList())
 
-    if (show) {
-        if (showFilterSheet) {
-            ModalBottomSheet(
-                onDismissRequest = {
-                    showFilterSheet = false
-                },
-                sheetState = sheetState
-            ) {
-                Button(onClick = {
-                    scope.launch { sheetState.hide() }
-                        .invokeOnCompletion {
-                            if (!sheetState.isVisible) {
-                                showFilterSheet = false
-                            }
-                        }
-                }) {
-                    Text("Hide bottom sheet")
-                }
-            }
-        }
-
-        if (showSortMenu) {
-            DropdownMenu(
-                expanded = true,
-                onDismissRequest = { showSortMenu = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text(text = "Name") },
-                    colors = if (uiState.filter.sort == "name")
-                        MenuDefaults.itemColors(MaterialTheme.colorScheme.primary)
-                    else MenuDefaults.itemColors(),
-                    leadingIcon = {
-                        Icon(
-                            Icons.Rounded.SortByAlpha,
-                            contentDescription = "Sort by name"
-                        )
-                    },
-                    trailingIcon = {
-                        if (uiState.filter.sort == "name") {
-                            if (uiState.filter.reverse) {
-                                Icon(
-                                    Icons.Rounded.ArrowDropDown,
-                                    contentDescription = "Descending"
-                                )
-                            } else {
-                                Icon(
-                                    Icons.Rounded.ArrowDropUp,
-                                    contentDescription = "Ascending"
-                                )
-                            }
-                        }
-                    },
-                    onClick = {
-                        homeViewModel.updateSort(
-                            uiState.filter.copy(
-                                sort = "name",
-                                reverse = if (uiState.filter.sort == "name") !uiState.filter.reverse else uiState.filter.reverse
-                            )
-                        )
-                        showSortMenu = false
-                    })
-                DropdownMenuItem(
-                    text = { Text(text = "Added On") },
-                    colors = if (uiState.filter.sort == "added_on")
-                        MenuDefaults.itemColors(MaterialTheme.colorScheme.primary)
-                    else MenuDefaults.itemColors(),
-                    leadingIcon = {
-                        Icon(
-                            Icons.Rounded.AccessTime,
-                            contentDescription = "Sort by add time"
-                        )
-                    },
-                    trailingIcon = {
-                        if (uiState.filter.sort == "added_on") {
-                            if (uiState.filter.reverse) {
-                                Icon(
-                                    Icons.Rounded.ArrowDropDown,
-                                    contentDescription = "Descending"
-                                )
-                            } else {
-                                Icon(
-                                    Icons.Rounded.ArrowDropUp,
-                                    contentDescription = "Ascending"
-                                )
-                            }
-                        }
-                    },
-                    onClick = {
-                        homeViewModel.updateSort(
-                            uiState.filter.copy(
-                                sort = "added_on",
-                                reverse = if (uiState.filter.sort == "added_on") !uiState.filter.reverse else uiState.filter.reverse
-                            )
-                        )
-                        showSortMenu = false
-                    })
-                DropdownMenuItem(
-                    text = { Text(text = "Download Speed") },
-                    colors = if (uiState.filter.sort == "dlspeed")
-                        MenuDefaults.itemColors(MaterialTheme.colorScheme.primary)
-                    else MenuDefaults.itemColors(),
-                    leadingIcon = {
-                        Icon(
-                            Icons.Rounded.Speed,
-                            contentDescription = "Sort by download speed"
-                        )
-                    },
-                    trailingIcon = {
-                        if (uiState.filter.sort == "dlspeed") {
-                            if (uiState.filter.reverse) {
-                                Icon(
-                                    Icons.Rounded.ArrowDropDown,
-                                    contentDescription = "Descending"
-                                )
-                            } else {
-                                Icon(
-                                    Icons.Rounded.ArrowDropUp,
-                                    contentDescription = "Ascending"
-                                )
-                            }
-                        }
-                    },
-                    onClick = {
-                        homeViewModel.updateSort(
-                            uiState.filter.copy(
-                                sort = "dlspeed",
-                                reverse = if (uiState.filter.sort == "dlspeed") !uiState.filter.reverse else uiState.filter.reverse
-                            )
-                        )
-                        showSortMenu = false
-                    })
-            }
-        }
-
-        BottomAppBar(
-            actions = {
-                IconButton(onClick = { /* do something */ }, enabled = false) {
-                    Icon(Icons.Rounded.Search, contentDescription = "search")
-                }
-                IconButton(onClick = { showFilterSheet = true }) {
-                    Icon(
-                        Icons.Rounded.FilterList,
-                        contentDescription = "filter"
-                    )
-                }
-                IconButton(onClick = { showSortMenu = true }) {
-                    Icon(
-                        Icons.Rounded.SwapVert,
-                        contentDescription = "sort"
-                    )
-                }
-            },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { },
-                    containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
-                    elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
-                ) {
-                    Icon(Icons.Rounded.Add, "Add torrent")
-                }
-            }
+    if (showFilterSheet) {
+        FilterMenu(
+            uiState.filter,
+            category,
+            tags,
+            onClose = { showFilterSheet = false },
+            onFilter = { homeViewModel.updateFilter(it) }
         )
     }
+
+    if (showSortMenu) {
+        SortMenu(
+            uiState.filter,
+            onClose = { showSortMenu = false },
+            onSort = { homeViewModel.updateFilter(it) })
+    }
+
+    BottomAppBar(
+        actions = {
+            IconButton(onClick = { /* do something */ }, enabled = false) {
+                Icon(Icons.Rounded.Search, contentDescription = "search")
+            }
+            IconButton(
+                onClick = { showFilterSheet = true },
+                colors = if (uiState.filter.hasFiltered())
+                    IconButtonDefaults.iconButtonColors(MaterialTheme.colorScheme.primaryContainer)
+                else IconButtonDefaults.iconButtonColors(),
+            ) {
+                Icon(
+                    Icons.Rounded.FilterList,
+                    contentDescription = "filter"
+                )
+            }
+            IconButton(
+                onClick = { showSortMenu = true },
+                colors = if (uiState.filter.hasSorted())
+                    IconButtonDefaults.iconButtonColors(MaterialTheme.colorScheme.primaryContainer)
+                else IconButtonDefaults.iconButtonColors(),
+            ) {
+                Icon(
+                    Icons.Rounded.SwapVert,
+                    contentDescription = "sort"
+                )
+            }
+
+            if (uiState.filter.hasFiltered() || uiState.filter.hasSorted()) {
+                IconButton(onClick = { homeViewModel.resetFilter() }) {
+                    Icon(
+                        Icons.Rounded.CleaningServices,
+                        contentDescription = "clear filter"
+                    )
+                }
+            }
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { },
+                containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
+                elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
+            ) {
+                Icon(Icons.Rounded.Add, "Add torrent")
+            }
+        }
+    )
 }
 
 @Composable

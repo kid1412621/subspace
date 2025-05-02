@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "torrent")
 data class TorrentEntity(
-    // "$aid-${this.hash}" (since hash might be duplicated, like user added same service multiple times)
+    // "$aid-${this.hash}" (since hash might be duplicated, e.g. user added same service multiple times)
     @PrimaryKey
     val id: String,
     @ColumnInfo(index = true)

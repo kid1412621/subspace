@@ -27,7 +27,7 @@ import javax.inject.Inject
 data class HomeUiState(
     var error: String? = null,
     val data: List<Torrent> = emptyList(),
-    val filter: QTListParams = QTListParams()
+    val filter: QTListParams = QTListParams(),
 )
 
 @HiltViewModel
@@ -52,6 +52,9 @@ class HomeViewModel @Inject constructor(
 
     }
 
+    val categories = torrentRepo.categories()
+    val tags = torrentRepo.tags()
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val pagingDataFlow: Flow<PagingData<Torrent>> =
         combine(
@@ -66,7 +69,7 @@ class HomeViewModel @Inject constructor(
     fun switchAccount(account: Account) {
         viewModelScope.launch {
             accountRepo.switch(account.id)
-            updateSort()
+            updateFilter()
         }
     }
 
@@ -76,9 +79,15 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun updateSort(newFilter: QTListParams = QTListParams()) {
+    fun updateFilter(newFilter: QTListParams = QTListParams()) {
         _homeUiState.update {
             it.copy(filter = newFilter)
+        }
+    }
+
+    fun resetFilter() {
+        _homeUiState.update {
+            it.copy(filter = QTListParams())
         }
     }
 }

@@ -31,10 +31,16 @@ interface TorrentDao {
             accountId: Long,
             filter: QTListParams,
         ): SupportSQLiteQuery {
-            var query = "SELECT * FROM torrent WHERE account_id = $accountId"
+            // TODO: temp fix PagingSource<Int, TorrentEntity>
+            var query =
+                "SELECT *, added_on AS addedOn, last_updated AS lastUpdated FROM torrent WHERE account_id = $accountId"
 
             if (filter.category != null) {
                 query += " AND category = '${filter.category}'"
+            }
+
+            if (filter.category != null) {
+                query += " AND ',' || tags || ',' LIKE '%,' || ${filter.tag} || ',%'"
             }
 
             if (filter.filter.isNotBlank()) {

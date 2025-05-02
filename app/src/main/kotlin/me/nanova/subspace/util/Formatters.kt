@@ -8,6 +8,11 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.ln
 import kotlin.math.pow
 
+fun String.toCamelCase(): String {
+    return this.split('_')
+        .joinToString("") { it.replaceFirstChar { char -> char.uppercase() } }
+}
+
 fun Float.percentage(decimalPlaces: Int = 2): String {
     return when {
         this < 1 -> "%.${decimalPlaces}f%%".format(this * 100)

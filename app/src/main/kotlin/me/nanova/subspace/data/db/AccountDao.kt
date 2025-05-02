@@ -5,8 +5,8 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
-import me.nanova.subspace.domain.model.AccountType
 import me.nanova.subspace.domain.model.Account
+import me.nanova.subspace.domain.model.AccountType
 
 @Dao
 interface AccountDao {
@@ -27,6 +27,7 @@ interface AccountDao {
 
     @Query("SELECT * FROM account WHERE type = :type AND url = :url AND user = :user LIMIT 1")
     suspend fun getByUrlTypeUser(type: AccountType, url: String, user: String): Account?
+
     @Insert
     suspend fun insert(account: Account): Long
 
