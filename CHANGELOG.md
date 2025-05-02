@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.6.0 - 2025-02-22
+
+- Bump AGP to 8.8.1 and compose lib to 2025.02.00;
+- Bump Java from 17 to 21.
+
+## 0.5.0 - 2025-01-14
+
+- Bump AGP to 8.8.0 and compose lib to 2024.12.01;
+- Update target SDK to 35.
+
 ## 0.4.0 - 2024-07-24
 
 - Bump AGP to 8.5.1, gradlew to 8.9;

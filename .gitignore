@@ -1,6 +1,7 @@
 # Gradle files
 .gradle/
 build/
+.kotlin/
 
 # Ignore Kotlin cache directory
 .kotlin/

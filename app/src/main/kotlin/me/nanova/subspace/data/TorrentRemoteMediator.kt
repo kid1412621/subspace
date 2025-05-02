@@ -9,7 +9,7 @@ import me.nanova.subspace.data.api.QTApiService
 import me.nanova.subspace.data.db.AppDatabase
 import me.nanova.subspace.domain.model.QTListParams
 import me.nanova.subspace.domain.model.RemoteKeys
-import me.nanova.subspace.domain.model.Torrent
+import me.nanova.subspace.domain.model.TorrentEntity
 import me.nanova.subspace.domain.model.toEntity
 
 @OptIn(ExperimentalPagingApi::class)
@@ -18,7 +18,7 @@ class TorrentRemoteMediator(
     private val query: QTListParams,
     private val database: AppDatabase,
     private val networkService: QTApiService
-) : RemoteMediator<Int, Torrent>() {
+) : RemoteMediator<Int, TorrentEntity>() {
 
     private val torrentDao = database.torrentDao()
     private val remoteKeyDao = database.remoteKeyDao()
@@ -30,7 +30,7 @@ class TorrentRemoteMediator(
 
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, Torrent>
+        state: PagingState<Int, TorrentEntity>
     ): MediatorResult {
         return try {
             val offset = when (loadType) {

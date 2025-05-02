@@ -16,9 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import dagger.hilt.android.AndroidEntryPoint
 import me.nanova.subspace.ui.page.AccountPage
 import me.nanova.subspace.ui.page.HomePage
@@ -55,7 +57,7 @@ fun AppContainer(
 //                    modifier = Modifier.padding(innerPadding)
     ) {
         composable(
-            route = Routes.Settings.name,
+            route = Routes.AccountCreation.name,
             enterTransition = {
                 fadeIn(
                     animationSpec = tween(
@@ -73,7 +75,33 @@ fun AppContainer(
                 )
             }
         ) {
+            AccountPage(navController = navController)
+        }
+        composable(
+            route = "${Routes.AccountDetails.name}/{accountId}",
+            arguments = listOf(
+                navArgument("accountId") { type = NavType.LongType }
+            ),
+            enterTransition = {
+                fadeIn(
+                    animationSpec = tween(
+                        300, easing = LinearEasing
+                    )
+                ) + slideIntoContainer(
+                    animationSpec = tween(300, easing = EaseIn),
+                    towards = AnimatedContentTransitionScope.SlideDirection.Start
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    animationSpec = tween(300, easing = EaseOut),
+                    towards = AnimatedContentTransitionScope.SlideDirection.End
+                )
+            }
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getLong("accountId")
             AccountPage(
+                id = id,
                 navController = navController
             )
         }

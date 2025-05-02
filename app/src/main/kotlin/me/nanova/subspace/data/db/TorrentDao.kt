@@ -10,7 +10,6 @@ import androidx.sqlite.db.SupportSQLiteQuery
 import kotlinx.coroutines.flow.Flow
 import me.nanova.subspace.domain.model.QTFilterState
 import me.nanova.subspace.domain.model.QTListParams
-import me.nanova.subspace.domain.model.Torrent
 import me.nanova.subspace.domain.model.TorrentEntity
 
 @Dao
@@ -19,7 +18,7 @@ interface TorrentDao {
     fun getAll(accountId: Long): Flow<List<TorrentEntity>>
 
     @RawQuery(observedEntities = [TorrentEntity::class])
-    fun pagingSource(query: SupportSQLiteQuery): PagingSource<Int, Torrent>
+    fun pagingSource(query: SupportSQLiteQuery): PagingSource<Int, TorrentEntity>
 
     @Upsert
     suspend fun insertAll(torrents: List<TorrentEntity>)

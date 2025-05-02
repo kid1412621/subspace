@@ -3,6 +3,7 @@ package me.nanova.subspace.ui.vm
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -48,6 +49,7 @@ class HomeViewModel @Inject constructor(
                 _accounts.value = it
             }
         }
+
     }
 
     val categories = torrentRepo.categories()
@@ -62,12 +64,18 @@ class HomeViewModel @Inject constructor(
             .distinctUntilChanged()
             .flatMapLatest { (account, filter) ->
                 torrentRepo.torrents(account, filter)
-            }
+            }.cachedIn(viewModelScope)
 
     fun switchAccount(account: Account) {
         viewModelScope.launch {
             accountRepo.switch(account.id)
             updateFilter()
+        }
+    }
+
+    fun deleteAccount(account: Account) {
+        viewModelScope.launch {
+            accountRepo.delete(account.id)
         }
     }
 

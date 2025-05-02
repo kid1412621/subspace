@@ -4,8 +4,9 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import androidx.paging.map
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import me.nanova.subspace.data.api.QTApiService
 import me.nanova.subspace.data.db.AppDatabase
 import me.nanova.subspace.data.db.TorrentDao
@@ -14,6 +15,7 @@ import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.domain.model.QTCategories
 import me.nanova.subspace.domain.model.QTListParams
 import me.nanova.subspace.domain.model.Torrent
+import me.nanova.subspace.domain.model.toModel
 import me.nanova.subspace.domain.repo.TorrentRepo
 import javax.inject.Inject
 import javax.inject.Provider
@@ -46,7 +48,9 @@ class TorrentRepoImpl @Inject constructor(
             pagingSourceFactory = {
                 torrentDao.pagingSource(buildQuery(account.id, filter))
             }
-        ).flow
+        ).flow.map { pagingData ->
+            pagingData.map { entity -> entity.toModel() }
+        }
     }
 
     override fun categories(): Flow<QTCategories> {

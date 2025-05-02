@@ -1,26 +1,44 @@
 package me.nanova.subspace.ui.component
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -39,15 +57,15 @@ fun AccountMenu(
     accounts: List<Account> = emptyList(),
     onAccountSelected: (Account) -> Unit = {},
     onAccountAdding: () -> Unit = {},
+    onAccountEditing: (Account) -> Unit = {},
+    onAccountDeleting: (Account) -> Unit = {},
 ) {
-
     val lazyColumnState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
     LazyColumn(
         state = lazyColumnState,
         modifier = Modifier.fillMaxWidth(),
-//            verticalArrangement = Arrangement.spacedBy(15.dp),
     ) {
         stickyHeader {
             Surface(
@@ -68,40 +86,50 @@ fun AccountMenu(
                         modifier = Modifier.padding(10.dp),
                         style = MaterialTheme.typography.titleLarge,
                     )
-
                     FilledIconButton(
                         onClick = { onAccountAdding() },
                         modifier = Modifier.padding(10.dp),
                     ) {
-                        Icon(
-                            Icons.Rounded.Add,
-                            contentDescription = "add new server"
-                        )
+                        Icon(Icons.Rounded.Add, contentDescription = "add new server")
                     }
                 }
             }
-
             HorizontalDivider()
         }
 
         items(accounts, key = { it.id }) {
+            val isCurrent = it.isCurrent(currentAccountId)
+            var showOverlay by remember { mutableStateOf(false) }
+
             NavigationDrawerItem(
                 label = {
-                    Column {
-                        Text(
-                            color = if (it.isCurrent(currentAccountId)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
-                            text = it.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        Text(
-                            color = if (it.isCurrent(currentAccountId)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
-                            text = "${it.user}@${it.url}",
-                            style = MaterialTheme.typography.labelSmall,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(0.dp, 2.dp)
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(52.dp) // Fixed height for the animation container
+                        ) {
+                            NavItemInfoLabels(
+                                !showOverlay, isCurrent, it,
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
+
+                            NavItemActionButtons(
+                                showOverlay,
+                                onDismiss = { showOverlay = false },
+                                onEditing = { onAccountEditing(it) },
+                                onDeleting = { onAccountDeleting(it) },
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
+                        }
+                        Icon(
+                            Icons.Outlined.MoreVert,
+                            "Actions on account",
+                            modifier = Modifier.clickable { showOverlay = !showOverlay }
                         )
                     }
                 },
@@ -109,21 +137,112 @@ fun AccountMenu(
                     Icon(
                         imageVector = ImageVector.vectorResource(id = it.type.toMonoIcon()),
                         contentDescription = it.user,
-                        modifier = Modifier.size(33.dp),
-                        tint = if (it.isCurrent(currentAccountId)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+                        modifier = Modifier.size(43.dp),
+                        tint = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
                     )
                 },
-                modifier = Modifier.padding(10.dp, 15.dp),
-                selected = it.isCurrent(currentAccountId),
-                onClick = { onAccountSelected(it) }
+                selected = isCurrent,
+                modifier = Modifier
+                    .padding(10.dp, 15.dp)
+                    .fillMaxWidth(),
+                onClick = { onAccountSelected(it) },
             )
-
             HorizontalDivider()
         }
     }
 }
 
-private fun Account.isCurrent(id: Long?) = id?.equals(this.id) ?: false
+private fun Account.isCurrent(id: Long?) = id?.equals(this.id) == true
+
+@Composable
+private fun NavItemInfoLabels(
+    showLabel: Boolean,
+    isCurrent: Boolean,
+    account: Account,
+    modifier: Modifier = Modifier
+) {
+    AnimatedVisibility(
+        visible = showLabel,
+        enter = fadeIn() + slideInVertically { -it },
+        exit = fadeOut() + slideOutVertically { -it },
+        modifier = modifier
+    ) {
+        Column {
+            Text(
+                color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
+                text = account.name,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
+                text = "${account.user}@${account.url}",
+                style = MaterialTheme.typography.labelSmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(bottom = 2.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun NavItemActionButtons(
+    showOverlay: Boolean,
+    onDismiss: () -> Unit,
+    onEditing: () -> Unit,
+    onDeleting: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AnimatedVisibility(
+        visible = showOverlay,
+        enter = fadeIn() + slideInVertically { it },
+        exit = fadeOut() + slideOutVertically { it },
+        modifier = modifier
+    ) {
+
+        Row(
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            FilledIconButton(
+                onClick = {
+                    onEditing()
+                    onDismiss()
+                }
+            ) {
+                Icon(Icons.Outlined.Edit, "Edit account")
+            }
+            FilledIconButton(
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.error
+                ),
+                onClick = {
+                    onDeleting()
+                    onDismiss()
+                }
+            ) {
+                Icon(Icons.Outlined.Delete, "Delete account")
+            }
+            FilledIconButton(
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary
+                ),
+                onClick = { onDismiss() }
+            ) {
+                Icon(Icons.Outlined.PushPin, "Pin account on the top")
+            }
+        }
+    }
+
+    if (showOverlay) {
+        BackHandler {
+            onDismiss()
+        }
+    }
+}
 
 @Composable
 @Preview
@@ -148,7 +267,7 @@ fun AccountMenuPrev() {
             created = 123412
         ),
     )
-    accounts += (3..12).toList().map {
+    accounts += (3..12).map {
         Account(
             id = it.toLong(),
             type = AccountType.QT,
