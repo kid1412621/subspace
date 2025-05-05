@@ -8,7 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import me.nanova.subspace.data.api.QTAuthService
+import me.nanova.subspace.data.api.QBAuthService
 import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.domain.model.AccountType
 import me.nanova.subspace.domain.repo.AccountRepo
@@ -22,7 +22,7 @@ class AccountViewModel
     private val accountRepo: AccountRepo
 ) : ViewModel() {
 
-    val account = MutableStateFlow(Account(type = AccountType.QT))
+    val account = MutableStateFlow(Account(type = AccountType.QBITTORENT))
     val snackBarMessage = MutableStateFlow<String?>(null)
     val loading = MutableStateFlow(false)
     val submitted = MutableStateFlow(false)
@@ -44,9 +44,9 @@ class AccountViewModel
         this.account.update { account }
     }
 
-    fun saveAccount(account: Account) {
+    fun saveAccount(account: Account, isCreate: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            if (account.type != AccountType.QT) {
+            if (account.type != AccountType.QBITTORENT) {
                 snackBarMessage.update { "${account.type} not supported yet." }
                 return@launch
             }
@@ -58,7 +58,7 @@ class AccountViewModel
                     .baseUrl(account.url)
                     .addConverterFactory(ScalarsConverterFactory.create())
                     .build()
-                    .create(QTAuthService::class.java)
+                    .create(QBAuthService::class.java)
                 val call = authApiService.login(account.user, account.pass)
                 val res = call.execute()
                 if (!res.isSuccessful) {
@@ -77,15 +77,16 @@ class AccountViewModel
                 // TODO: check version
 //                val version = torrentRepo.apiVersion()
 
-                val existed = accountRepo.get(account.id)
-                // simplest solution for update, since user might change to another instance and no way to know
-                if (existed != null) {
-                    accountRepo.delete(account.id)
+                if (isCreate) {
+                    accountRepo.save(account)
+                } else {
+//                  // TODO: since user might change to another instance and no way to know, need to cleanup torrents under the account
+                    accountRepo.update(account)
                 }
-                accountRepo.save(account)
                 submitted.update { true }
-            } catch (e: Exception) {
-                snackBarMessage.update { "Cannot connect to ${account.type} service: " + e.message }
+            } catch (ex: Exception) {
+                Log.e("[Account]", ex.message ?: "")
+                snackBarMessage.update { "Cannot connect to ${account.type} service" }
                 return@launch
             } finally {
                 loading.update { false }

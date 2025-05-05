@@ -7,7 +7,7 @@ import dagger.hilt.components.SingletonComponent
 import me.nanova.subspace.data.AccountRepoImpl
 import me.nanova.subspace.data.Storage
 import me.nanova.subspace.data.TorrentRepoImpl
-import me.nanova.subspace.data.api.QTApiService
+import me.nanova.subspace.data.api.QBApiService
 import me.nanova.subspace.data.db.AccountDao
 import me.nanova.subspace.data.db.AppDatabase
 import me.nanova.subspace.data.db.TorrentDao
@@ -32,7 +32,7 @@ object RepoModule {
     fun provideTorrentRepo(
         appDatabase: AppDatabase,
         torrentDao: TorrentDao,
-        apiService: Provider<QTApiService>
+        apiService: Provider<QBApiService>
     ): TorrentRepo {
         return TorrentRepoImpl(appDatabase, torrentDao, apiService)
     }

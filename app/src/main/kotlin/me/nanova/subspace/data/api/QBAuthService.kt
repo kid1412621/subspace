@@ -5,7 +5,7 @@ import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.POST
 
-interface QTAuthService {
+interface QBAuthService {
 
     @FormUrlEncoded
     @POST("api/v2/auth/login")

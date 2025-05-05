@@ -250,7 +250,7 @@ fun AccountMenuPrev() {
     val accounts = mutableListOf(
         Account(
             id = 1,
-            type = AccountType.QT,
+            type = AccountType.QBITTORENT,
             name = "server name toooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo long",
             url = "host",
             user = "user",
@@ -261,7 +261,7 @@ fun AccountMenuPrev() {
             id = 2,
             type = AccountType.TRANSMISSION,
             name = "server name 2",
-            url = "qt.host.com",
+            url = "qb.host.com",
             user = "user",
             pass = "secret",
             created = 123412
@@ -270,7 +270,7 @@ fun AccountMenuPrev() {
     accounts += (3..12).map {
         Account(
             id = it.toLong(),
-            type = AccountType.QT,
+            type = AccountType.QBITTORENT,
             name = "name",
             url = "host",
             user = "user",

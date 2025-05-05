@@ -2,7 +2,7 @@ package me.nanova.subspace.domain.model
 
 import me.nanova.subspace.data.TorrentRepoImpl.Companion.PAGE_SIZE
 
-data class QTListParams(
+data class QBListParams(
     val filter: String = "all",
     val category: String? = null,
     val tag: String? = null,

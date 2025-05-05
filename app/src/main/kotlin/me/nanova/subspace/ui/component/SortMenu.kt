@@ -14,14 +14,14 @@ import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
-import me.nanova.subspace.domain.model.QTListParams
+import me.nanova.subspace.domain.model.QBListParams
 import me.nanova.subspace.util.toCamelCase
 
 @Composable
 fun SortMenu(
-    filter: QTListParams,
+    filter: QBListParams,
     onClose: () -> Unit = {},
-    onSort: (QTListParams) -> Unit = {},
+    onSort: (QBListParams) -> Unit = {},
     onReset: () -> Unit = {},
 ) {
     fun handleSortSelection(label: String) {

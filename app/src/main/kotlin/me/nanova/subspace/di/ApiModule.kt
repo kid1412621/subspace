@@ -4,7 +4,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import me.nanova.subspace.data.api.QTApiService
+import me.nanova.subspace.data.api.QBApiService
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -12,7 +12,7 @@ object ApiModule {
 
     @Provides
 //    @Singleton
-    fun provideQTApiService(factory: RetrofitFactory): QTApiService {
-        return factory.retrofit().create(QTApiService::class.java)
+    fun provideQBApiService(factory: RetrofitFactory): QBApiService {
+        return factory.retrofit().create(QBApiService::class.java)
     }
 }

@@ -12,7 +12,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import javax.inject.Inject
 
-class QtCookieInterceptor
+class QBCookieInterceptor
 @Inject
 constructor(
     private val storage: Storage,
@@ -26,10 +26,10 @@ constructor(
 
     init {
         CoroutineScope(Dispatchers.IO).launch {
-            storage.qtCookie.collect { newCookie ->
+            storage.qbCookie.collect { newCookie ->
                 cookie = newCookie
             }
-            storage.qtCookieTime.collect { cookieTime ->
+            storage.qbCookieTime.collect { cookieTime ->
                 timestamp = cookieTime
             }
         }
@@ -47,12 +47,12 @@ constructor(
                 .baseUrl(account.url)
                 .addConverterFactory(ScalarsConverterFactory.create())
                 .build()
-                .create(QTAuthService::class.java)
+                .create(QBAuthService::class.java)
             val call = authApiService.login(account.user, account.pass)
             val newCookie = call.execute().headers()["Set-Cookie"] ?: ""
             runBlocking {
-                storage.saveQtCookie(newCookie)
-                storage.updateQtCookieTime()
+                storage.saveQBCookie(newCookie)
+                storage.updateQBCookieTime()
             }
         }
         cookie?.let {

@@ -49,6 +49,16 @@ class AccountRepoImpl @Inject constructor(
         return id
     }
 
+    override suspend fun update(account: Account): Long {
+        val existed = accountDao.getById(account.id)
+        if (existed == null) {
+            throw RuntimeException("Account not exist")
+        }
+        accountDao.update(account)
+        storage.updateCurrentAccountId(account.id)
+        return account.id
+    }
+
     override suspend fun switch(accountId: Long) {
         storage.updateCurrentAccountId(accountId)
     }

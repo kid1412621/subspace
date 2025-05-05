@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import me.nanova.subspace.domain.model.Account
-import me.nanova.subspace.domain.model.QTListParams
+import me.nanova.subspace.domain.model.QBListParams
 import me.nanova.subspace.domain.model.Torrent
 import me.nanova.subspace.domain.repo.AccountRepo
 import me.nanova.subspace.domain.repo.TorrentRepo
@@ -27,7 +27,7 @@ import javax.inject.Inject
 data class HomeUiState(
     var error: String? = null,
     val data: List<Torrent> = emptyList(),
-    val filter: QTListParams = QTListParams(),
+    val filter: QBListParams = QBListParams(),
 )
 
 @HiltViewModel
@@ -79,7 +79,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun updateFilter(newFilter: QTListParams = QTListParams()) {
+    fun updateFilter(newFilter: QBListParams = QBListParams()) {
         _homeUiState.update {
             it.copy(filter = newFilter)
         }
@@ -87,7 +87,7 @@ class HomeViewModel @Inject constructor(
 
     fun resetFilter() {
         _homeUiState.update {
-            it.copy(filter = QTListParams())
+            it.copy(filter = QBListParams())
         }
     }
 }

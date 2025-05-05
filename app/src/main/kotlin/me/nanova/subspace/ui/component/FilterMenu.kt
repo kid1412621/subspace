@@ -49,17 +49,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import kotlinx.coroutines.launch
 import me.nanova.subspace.domain.model.FilterState
-import me.nanova.subspace.domain.model.QTCategories
-import me.nanova.subspace.domain.model.QTCategory
-import me.nanova.subspace.domain.model.QTListParams
+import me.nanova.subspace.domain.model.QBCategories
+import me.nanova.subspace.domain.model.QBCategory
+import me.nanova.subspace.domain.model.QBListParams
 
-private enum class FilterType(val icon: ImageVector, val showCondition: (QTListParams) -> Boolean) {
+private enum class FilterType(val icon: ImageVector, val showCondition: (QBListParams) -> Boolean) {
     Status(Icons.Filled.QuestionMark, { it.filter != "all" }),
     Category(Icons.Filled.Category, { it.category != null }),
     Tag(Icons.AutoMirrored.Filled.Label, { it.tag != null });
 }
 
-private data class QTFilters(
+private data class QBFilters(
     var filter: String = "all",
     var category: String? = null,
     var tag: String? = null,
@@ -68,15 +68,15 @@ private data class QTFilters(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilterMenu(
-    filter: QTListParams,
-    categories: QTCategories,
+    filter: QBListParams,
+    categories: QBCategories,
     tags: List<String>,
     onClose: () -> Unit = {},
-    onFilter: (QTListParams) -> Unit = {},
+    onFilter: (QBListParams) -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
-    val tmp = QTFilters(filter = filter.filter, tag = filter.tag, category = filter.category)
+    val tmp = QBFilters(filter = filter.filter, tag = filter.tag, category = filter.category)
     val checkedList = remember {
         mutableStateListOf(
             *FilterType.entries
@@ -227,7 +227,7 @@ private fun StatusFilterMenu(
 @Composable
 private fun CategoryFilterMenu(
     initial: String?,
-    categories: QTCategories,
+    categories: QBCategories,
     onUpdate: (String?) -> Unit = {}
 ) {
     HorizontalDivider(Modifier.padding(vertical = 5.dp))
@@ -342,7 +342,7 @@ fun StatusFilterMenuPreview() {
 fun CategoryFilterMenuPreview() {
     CategoryFilterMenu(
         initial = "cat1",
-        categories = listOf(QTCategory("cat1"), QTCategory("cat2")).associateBy { it.name },
+        categories = listOf(QBCategory("cat1"), QBCategory("cat2")).associateBy { it.name },
     )
 }
 

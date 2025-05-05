@@ -46,7 +46,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import me.nanova.subspace.domain.model.QTState
+import me.nanova.subspace.domain.model.QBState
 import me.nanova.subspace.domain.model.Torrent
 import me.nanova.subspace.util.formatBytes
 import me.nanova.subspace.util.formatBytesPerSec
@@ -85,7 +85,7 @@ fun TorrentItem(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Icon(
-                    QTState.valueOf(torrent.state).toIcon(),
+                    QBState.valueOf(torrent.state).toIcon(),
                     contentDescription = torrent.state,
                 )
                 Text(
@@ -237,7 +237,7 @@ fun TorrentItemPrev() {
                 size = 657457152,
                 progress = 0.16108787F,
                 eta = 8640,
-                state = QTState.downloading.toString(),
+                state = QBState.downloading.toString(),
                 category = null,
                 tags = "",
                 dlspeed = 9681262,
@@ -264,7 +264,7 @@ fun TorrentItemPrev() {
                 size = 13453865673,
                 progress = 1.0F,
                 eta = 8640000,
-                state = QTState.pausedUP.toString(),
+                state = QBState.pausedUP.toString(),
                 category = "movie",
                 tags = "tag1,tag2,tag3,tagZ,tag1,tag2,tag3,tagZ,tag1,tag2,tag3,tagZ",
                 dlspeed = 0,

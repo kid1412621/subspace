@@ -88,7 +88,7 @@ fun AccountPage(
             SnackbarHost(hostState = snackBarHostState)
         },
     ) { contentPadding ->
-        AccountForm(modifier = Modifier.padding(contentPadding), viewModel)
+        AccountForm(modifier = Modifier.padding(contentPadding), viewModel, id == null)
     }
 }
 
@@ -96,6 +96,7 @@ fun AccountPage(
 private fun AccountForm(
     modifier: Modifier = Modifier,
     viewModel: AccountViewModel,
+    isCreate: Boolean
 ) {
 
     val focusManager = LocalFocusManager.current
@@ -192,7 +193,7 @@ private fun AccountForm(
                 enabled = !loading && validations.isNotEmpty() && validations.values.all { it },
                 onClick = {
                     focusManager.clearFocus()
-                    viewModel.saveAccount(account)
+                    viewModel.saveAccount(account, isCreate)
                 }
             ) {
                 if (loading) {
@@ -209,5 +210,5 @@ private fun AccountForm(
 @Composable
 @Preview
 fun NewAccountFormPrev() {
-    AccountForm(viewModel = hiltViewModel())
+    AccountForm(viewModel = hiltViewModel(), isCreate = true)
 }

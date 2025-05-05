@@ -8,7 +8,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import me.nanova.subspace.data.api.QtCookieInterceptor
+import me.nanova.subspace.data.api.QBCookieInterceptor
 import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.domain.repo.AccountRepo
 import okhttp3.OkHttpClient
@@ -57,7 +57,7 @@ object NetworkModule {
 
 //    fun httpClientByType(type: AccountType): OkHttpClient {
 //        when (type) {
-//            AccountType.QT -> createOkHttpClient();
+//            AccountType.QBITTORENT -> createOkHttpClient();
 //            AccountType.TRANSMISSION -> TODO()
 //        }
 //        return TODO("Provide the return value")
@@ -65,7 +65,7 @@ object NetworkModule {
 
     @Provides
     fun provideOkHttpClient(
-        cookieInterceptor: QtCookieInterceptor
+        cookieInterceptor: QBCookieInterceptor
     ): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY // Log HTTP request and response details

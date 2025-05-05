@@ -8,8 +8,8 @@ import androidx.room.Upsert
 import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteQuery
 import kotlinx.coroutines.flow.Flow
-import me.nanova.subspace.domain.model.QTFilterState
-import me.nanova.subspace.domain.model.QTListParams
+import me.nanova.subspace.domain.model.QBFilterState
+import me.nanova.subspace.domain.model.QBListParams
 import me.nanova.subspace.domain.model.TorrentEntity
 
 @Dao
@@ -29,7 +29,7 @@ interface TorrentDao {
     companion object {
         fun buildQuery(
             accountId: Long,
-            filter: QTListParams,
+            filter: QBListParams,
         ): SupportSQLiteQuery {
             // TODO: temp fix PagingSource<Int, TorrentEntity>
             var query =
@@ -44,7 +44,7 @@ interface TorrentDao {
             }
 
             if (filter.filter.isNotBlank()) {
-                val state = QTFilterState.valueOf(filter.filter).toQTStates()
+                val state = QBFilterState.valueOf(filter.filter).toQBStates()
                 if (state.isNotEmpty()) {
                     query += " AND state IN ('${state.joinToString("', '")}')"
                 }

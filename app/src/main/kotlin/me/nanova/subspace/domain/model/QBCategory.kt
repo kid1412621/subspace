@@ -1,8 +1,8 @@
 package me.nanova.subspace.domain.model
 
-data class QTCategory(
+data class QBCategory(
     val name: String,
     val savePath: String = ""
 )
 
-typealias QTCategories = Map<String, QTCategory>
+typealias QBCategories = Map<String, QBCategory>

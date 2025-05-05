@@ -1,12 +1,12 @@
 package me.nanova.subspace.data.api
 
 import kotlinx.coroutines.flow.Flow
-import me.nanova.subspace.domain.model.QTCategories
+import me.nanova.subspace.domain.model.QBCategories
 import me.nanova.subspace.domain.model.Torrent
 import retrofit2.http.GET
 import retrofit2.http.QueryMap
 
-interface QTApiService {
+interface QBApiService {
 
     @GET("api/v2/app/version")
     suspend fun version(): String
@@ -15,7 +15,7 @@ interface QTApiService {
     suspend fun list(@QueryMap params: Map<String, String?>): List<Torrent>
 
     @GET("api/v2/torrents/categories")
-    suspend fun categories(): QTCategories?
+    suspend fun categories(): QBCategories?
 
     @GET("api/v2/torrents/tags")
     suspend fun tags(): List<String>

@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.domain.model.AccountType
@@ -30,6 +31,9 @@ interface AccountDao {
 
     @Insert
     suspend fun insert(account: Account): Long
+
+    @Update
+    suspend fun update(account: Account)
 
     @Delete
     suspend fun delete(account: Account)

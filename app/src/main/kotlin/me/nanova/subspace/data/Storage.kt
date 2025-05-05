@@ -22,8 +22,8 @@ class Storage @Inject constructor(@ApplicationContext context: Context) {
 
     companion object {
         val CURRENT_ACCOUNT_ID = longPreferencesKey("account")
-        val QT_COOKIE_KEY = stringPreferencesKey("qt-cookie")
-        val QT_COOKIE_TIME_KEY = longPreferencesKey("qt-cookie-time")
+        val QB_COOKIE_KEY = stringPreferencesKey("qb-cookie")
+        val QB_COOKIE_TIME_KEY = longPreferencesKey("qb-cookie-time")
     }
 
 
@@ -31,13 +31,13 @@ class Storage @Inject constructor(@ApplicationContext context: Context) {
         .map { preferences ->
             preferences[CURRENT_ACCOUNT_ID]
         }
-    val qtCookie: Flow<String?> = dataStore.data
+    val qbCookie: Flow<String?> = dataStore.data
         .map { preferences ->
-            preferences[QT_COOKIE_KEY]
+            preferences[QB_COOKIE_KEY]
         }
-    val qtCookieTime: Flow<Long?> = dataStore.data
+    val qbCookieTime: Flow<Long?> = dataStore.data
         .map { preferences ->
-            preferences[QT_COOKIE_TIME_KEY]
+            preferences[QB_COOKIE_TIME_KEY]
         }
 
     suspend fun updateCurrentAccountId(account: Account?) {
@@ -56,15 +56,15 @@ class Storage @Inject constructor(@ApplicationContext context: Context) {
         }
     }
 
-    suspend fun saveQtCookie(cookie: String) {
+    suspend fun saveQBCookie(cookie: String) {
         dataStore.edit { preferences ->
-            preferences[QT_COOKIE_KEY] = cookie
+            preferences[QB_COOKIE_KEY] = cookie
         }
     }
 
-    suspend fun updateQtCookieTime() {
+    suspend fun updateQBCookieTime() {
         dataStore.edit { preferences ->
-            preferences[QT_COOKIE_TIME_KEY] = System.currentTimeMillis()
+            preferences[QB_COOKIE_TIME_KEY] = System.currentTimeMillis()
         }
     }
 }

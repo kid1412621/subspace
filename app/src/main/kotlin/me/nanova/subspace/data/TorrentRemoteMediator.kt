@@ -5,9 +5,9 @@ import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
-import me.nanova.subspace.data.api.QTApiService
+import me.nanova.subspace.data.api.QBApiService
 import me.nanova.subspace.data.db.AppDatabase
-import me.nanova.subspace.domain.model.QTListParams
+import me.nanova.subspace.domain.model.QBListParams
 import me.nanova.subspace.domain.model.RemoteKeys
 import me.nanova.subspace.domain.model.TorrentEntity
 import me.nanova.subspace.domain.model.toEntity
@@ -15,9 +15,9 @@ import me.nanova.subspace.domain.model.toEntity
 @OptIn(ExperimentalPagingApi::class)
 class TorrentRemoteMediator(
     private val currentAccountId: Long,
-    private val query: QTListParams,
+    private val query: QBListParams,
     private val database: AppDatabase,
-    private val networkService: QTApiService
+    private val networkService: QBApiService
 ) : RemoteMediator<Int, TorrentEntity>() {
 
     private val torrentDao = database.torrentDao()

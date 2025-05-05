@@ -8,13 +8,18 @@ import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.MoreTime
 import androidx.compose.material.icons.filled.PauseCircleOutline
 import androidx.compose.material.icons.filled.QuestionMark
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.ui.graphics.vector.ImageVector
 
 /**
- * @link https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)#get-torrent-list
+ * @link https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)#:~:text=Possible%20values%20of%20state:
  */
-enum class QTState {
+enum class QBState {
+    // not listed in wiki doc, but actually exist,
+    // see: https://github.com/qbittorrent/qBittorrent/blob/c494314a29b339a1bd7436623167583560b68e81/src/webui/www/private/scripts/client.js#L743
+    stoppedDL,
+    stoppedUP,
     // Some error occurred, applies to paused torrents
     error,
     // Torrent data files is missing
@@ -60,6 +65,7 @@ enum class QTState {
             uploading, forcedUP -> Icons.Filled.Upload
             downloading, forcedDL, metaDL -> Icons.Filled.Downloading
             pausedDL -> Icons.Filled.PauseCircleOutline
+            stoppedDL, stoppedUP -> Icons.Filled.Stop
             stalledDL, stalledUP -> Icons.Filled.HourglassTop
             queuedDL, queuedUP -> Icons.Filled.MoreTime
             error -> Icons.Filled.ErrorOutline
@@ -82,7 +88,7 @@ enum class TRState(value: Int) {
     SEEDING(6)
 }
 
-enum class QTFilterState {
+enum class QBFilterState {
     all,
     active,
     downloading,
@@ -96,21 +102,21 @@ enum class QTFilterState {
     stalled_downloading,
     errored;
 
-    fun toQTStates(): List<QTState> {
+    fun toQBStates(): List<QBState> {
         return when (this) {
-            all -> QTState.entries
-            active -> listOf(QTState.downloading, QTState.uploading)
+            all -> QBState.entries
+            active -> listOf(QBState.downloading, QBState.uploading)
             downloading -> listOf(
-                QTState.downloading,
-                QTState.metaDL,
-                QTState.checkingDL,
-                QTState.forcedDL
+                QBState.downloading,
+                QBState.metaDL,
+                QBState.checkingDL,
+                QBState.forcedDL
             )
-            seeding -> listOf(QTState.uploading)
-            completed -> listOf(QTState.pausedUP, QTState.checkingUP)
-            paused -> listOf(QTState.pausedDL, QTState.pausedUP)
-            stalled -> listOf(QTState.stalledDL, QTState.stalledUP)
-            errored -> listOf(QTState.error)
+            seeding -> listOf(QBState.uploading)
+            completed -> listOf(QBState.pausedUP, QBState.checkingUP)
+            paused -> listOf(QBState.pausedDL, QBState.pausedUP)
+            stalled -> listOf(QBState.stalledDL, QBState.stalledUP)
+            errored -> listOf(QBState.error)
             // todo
             else -> listOf()
         }
