@@ -13,13 +13,14 @@ import androidx.compose.material.icons.filled.Upload
 import androidx.compose.ui.graphics.vector.ImageVector
 
 /**
- * @link https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)#:~:text=Possible%20values%20of%20state:
+ * [official wiki](https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-5.0)#:~:text=Possible%20values%20of%20state)
+ *
+ * **NOTE**: the value slightly differs from [query filter](https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-5.0)#get-torrent-list), e.g. error vs errored
+ *
+ * [official WebUI status mapping](https://github.com/qbittorrent/qBittorrent/blob/0262faa915055fa25bf6e82ffc806db737d5b33e/src/webui/www/private/scripts/dynamicTable.js#L1586)
  */
 enum class QBState {
-    // not listed in wiki doc, but actually exist,
-    // see: https://github.com/qbittorrent/qBittorrent/blob/c494314a29b339a1bd7436623167583560b68e81/src/webui/www/private/scripts/client.js#L743
-    stoppedDL,
-    stoppedUP,
+    forcedMetaDL,
     // Some error occurred, applies to paused torrents
     error,
     // Torrent data files is missing
@@ -27,6 +28,8 @@ enum class QBState {
     // Torrent is being seeded and data is being transferred
     uploading,
     // Torrent is paused and has finished downloading
+    stoppedUP,
+    // older version of `stoppedUP`
     pausedUP,
     // Queuing is enabled and torrent is queued for upload
     queuedUP,
@@ -43,6 +46,10 @@ enum class QBState {
     // Torrent has just started downloading and is fetching metadata
     metaDL,
     // Torrent is paused and has NOT finished downloading
+    // not listed in latest wiki doc, but actually exist,
+    // see: https://github.com/qbittorrent/qBittorrent/blob/c494314a29b339a1bd7436623167583560b68e81/src/webui/www/private/scripts/client.js#L743
+    stoppedDL,
+    // older version of `stoppedDL`
     pausedDL,
     // Queuing is enabled and torrent is queued for download
     queuedDL,
@@ -62,10 +69,10 @@ enum class QBState {
     fun toIcon(): ImageVector {
         return when (this) {
             pausedUP -> Icons.Filled.DownloadDone
-            uploading, forcedUP -> Icons.Filled.Upload
-            downloading, forcedDL, metaDL -> Icons.Filled.Downloading
             pausedDL -> Icons.Filled.PauseCircleOutline
             stoppedDL, stoppedUP -> Icons.Filled.Stop
+            uploading, forcedUP -> Icons.Filled.Upload
+            downloading, forcedDL, metaDL, forcedMetaDL -> Icons.Filled.Downloading
             stalledDL, stalledUP -> Icons.Filled.HourglassTop
             queuedDL, queuedUP -> Icons.Filled.MoreTime
             error -> Icons.Filled.ErrorOutline
@@ -109,12 +116,13 @@ enum class QBFilterState {
             downloading -> listOf(
                 QBState.downloading,
                 QBState.metaDL,
+                QBState.forcedMetaDL,
                 QBState.checkingDL,
                 QBState.forcedDL
             )
             seeding -> listOf(QBState.uploading)
             completed -> listOf(QBState.pausedUP, QBState.checkingUP)
-            paused -> listOf(QBState.pausedDL, QBState.pausedUP)
+            paused -> listOf(QBState.pausedDL, QBState.pausedUP, QBState.stoppedDL)
             stalled -> listOf(QBState.stalledDL, QBState.stalledUP)
             errored -> listOf(QBState.error)
             // todo

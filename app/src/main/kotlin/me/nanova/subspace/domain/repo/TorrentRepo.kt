@@ -8,7 +8,17 @@ import me.nanova.subspace.domain.model.QBListParams
 import me.nanova.subspace.domain.model.Torrent
 
 interface TorrentRepo {
-//    suspend fun apiVersion(): String
+
+    /**
+     * @return semver without prefix `v`
+     */
+    suspend fun appVersion(): String
+
+    /**
+     * seems the api version is not suitable for compatibility check,
+     * cannot find the version mapping between api version and app version
+     */
+    suspend fun apiVersion(): String
 
     fun torrents(account: Account, filter: QBListParams): Flow<PagingData<Torrent>>
 

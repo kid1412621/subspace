@@ -17,7 +17,7 @@ class TorrentRemoteMediator(
     private val currentAccountId: Long,
     private val query: QBListParams,
     private val database: AppDatabase,
-    private val networkService: QBApiService
+    private val api: QBApiService
 ) : RemoteMediator<Int, TorrentEntity>() {
 
     private val torrentDao = database.torrentDao()
@@ -55,7 +55,7 @@ class TorrentRemoteMediator(
             }
 
             // fetch api
-            val response = networkService.list(
+            val response = api.list(
                 query.copy(offset = offset, limit = state.config.pageSize).toMap()
             )
             // fixme

@@ -12,6 +12,9 @@ import me.nanova.subspace.data.api.QBAuthService
 import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.domain.model.AccountType
 import me.nanova.subspace.domain.repo.AccountRepo
+import me.nanova.subspace.domain.repo.TorrentRepo
+import me.nanova.subspace.util.MINIMAL_SUPPORTED_QB_VERSION
+import me.nanova.subspace.util.isVersionAtLeast
 import retrofit2.Retrofit
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import javax.inject.Inject
@@ -19,7 +22,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AccountViewModel
 @Inject constructor(
-    private val accountRepo: AccountRepo
+    private val accountRepo: AccountRepo,
+    private val torrentRepo: TorrentRepo,
 ) : ViewModel() {
 
     val account = MutableStateFlow(Account(type = AccountType.QBITTORENT))
@@ -74,14 +78,20 @@ class AccountViewModel
                     return@launch
                 }
 
-                // TODO: check version
-//                val version = torrentRepo.apiVersion()
+                // check version
+                val version = torrentRepo.appVersion()
+                if (notSupportedVersion(version)) {
+                    snackBarMessage.update { "Not supported version, $version is obsoleted." }
+                    return@launch
+                }
+                // store app version for api mapping, like /torrents/pause → /torrents/stop
+                val acc4db = account.copy(version = version)
 
                 if (isCreate) {
-                    accountRepo.save(account)
+                    accountRepo.save(acc4db)
                 } else {
 //                  // TODO: since user might change to another instance and no way to know, need to cleanup torrents under the account
-                    accountRepo.update(account)
+                    accountRepo.update(acc4db)
                 }
                 submitted.update { true }
             } catch (ex: Exception) {
@@ -94,5 +104,8 @@ class AccountViewModel
 
         }
     }
+
+    private fun notSupportedVersion(version: String) =
+        !isVersionAtLeast(version, MINIMAL_SUPPORTED_QB_VERSION)
 
 }

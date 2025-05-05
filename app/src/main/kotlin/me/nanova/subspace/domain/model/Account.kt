@@ -22,4 +22,5 @@ data class Account(
     val lanUrl: String = "",
     @ColumnInfo(name = "lan_ssid")
     val lanSSID: String = "",
+    val version: String = ""
 )

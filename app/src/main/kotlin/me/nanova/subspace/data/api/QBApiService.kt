@@ -9,7 +9,10 @@ import retrofit2.http.QueryMap
 interface QBApiService {
 
     @GET("api/v2/app/version")
-    suspend fun version(): String
+    suspend fun appVersion(): String
+
+    @GET("api/v2/app/webapiVersion")
+    suspend fun apiVersion(): String
 
     @GET("api/v2/torrents/info")
     suspend fun list(@QueryMap params: Map<String, String?>): List<Torrent>

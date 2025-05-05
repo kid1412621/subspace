@@ -27,7 +27,10 @@ class TorrentRepoImpl @Inject constructor(
     private val torrentDao: TorrentDao,
     private val apiService: Provider<QBApiService>
 ) : TorrentRepo {
-//    override suspend fun apiVersion() = apiService.get().version()
+
+    override suspend fun appVersion() = apiService.get().appVersion().removePrefix("v")
+
+    override suspend fun apiVersion() = apiService.get().apiVersion()
 
     companion object {
         const val PAGE_SIZE = 20

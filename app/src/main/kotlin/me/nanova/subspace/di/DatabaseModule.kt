@@ -11,6 +11,7 @@ import me.nanova.subspace.data.db.AccountDao
 import me.nanova.subspace.data.db.AppDatabase
 import me.nanova.subspace.data.db.AppDatabase.Companion.DATABASE_NAME
 import me.nanova.subspace.data.db.AppDatabase.Companion.MIGRATION_1_2
+import me.nanova.subspace.data.db.AppDatabase.Companion.MIGRATION_2_3
 import me.nanova.subspace.data.db.RemoteKeyDao
 import me.nanova.subspace.data.db.TorrentDao
 import javax.inject.Singleton
@@ -25,6 +26,7 @@ object DatabaseModule {
         return Room
             .databaseBuilder(appContext, AppDatabase::class.java, DATABASE_NAME)
             .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_2_3)
             .build()
     }
 
