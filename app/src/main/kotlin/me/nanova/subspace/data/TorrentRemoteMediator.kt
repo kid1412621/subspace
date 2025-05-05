@@ -33,33 +33,32 @@ class TorrentRemoteMediator(
         state: PagingState<Int, TorrentEntity>
     ): MediatorResult {
         return try {
-            val offset = when (loadType) {
-                LoadType.REFRESH -> 0
-                LoadType.APPEND -> {
-                    val remoteKeys = state.pages
-                        .lastOrNull { it.data.isNotEmpty() }
-                        ?.data?.lastOrNull()
-                        ?.let { remoteKeyDao.remoteKeysItemId(it.id) }
-                    remoteKeys?.nextOffset
-                        ?: return MediatorResult.Success(endOfPaginationReached = remoteKeys != null)
+            val loadKey = when (loadType) {
+                LoadType.REFRESH -> null // Start from the beginning on refresh
+                LoadType.PREPEND -> {
+                    // Get the first item's key to determine the prev offset
+                    val firstItem = state.firstItemOrNull()
+                    val remoteKeys = firstItem?.let { remoteKeyDao.remoteKeysItemId(it.id) }
+                    remoteKeys?.prevOffset
+                        ?: return MediatorResult.Success(endOfPaginationReached = true)
                 }
 
-                LoadType.PREPEND -> {
-                    val remoteKeys = state.pages
-                        .firstOrNull { it.data.isNotEmpty() }
-                        ?.data?.firstOrNull()
-                        ?.let { remoteKeyDao.remoteKeysItemId(it.id) }
-                    remoteKeys?.prevOffset
-                        ?: return MediatorResult.Success(endOfPaginationReached = remoteKeys != null)
+                LoadType.APPEND -> {
+                    // Get the last item's key to determine the next offset
+                    val lastItem = state.lastItemOrNull()
+                    val remoteKeys = lastItem?.let { remoteKeyDao.remoteKeysItemId(it.id) }
+                    remoteKeys?.nextOffset
+                        ?: return MediatorResult.Success(endOfPaginationReached = true)
                 }
             }
 
             // fetch api
+            val offset =
+                loadKey ?: 0 //Default to 0 if null, means its load type refresh or first time load
             val response = api.list(
                 query.copy(offset = offset, limit = state.config.pageSize).toMap()
             )
-            // fixme
-            val endOfPaginationReached = response.size < state.config.pageSize
+            val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
 
             // update db
             database.withTransaction {
