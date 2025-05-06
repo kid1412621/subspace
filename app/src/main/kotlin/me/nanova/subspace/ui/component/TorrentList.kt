@@ -73,7 +73,8 @@ fun TorrentList(
                 list[idx]?.let {
                     TorrentItem(
                         modifier = Modifier.animateItem(),
-                        torrent = it
+                        torrent = it,
+                        onToggleStatus = { viewModel.toggleTorrentStatus(it) }
                     )
                 }
 

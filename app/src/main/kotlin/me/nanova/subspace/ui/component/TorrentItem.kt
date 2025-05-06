@@ -2,6 +2,7 @@ package me.nanova.subspace.ui.component
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -60,7 +61,8 @@ fun TorrentItem(
     modifier: Modifier = Modifier,
     torrent: Torrent,
     useSI: Boolean = false,
-    toBit: Boolean = false
+    toBit: Boolean = false,
+    onToggleStatus: (Torrent) -> Unit = {},
 ) {
     val progress by remember { mutableFloatStateOf(torrent.progress) }
     val animatedProgress by animateFloatAsState(
@@ -78,9 +80,12 @@ fun TorrentItem(
         leadingContent = {
             Column(
                 modifier =
-                Modifier
-                    .height(with(LocalDensity.current) { totalHeight.toDp() })
-                    .fillMaxWidth(0.15f),
+                    Modifier
+                        .height(with(LocalDensity.current) { totalHeight.toDp() })
+                        .fillMaxWidth(0.15f)
+                        .clickable {
+                            onToggleStatus(torrent)
+                        },
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -100,9 +105,10 @@ fun TorrentItem(
             val showCatOrTag =
                 !torrent.category.isNullOrBlank() || tags.isNotEmpty()
             if (showCatOrTag) {
-                CentricSpaceBetweenRow(modifier = Modifier
-                    .fillMaxWidth()
-                    .onGloballyPositioned { overlineHeight = it.size.height }) {
+                CentricSpaceBetweenRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onGloballyPositioned { overlineHeight = it.size.height }) {
                     CentricSpaceBetweenRow(Modifier.weight(1F)) {
                         torrent.category?.let {
                             Text(

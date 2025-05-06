@@ -57,3 +57,17 @@ TBD
     keyPassword:fake-password
     EOF
     ```
+
+# Torrent state mapping
+
+|             | qBittorrent(<5.0.0) | qBittorrent(>=5.0.0) | Transmission |
+|-------------|:-------------------:|:--------------------:|:------------:|
+| all         |                     |                      |              |
+| active      |                     |                      |              |
+| downloading |                     |                      |              |
+| seeding     |                     |                      |              |
+| completed   |                     |                      |              |
+| paused      |                     |         N/A          |              |
+| stopped     |         N/A         |                      |              |
+| stalled     |                     |                      |              |
+| errored     |                     |                      |     N/A      |

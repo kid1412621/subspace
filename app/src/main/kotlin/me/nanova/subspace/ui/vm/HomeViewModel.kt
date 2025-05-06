@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.domain.model.QBListParams
+import me.nanova.subspace.domain.model.QBState
 import me.nanova.subspace.domain.model.Torrent
 import me.nanova.subspace.domain.repo.AccountRepo
 import me.nanova.subspace.domain.repo.TorrentRepo
@@ -88,6 +89,16 @@ class HomeViewModel @Inject constructor(
     fun resetFilter() {
         _homeUiState.update {
             it.copy(filter = QBListParams())
+        }
+    }
+
+    fun toggleTorrentStatus(torrent: Torrent) {
+        viewModelScope.launch {
+            if (QBState.isStopped(torrent.state)) {
+                torrentRepo.start(listOf(torrent.hash))
+            } else {
+                torrentRepo.stop(listOf(torrent.hash))
+            }
         }
     }
 }

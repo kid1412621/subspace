@@ -88,6 +88,13 @@ class TorrentRepoImpl @Inject constructor(
         }.catch { e -> throw e }
     }
 
+    override suspend fun stop(torrents: List<String>) {
+        apiService.get().stop(torrents.joinToString("|"))
+    }
+
+    override suspend fun start(torrents: List<String>) {
+        apiService.get().start(torrents.joinToString("|"))
+    }
 }
 
 

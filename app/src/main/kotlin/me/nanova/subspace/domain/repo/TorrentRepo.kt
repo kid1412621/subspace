@@ -31,5 +31,8 @@ interface TorrentRepo {
 
     fun tags(): Flow<List<String>>
 
+    suspend fun stop(torrents: List<String>)
+    suspend fun start(torrents: List<String>)
+
 }
 
