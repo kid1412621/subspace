@@ -86,6 +86,7 @@ abstract class AppDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 try {
                     db.execSQL("ALTER TABLE Account ADD COLUMN version TEXT NOT NULL DEFAULT '';")
+                    db.execSQL("UPDATE Account SET type = 'QBITTORENT' WHERE type = 'QT';")
                 } catch (e: Exception) {
                     Log.e("AppDatabase", "DB migration error: $e")
                 }
