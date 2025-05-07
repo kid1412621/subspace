@@ -8,6 +8,7 @@ import me.nanova.subspace.data.AccountRepoImpl
 import me.nanova.subspace.data.Storage
 import me.nanova.subspace.data.TorrentRepoImpl
 import me.nanova.subspace.data.api.QBApiService
+import me.nanova.subspace.data.api.QBAuthService
 import me.nanova.subspace.data.db.AccountDao
 import me.nanova.subspace.data.db.AppDatabase
 import me.nanova.subspace.data.db.TorrentDao
@@ -32,9 +33,10 @@ object RepoModule {
     fun provideTorrentRepo(
         appDatabase: AppDatabase,
         torrentDao: TorrentDao,
-        apiService: Provider<QBApiService>
+        apiService: Provider<QBApiService>,
+        authService: QBAuthService
     ): TorrentRepo {
-        return TorrentRepoImpl(appDatabase, torrentDao, apiService)
+        return TorrentRepoImpl(appDatabase, torrentDao, apiService, authService)
     }
 
 }

@@ -21,7 +21,7 @@ interface AccountDao {
     fun getFlowById(id: Long): Flow<Account?>
 
     @Query("SELECT * FROM account ORDER BY created LIMIT 1")
-    suspend fun getLatest(): Account
+    suspend fun getLatest(): Account?
 
     @Query("SELECT * FROM account WHERE type = :type")
     fun getByType(type: AccountType): Flow<List<Account>>

@@ -1,7 +1,7 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
     // https://developer.android.com/build/releases/gradle-plugin
-    id("com.android.application") version "8.9.2" apply false
+    id("com.android.application") version "8.10.0" apply false
     // https://plugins.gradle.org/plugin/org.jetbrains.kotlin.android
     id("org.jetbrains.kotlin.android") version "2.1.20" apply false
     // https://plugins.gradle.org/plugin/org.jetbrains.kotlin.plugin.compose

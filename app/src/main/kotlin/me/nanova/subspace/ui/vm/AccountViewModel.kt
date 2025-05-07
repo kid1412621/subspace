@@ -58,28 +58,14 @@ class AccountViewModel
             loading.update { true }
             try {
                 // check connection
-                val authApiService = Retrofit.Builder()
-                    .baseUrl(account.url)
-                    .addConverterFactory(ScalarsConverterFactory.create())
-                    .build()
-                    .create(QBAuthService::class.java)
-                val call = authApiService.login(account.user, account.pass)
-                val res = call.execute()
-                if (!res.isSuccessful) {
-                    if (res.code() == 403) {
-                        snackBarMessage.update { "Wrong password." }
-                    } else {
-                        snackBarMessage.update { "Cannot connect to ${account.type} service." }
-                    }
-                    return@launch
-                }
-                if (res.headers()["Set-Cookie"] == null) {
-                    snackBarMessage.update { "Failed to retrieve cookie." }
-                    return@launch
-                }
+                val cookie = torrentRepo.login(
+                    "${account.url}/api/v2/auth/login",
+                    account.user,
+                    account.pass
+                )
 
                 // check version
-                val version = torrentRepo.appVersion()
+                val version = torrentRepo.appVersion("${account.url}/api/v2/app/version", cookie)
                 if (notSupportedVersion(version)) {
                     snackBarMessage.update { "Not supported version, $version is obsoleted." }
                     return@launch
@@ -96,7 +82,7 @@ class AccountViewModel
                 submitted.update { true }
             } catch (ex: Exception) {
                 Log.e("[Account]", ex.message ?: "")
-                snackBarMessage.update { "Cannot connect to ${account.type} service" }
+                snackBarMessage.update { "Cannot connect to ${account.type} service due to: ${ex.message}" }
                 return@launch
             } finally {
                 loading.update { false }

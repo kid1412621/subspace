@@ -4,7 +4,9 @@ import kotlinx.coroutines.flow.Flow
 import me.nanova.subspace.domain.model.QBCategories
 import me.nanova.subspace.domain.model.Torrent
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.QueryMap
+import retrofit2.http.Url
 
 interface QBApiService {
 

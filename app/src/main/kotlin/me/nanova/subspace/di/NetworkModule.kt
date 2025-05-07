@@ -9,7 +9,6 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import me.nanova.subspace.data.api.QBCookieInterceptor
-import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.domain.repo.AccountRepo
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -17,23 +16,20 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import javax.inject.Inject
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Singleton
 class RetrofitFactory @Inject constructor(
+    private val moshi: Moshi,
     private val httpClient: OkHttpClient,
     private val accountRepo: AccountRepo
 ) {
-    private val retrofitMap = mutableMapOf<Account, Retrofit>()
+    private val retrofitMap = mutableMapOf<Long, Retrofit>()
 
     fun retrofit(): Retrofit {
         return runBlocking { accountRepo.currentAccount.first() }?.let {
-            retrofitMap.getOrPut(it) {
-                // Create and return new Retrofit instance
-                val moshi = Moshi.Builder()
-                    .add(KotlinJsonAdapterFactory())
-                    .build()
-
+            retrofitMap.getOrPut(it.id) {
                 return Retrofit.Builder()
                     .client(httpClient)
                     .addConverterFactory(ScalarsConverterFactory.create())
@@ -41,7 +37,7 @@ class RetrofitFactory @Inject constructor(
                     .baseUrl(it.url)
                     .build()
             }
-        } ?: Retrofit.Builder().baseUrl("https://placeholder.local").build()
+        } ?: throw RuntimeException("No account found")
     }
 }
 
@@ -50,10 +46,24 @@ class RetrofitFactory @Inject constructor(
 object NetworkModule {
     @Singleton
     @Provides
+    fun provideMoshi(): Moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+
+    @Singleton
+    @Provides
+    @Named("defaultRetrofit")
+    fun provideDefaultRetrofit(moshi: Moshi): Retrofit = Retrofit.Builder()
+        .addConverterFactory(ScalarsConverterFactory.create())
+        .addConverterFactory(MoshiConverterFactory.create(moshi))
+        .baseUrl("https://placeholder.local")
+        .build()
+
+    @Singleton
+    @Provides
     fun provideRetrofitFactory(
+        moshi: Moshi,
         okHttpClient: OkHttpClient,
         accountRepo: AccountRepo
-    ): RetrofitFactory = RetrofitFactory(okHttpClient, accountRepo)
+    ): RetrofitFactory = RetrofitFactory(moshi, okHttpClient, accountRepo)
 
 //    fun httpClientByType(type: AccountType): OkHttpClient {
 //        when (type) {

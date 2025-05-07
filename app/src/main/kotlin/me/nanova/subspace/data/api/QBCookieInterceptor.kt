@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import me.nanova.subspace.data.Storage
 import me.nanova.subspace.domain.repo.AccountRepo
 import okhttp3.Interceptor
+import okhttp3.ResponseBody
 import retrofit2.Retrofit
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import javax.inject.Inject
@@ -16,7 +17,8 @@ class QBCookieInterceptor
 @Inject
 constructor(
     private val storage: Storage,
-    private val accountRepo: AccountRepo
+    private val accountRepo: AccountRepo,
+    private val authService: QBAuthService
 ) : Interceptor {
     private var cookie: String? = null
     private var timestamp: Long? = null
@@ -43,13 +45,10 @@ constructor(
             val account =
                 runBlocking { accountRepo.currentAccount.first() } ?: throw RuntimeException()
 
-            val authApiService = Retrofit.Builder()
-                .baseUrl(account.url)
-                .addConverterFactory(ScalarsConverterFactory.create())
-                .build()
-                .create(QBAuthService::class.java)
-            val call = authApiService.login(account.user, account.pass)
-            val newCookie = call.execute().headers()["Set-Cookie"] ?: ""
+            val res: retrofit2.Response<ResponseBody> = runBlocking(Dispatchers.IO) {
+                authService.login("${account.url}/api/v2/auth/login", account.user, account.pass)
+            }
+            val newCookie = res.headers()["Set-Cookie"] ?: ""
             runBlocking {
                 storage.saveQBCookie(newCookie)
                 storage.updateQBCookieTime()

@@ -10,9 +10,14 @@ import me.nanova.subspace.domain.model.Torrent
 interface TorrentRepo {
 
     /**
+     * @return cookie
+     * */
+    suspend fun login(url: String, username: String, password: String): String
+
+    /**
      * @return semver without prefix `v`
      */
-    suspend fun appVersion(): String
+    suspend fun appVersion(url: String, cookie: String): String
 
     /**
      * seems the api version is not suitable for compatibility check,
