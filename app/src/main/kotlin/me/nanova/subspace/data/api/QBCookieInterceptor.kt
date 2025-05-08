@@ -1,16 +1,17 @@
 package me.nanova.subspace.data.api
 
+import android.util.Log
+import com.google.common.net.HttpHeaders
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import me.nanova.subspace.data.Storage
 import me.nanova.subspace.domain.repo.AccountRepo
 import okhttp3.Interceptor
-import okhttp3.ResponseBody
-import retrofit2.Retrofit
-import retrofit2.converter.scalars.ScalarsConverterFactory
 import javax.inject.Inject
 
 class QBCookieInterceptor
@@ -25,39 +26,63 @@ constructor(
 
     // default 1h session
     private val ttl = 50 * 60 * 1000
+    private val refreshMutex = Mutex()
+
+    companion object {
+        private const val TAG = "QBCookieInterceptor"
+    }
 
     init {
         CoroutineScope(Dispatchers.IO).launch {
-            storage.qbCookie.collect { newCookie ->
-                cookie = newCookie
-            }
-            storage.qbCookieTime.collect { cookieTime ->
-                timestamp = cookieTime
-            }
+            launch { storage.qbCookie.collect { cookie = it } }
+            launch { storage.qbCookieTime.collect { timestamp = it } }
         }
     }
 
     override fun intercept(chain: Interceptor.Chain): okhttp3.Response {
-        val builder = chain.request().newBuilder()
-        // Add cookie to every request if available
+        val originalRequest = chain.request()
 
-        if (cookie == null || timestamp == null || System.currentTimeMillis() - timestamp!! > ttl) {
-            val account =
-                runBlocking { accountRepo.currentAccount.first() } ?: throw RuntimeException()
-
-            val res: retrofit2.Response<ResponseBody> = runBlocking(Dispatchers.IO) {
-                authService.login("${account.url}/api/v2/auth/login", account.user, account.pass)
-            }
-            val newCookie = res.headers()["Set-Cookie"] ?: ""
-            runBlocking {
-                storage.saveQBCookie(newCookie)
-                storage.updateQBCookieTime()
+        // Check and refresh cookie if needed (with double-checked locking)
+        if (isCookieStale()) {
+            runBlocking(Dispatchers.IO) {
+                refreshMutex.withLock {
+                    // Second check after acquiring the lock
+                    if (isCookieStale()) {
+                        Log.d(TAG, "Cookie stale/missing for ${originalRequest.url}. Refreshing.")
+                        refreshCookie()
+                    }
+                }
             }
         }
-        cookie?.let {
-            builder.addHeader("Cookie", it)
-        }
-        return chain.proceed(builder.build())
+
+        // Add cookie to request header
+        val requestWithCookie = cookie?.takeIf { it.isNotBlank() }?.let {
+            originalRequest.newBuilder()
+                .addHeader(HttpHeaders.COOKIE, it)
+                .also { Log.d(TAG, "Attaching cookie to request for ${originalRequest.url}") }
+                .build()
+        } ?: originalRequest
+
+        return chain.proceed(requestWithCookie)
     }
+
+    private suspend fun refreshCookie() {
+        val account = accountRepo.currentAccount.first()
+            ?: throw IllegalStateException("No current account found")
+
+        val response =
+            authService.login("${account.url}/api/v2/auth/login", account.user, account.pass)
+        val newCookie = response.headers()[HttpHeaders.SET_COOKIE] ?: ""
+        cookie = newCookie
+        timestamp = System.currentTimeMillis()
+
+        // Update storage
+        storage.saveQBCookie(account.id, newCookie)
+        storage.updateQBCookieTime(account.id)
+    }
+
+    private fun isCookieStale(): Boolean =
+        cookie.isNullOrBlank() || timestamp == null || (System.currentTimeMillis() - timestamp!! > ttl)
+
 }
 

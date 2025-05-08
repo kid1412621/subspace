@@ -9,6 +9,9 @@ import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Url
 
+/**
+ * since it created pre account initialisation, it use bare retrofit client with passed url
+ */
 interface QBAuthService {
 
     // endpoint: api/v2/auth/login

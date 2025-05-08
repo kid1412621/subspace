@@ -15,12 +15,9 @@ class AccountRepoImpl @Inject constructor(
     private val torrentDao: TorrentDao,
     private val storage: Storage
 ) : AccountRepo {
-    private var currentAccountCache: Account? = null
-
-//    override val currentAccount: Account? = if(currentAccountCache!=null)  currentAccountCache else accountDao.getById(storage.currentAccountId)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override val currentAccount: Flow<Account?> = storage.currentAccountId
+    override val currentAccount: Flow<Account?> = storage.activeAccountId
         .flatMapLatest { accountId ->
             accountId?.let { accountDao.getFlowById(it) } ?: flowOf(null)
         }
@@ -45,7 +42,7 @@ class AccountRepoImpl @Inject constructor(
         }
 
         val id = accountDao.insert(account)
-        storage.updateCurrentAccountId(id)
+        storage.setActiveAccountId(id)
         return id
     }
 
@@ -55,20 +52,21 @@ class AccountRepoImpl @Inject constructor(
             throw RuntimeException("Account not exist")
         }
         accountDao.update(account)
-        storage.updateCurrentAccountId(account.id)
+        storage.setActiveAccountId(account.id)
         return account.id
     }
 
     override suspend fun switch(accountId: Long) {
-        storage.updateCurrentAccountId(accountId)
+        storage.setActiveAccountId(accountId)
     }
 
     override suspend fun delete(accountId: Long) {
         accountDao.delete(accountId)
         torrentDao.clearAll(accountId)
+        storage.clearAccountData(accountId)
 
-        val account = accountDao.getLatest()
-        currentAccountCache = account
-        storage.updateCurrentAccountId(account)
+        accountDao.getLatest()?.let {
+            storage.setActiveAccountId(it.id)
+        }
     }
 }

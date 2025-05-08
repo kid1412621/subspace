@@ -20,6 +20,6 @@ object ApiModule {
     }
 
     @Provides
-    fun provideQBAuthService(@Named("defaultRetrofit") retrofit: Retrofit) =
+    fun provideQBAuthService(@Named("defaultRetrofit") retrofit: Retrofit): QBAuthService =
         retrofit.create(QBAuthService::class.java)
 }
