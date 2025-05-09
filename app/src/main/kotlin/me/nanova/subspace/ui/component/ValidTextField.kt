@@ -10,14 +10,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isShiftPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ValidTextField(
     modifier: Modifier = Modifier,
@@ -85,7 +93,7 @@ fun ValidTextField(
         ),
         keyboardActions = KeyboardActions(
             onNext = {
-                focusManager.moveFocus(FocusDirection.Down)
+                focusManager.moveFocus(FocusDirection.Down) // For software keyboard "Next"
             },
             onDone = {
                 keyboardController?.hide()
@@ -94,5 +102,13 @@ fun ValidTextField(
         ),
         isError = errorMsg != null, // Show error state
         modifier = modifier
+            .onPreviewKeyEvent { keyEvent ->
+                // Handle Tab key press for focus navigation
+                if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.Tab) {
+                    focusManager.moveFocus(if (keyEvent.isShiftPressed) FocusDirection.Up else FocusDirection.Down)
+                    return@onPreviewKeyEvent true // Consume the event
+                }
+                false // Do not consume other key events
+            }
     )
 }
