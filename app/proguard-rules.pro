@@ -59,3 +59,32 @@
 -dontwarn org.openjsse.javax.net.ssl.SSLSocket
 -dontwarn org.openjsse.net.ssl.OpenJSSE
 ##---------------End: proguard configuration for OkHttp  ----------
+
+# ---------------Begin: proguard configuration for Jetpack DataStore Preferences ----------
+# Keep the classes and members that DataStore Preferences relies on for Protocol Buffer serialization.
+# This is crucial for preventing crashes like "Field preferences_ not found".
+
+# Keep the main DataStore Preferences classes
+-keep class androidx.datastore.preferences.core.** { *; }
+-keep class androidx.datastore.preferences.** { *; }
+
+# Keep Protocol Buffer Lite runtime classes, which DataStore Preferences uses internally.
+-keep class androidx.datastore.preferences.protobuf.** { *; }
+
+# Specifically, keep the generated PreferencesProto classes and their members.
+# The error often relates to PreferencesProto$PreferenceMap and its 'preferences_' field.
+-keep class androidx.datastore.preferences.PreferencesProto* {
+    <fields>;
+    <methods>;
+}
+
+# Keep all classes that extend GeneratedMessageLite, as these are part of the protobuf mechanism.
+-keep public class * extends androidx.datastore.preferences.protobuf.GeneratedMessageLite {
+    <fields>;
+    <methods>;
+}
+
+# If using custom serializers or types with DataStore,
+# ensure those are kept as well. For example:
+# -keep class your.package.YourCustomPreferenceClass { *; }
+##---------------End: proguard configuration for Jetpack DataStore Preferences ----------

@@ -17,9 +17,19 @@ class GlobalExceptionHandler(
         private const val TAG = "GlobalExceptionHandler"
         const val EXTRA_ERROR_DETAILS =
             "me.nanova.subspace.ERROR_DETAILS"
+        private var isHandlingException = false
     }
 
     override fun uncaughtException(thread: Thread, exception: Throwable) {
+        // Check if already handling an exception.
+        // If so, delegate to the default handler to avoid a loop.
+        if (isHandlingException) {
+            Log.e(TAG, "Re-entrant call to uncaughtException. Delegating to default handler.", exception)
+            defaultHandler?.uncaughtException(thread, exception)
+            return
+        }
+        isHandlingException = true
+
         Log.e(TAG, "Uncaught exception: ${exception.message}", exception)
 
         // 1. Log to Firebase Crashlytics
