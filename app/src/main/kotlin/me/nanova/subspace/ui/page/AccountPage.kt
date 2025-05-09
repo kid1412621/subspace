@@ -49,6 +49,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.domain.model.AccountType
 import me.nanova.subspace.ui.Routes
 import me.nanova.subspace.ui.component.ValidTextField
@@ -62,6 +63,8 @@ fun AccountPage(
 ) {
     val snackBarHostState = remember { SnackbarHostState() }
     val snackBarMessage by viewModel.snackBarMessage.collectAsState()
+    val loading by viewModel.loading.collectAsState()
+    val account by viewModel.account.collectAsState()
     val added by viewModel.submitted.collectAsState()
 
     LaunchedEffect(id) {
@@ -88,21 +91,26 @@ fun AccountPage(
             SnackbarHost(hostState = snackBarHostState)
         },
     ) { contentPadding ->
-        AccountForm(modifier = Modifier.padding(contentPadding), viewModel, id == null)
+        AccountForm(
+            modifier = Modifier.padding(contentPadding),
+            loading,
+            account,
+            onUpdateAccount = { viewModel.updateAccount(it) },
+            onSubmitAccount = { viewModel.saveAccount(it, id == null) })
     }
 }
 
 @Composable
 private fun AccountForm(
     modifier: Modifier = Modifier,
-    viewModel: AccountViewModel,
-    isCreate: Boolean
+    loading: Boolean = false,
+    account: Account = Account(type = AccountType.QBITTORENT),
+    onUpdateAccount: (Account) -> Unit = {},
+    onSubmitAccount: (Account) -> Unit = {},
 ) {
 
     val focusManager = LocalFocusManager.current
 
-    val loading by viewModel.loading.collectAsState()
-    val account by viewModel.account.collectAsState()
     val validations = remember { mutableStateMapOf<String, Boolean>() }
     var passwordHidden by rememberSaveable { mutableStateOf(true) }
 
@@ -112,7 +120,7 @@ private fun AccountForm(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(40.dp, 35.dp),
+                .padding(top = 30.dp),
             verticalArrangement = Arrangement.spacedBy(26.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -121,13 +129,14 @@ private fun AccountForm(
                 horizontalArrangement = Arrangement.spacedBy(15.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp),
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxWidth(fraction = 0.8f)
+                    .padding(bottom = 10.dp)
             ) {
                 items(AccountType.entries.toTypedArray()) {
                     Image(
                         modifier = Modifier
                             .size(50.dp)
-                            .clickable { viewModel.updateAccount(account.copy(type = it)) },
+                            .clickable { onUpdateAccount(account.copy(type = it)) },
                         alignment = Alignment.Center,
                         painter = painterResource(id = it.toIcon()),
                         contentDescription = it.name,
@@ -143,7 +152,7 @@ private fun AccountForm(
                 value = account.name,
                 leadingIcon = { Icon(Icons.Filled.Abc, contentDescription = "name") },
                 placeholder = "Server Name",
-                onChanged = { viewModel.updateAccount(account.copy(name = it)) },
+                onChanged = { onUpdateAccount(account.copy(name = it)) },
                 onValidation = { validations["name"] = it }
             )
             ValidTextField(
@@ -152,7 +161,7 @@ private fun AccountForm(
                 placeholder = "http(s)://host:port/path",
                 keyboardType = KeyboardType.Uri,
                 leadingIcon = { Icon(Icons.Filled.Dns, contentDescription = "host") },
-                onChanged = { viewModel.updateAccount(account.copy(url = it)) },
+                onChanged = { onUpdateAccount(account.copy(url = it)) },
                 validations = mapOf(
                     { it: String ->
                         """\bhttps?://\S+""".toRegex(RegexOption.IGNORE_CASE).matches(it)
@@ -166,13 +175,13 @@ private fun AccountForm(
                 value = account.user,
                 placeholder = "Server account username",
                 leadingIcon = { Icon(Icons.Filled.AccountCircle, contentDescription = "user") },
-                onChanged = { viewModel.updateAccount(account.copy(user = it)) },
+                onChanged = { onUpdateAccount(account.copy(user = it)) },
                 onValidation = { validations["user"] = it }
             )
             ValidTextField(
                 label = "password",
                 value = account.pass,
-                onChanged = { viewModel.updateAccount(account.copy(pass = it)) },
+                onChanged = { onUpdateAccount(account.copy(pass = it)) },
                 placeholder = "Server account password",
                 leadingIcon = { Icon(Icons.Filled.Password, contentDescription = "password") },
                 last = true,
@@ -193,7 +202,7 @@ private fun AccountForm(
                 enabled = !loading && validations.isNotEmpty() && validations.values.all { it },
                 onClick = {
                     focusManager.clearFocus()
-                    viewModel.saveAccount(account, isCreate)
+                    onSubmitAccount(account)
                 }
             ) {
                 if (loading) {
@@ -210,5 +219,5 @@ private fun AccountForm(
 @Composable
 @Preview
 fun NewAccountFormPrev() {
-    AccountForm(viewModel = hiltViewModel(), isCreate = true)
+    AccountForm()
 }

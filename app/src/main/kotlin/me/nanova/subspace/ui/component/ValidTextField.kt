@@ -1,5 +1,6 @@
 package me.nanova.subspace.ui.component
 
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
@@ -102,6 +103,7 @@ fun ValidTextField(
         ),
         isError = errorMsg != null, // Show error state
         modifier = modifier
+            .fillMaxWidth(fraction = 0.8f)
             .onPreviewKeyEvent { keyEvent ->
                 // Handle Tab key press for focus navigation
                 if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.Tab) {
