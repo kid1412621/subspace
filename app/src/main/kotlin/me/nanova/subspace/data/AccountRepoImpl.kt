@@ -8,16 +8,17 @@ import me.nanova.subspace.data.db.AccountDao
 import me.nanova.subspace.data.db.TorrentDao
 import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.domain.repo.AccountRepo
+import me.nanova.subspace.domain.repo.SessionStorage
 import javax.inject.Inject
 
 class AccountRepoImpl @Inject constructor(
     private val accountDao: AccountDao,
     private val torrentDao: TorrentDao,
-    private val storage: Storage
+    private val sessionStorage: SessionStorage
 ) : AccountRepo {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override val currentAccount: Flow<Account?> = storage.activeAccountId
+    override val currentAccount: Flow<Account?> = sessionStorage.activeAccountId
         .flatMapLatest { accountId ->
             accountId?.let { accountDao.getFlowById(it) } ?: flowOf(null)
         }
@@ -42,7 +43,7 @@ class AccountRepoImpl @Inject constructor(
         }
 
         val id = accountDao.insert(account)
-        storage.setActiveAccountId(id)
+        sessionStorage.setActiveAccountId(id)
         return id
     }
 
@@ -52,21 +53,21 @@ class AccountRepoImpl @Inject constructor(
             throw RuntimeException("Account not exist")
         }
         accountDao.update(account)
-        storage.setActiveAccountId(account.id)
+        sessionStorage.setActiveAccountId(account.id)
         return account.id
     }
 
     override suspend fun switch(accountId: Long) {
-        storage.setActiveAccountId(accountId)
+        sessionStorage.setActiveAccountId(accountId)
     }
 
     override suspend fun delete(accountId: Long) {
         accountDao.delete(accountId)
         torrentDao.clearAll(accountId)
-        storage.clearAccountData(accountId)
+        sessionStorage.clearAccountData(accountId)
 
         accountDao.getLatest()?.let {
-            storage.setActiveAccountId(it.id)
+            sessionStorage.setActiveAccountId(it.id)
         }
     }
 }

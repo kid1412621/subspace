@@ -6,7 +6,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import me.nanova.subspace.data.Storage
+import me.nanova.subspace.data.storage.SessionStorageImpl
+import me.nanova.subspace.domain.repo.SessionStorage
 import javax.inject.Singleton
 
 @Module
@@ -15,8 +16,8 @@ object StorageModule {
 
     @Singleton
     @Provides
-    fun providePreferenceStorage(@ApplicationContext context: Context): Storage {
-        return Storage(context)
+    fun providePreferenceStorage(@ApplicationContext context: Context): SessionStorage {
+        return SessionStorageImpl(context)
     }
 
 }

@@ -5,7 +5,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import me.nanova.subspace.data.AccountRepoImpl
-import me.nanova.subspace.data.Storage
 import me.nanova.subspace.data.TorrentRepoImpl
 import me.nanova.subspace.data.api.QBApiService
 import me.nanova.subspace.data.api.QBAuthService
@@ -13,6 +12,7 @@ import me.nanova.subspace.data.db.AccountDao
 import me.nanova.subspace.data.db.AppDatabase
 import me.nanova.subspace.data.db.TorrentDao
 import me.nanova.subspace.domain.repo.AccountRepo
+import me.nanova.subspace.domain.repo.SessionStorage
 import me.nanova.subspace.domain.repo.TorrentRepo
 import javax.inject.Provider
 
@@ -24,7 +24,7 @@ object RepoModule {
     fun provideAccountRepo(
         accountDao: AccountDao,
         torrentDao: TorrentDao,
-        storage: Storage
+        storage: SessionStorage
     ): AccountRepo {
         return AccountRepoImpl(accountDao, torrentDao, storage)
     }

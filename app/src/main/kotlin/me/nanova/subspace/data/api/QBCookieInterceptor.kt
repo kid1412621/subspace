@@ -9,15 +9,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import me.nanova.subspace.data.Storage
 import me.nanova.subspace.domain.repo.AccountRepo
+import me.nanova.subspace.domain.repo.SessionStorage
 import okhttp3.Interceptor
 import javax.inject.Inject
 
 class QBCookieInterceptor
 @Inject
 constructor(
-    private val storage: Storage,
+    private val sessionStorage: SessionStorage,
     private val accountRepo: AccountRepo,
     private val authService: QBAuthService
 ) : Interceptor {
@@ -34,8 +34,8 @@ constructor(
 
     init {
         CoroutineScope(Dispatchers.IO).launch {
-            launch { storage.qbCookie.collect { cookie = it } }
-            launch { storage.qbCookieTime.collect { timestamp = it } }
+            launch { sessionStorage.qbCookie.collect { cookie = it } }
+            launch { sessionStorage.qbCookieTime.collect { timestamp = it } }
         }
     }
 
@@ -77,8 +77,8 @@ constructor(
         timestamp = System.currentTimeMillis()
 
         // Update storage
-        storage.saveQBCookie(account.id, newCookie)
-        storage.updateQBCookieTime(account.id)
+        sessionStorage.saveQBCookie(account.id, newCookie)
+        sessionStorage.updateQBCookieTime(account.id)
     }
 
     private fun isCookieStale(): Boolean =
