@@ -1,4 +1,4 @@
-package me.nanova.subspace.data
+package me.nanova.subspace.data.storage
 
 import android.content.Context
 import android.util.Log
@@ -14,13 +14,15 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import me.nanova.subspace.domain.repo.SessionStorage
 import javax.inject.Inject
 import javax.inject.Singleton
 
-val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "session")
 
 @Singleton
-class Storage @Inject constructor(@ApplicationContext private val context: Context) {
+class SessionStorageImpl @Inject constructor(@ApplicationContext private val context: Context) :
+    SessionStorage {
 
     companion object {
         // Key to store the ID of the currently *active* account (e.g., the one the user is currently interacting with)
@@ -37,7 +39,7 @@ class Storage @Inject constructor(@ApplicationContext private val context: Conte
     /**
      * Flow emitting the ID of the currently active account, or null if no account is active.
      */
-    val activeAccountId: Flow<Long?> = context.dataStore.data
+    override val activeAccountId: Flow<Long?> = context.dataStore.data
         .map { preferences ->
             preferences[ACTIVE_ACCOUNT_ID_KEY]
         }
@@ -47,7 +49,7 @@ class Storage @Inject constructor(@ApplicationContext private val context: Conte
      * Emits null if no account is active or if the active account has no cookie.
      */
     @OptIn(ExperimentalCoroutinesApi::class)
-    val qbCookie: Flow<String?> = activeAccountId.flatMapLatest { accountId ->
+    override val qbCookie: Flow<String?> = activeAccountId.flatMapLatest { accountId ->
         if (accountId == null) {
             Log.d(TAG, "No active account ID, qbCookie emitting null.")
             flowOf(null) // No active account, so no specific cookie
@@ -64,7 +66,7 @@ class Storage @Inject constructor(@ApplicationContext private val context: Conte
      * Emits null if no account is active or if the active account has no cookie timestamp.
      */
     @OptIn(ExperimentalCoroutinesApi::class)
-    val qbCookieTime: Flow<Long?> = activeAccountId.flatMapLatest { accountId ->
+    override val qbCookieTime: Flow<Long?> = activeAccountId.flatMapLatest { accountId ->
         if (accountId == null) {
             Log.d(TAG, "No active account ID, qbCookieTime emitting null.")
             flowOf(null) // No active account, so no specific timestamp
@@ -79,7 +81,7 @@ class Storage @Inject constructor(@ApplicationContext private val context: Conte
     /**
      * Sets the currently active account ID. Pass null to clear the active account.
      */
-    suspend fun setActiveAccountId(accountId: Long?) {
+    override suspend fun setActiveAccountId(accountId: Long?) {
         context.dataStore.edit { preferences ->
             if (accountId == null) {
                 preferences.remove(ACTIVE_ACCOUNT_ID_KEY)
@@ -94,7 +96,7 @@ class Storage @Inject constructor(@ApplicationContext private val context: Conte
     /**
      * Saves the QB Cookie for a specific account ID.
      */
-    suspend fun saveQBCookie(accountId: Long, cookie: String) {
+    override suspend fun saveQBCookie(accountId: Long, cookie: String) {
         context.dataStore.edit { preferences ->
             preferences[qbCookiePreferenceKey(accountId)] = cookie
         }
@@ -104,7 +106,7 @@ class Storage @Inject constructor(@ApplicationContext private val context: Conte
     /**
      * Updates the QB Cookie timestamp for a specific account ID to the current time.
      */
-    suspend fun updateQBCookieTime(accountId: Long) {
+    override suspend fun updateQBCookieTime(accountId: Long) {
         val currentTime = System.currentTimeMillis()
         context.dataStore.edit { preferences ->
             preferences[qbCookieTimePreferenceKey(accountId)] = currentTime
@@ -116,7 +118,7 @@ class Storage @Inject constructor(@ApplicationContext private val context: Conte
      * Clears all stored data for a specific account ID (cookie and timestamp).
      * Useful for logout or account deletion.
      */
-    suspend fun clearAccountData(accountId: Long) {
+    override suspend fun clearAccountData(accountId: Long) {
         context.dataStore.edit { preferences ->
             preferences.remove(qbCookiePreferenceKey(accountId))
             preferences.remove(qbCookieTimePreferenceKey(accountId))
@@ -135,7 +137,7 @@ class Storage @Inject constructor(@ApplicationContext private val context: Conte
     /**
      * Clears all preferences. Use with caution (e.g., for app reset).
      */
-    suspend fun clearAllData() {
+    override suspend fun clearAllData() {
         context.dataStore.edit { preferences ->
             preferences.clear()
         }
