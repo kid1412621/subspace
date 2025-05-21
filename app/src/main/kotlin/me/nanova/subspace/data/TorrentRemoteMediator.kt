@@ -11,82 +11,150 @@ import me.nanova.subspace.domain.model.QBListParams
 import me.nanova.subspace.domain.model.RemoteKeys
 import me.nanova.subspace.domain.model.TorrentEntity
 import me.nanova.subspace.domain.model.toEntity
+import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalPagingApi::class)
 class TorrentRemoteMediator(
     private val currentAccountId: Long,
     private val query: QBListParams,
     private val database: AppDatabase,
-    private val api: QBApiService
+    private val api: QBApiService,
+    // NetworkStatusMonitor is no longer needed here, check is done in ViewModel
+    // private val networkStatusMonitor: NetworkStatusMonitor
 ) : RemoteMediator<Int, TorrentEntity>() {
 
     private val torrentDao = database.torrentDao()
     private val remoteKeyDao = database.remoteKeyDao()
 
     override suspend fun initialize(): InitializeAction {
-//        return InitializeAction.SKIP_INITIAL_REFRESH
-        return InitializeAction.LAUNCH_INITIAL_REFRESH
+        // Check if cached data is older than 30 minutes
+        val cacheTimeout = TimeUnit.MILLISECONDS.convert(1, TimeUnit.SECONDS) // Using 1 second for testing, revert to 30 minutes later
+        val latest = database.withTransaction {
+            remoteKeyDao.lastUpdatedByAccount(currentAccountId)
+        }
+
+        return if (latest != null && System.currentTimeMillis() - latest.lastUpdated <= cacheTimeout) {
+            // Cached data is valid, no need to refresh
+            InitializeAction.SKIP_INITIAL_REFRESH
+        } else {
+            // Cached data is stale or missing, trigger a refresh
+            InitializeAction.LAUNCH_INITIAL_REFRESH
+        }
     }
 
     override suspend fun load(
         loadType: LoadType,
         state: PagingState<Int, TorrentEntity>
     ): MediatorResult {
-        return try {
-            val loadKey = when (loadType) {
-                LoadType.REFRESH -> null // Start from the beginning on refresh
-                LoadType.PREPEND -> {
-                    // Get the first item's key to determine the prev offset
-                    val firstItem = state.firstItemOrNull()
-                    val remoteKeys = firstItem?.let { remoteKeyDao.remoteKeysItemId(it.id) }
-                    remoteKeys?.prevOffset
-                        ?: return MediatorResult.Success(endOfPaginationReached = true)
-                }
+        // Network status check is now done in the ViewModel before calling this.
+        // If this method is called, we assume the ViewModel determined it's appropriate to try fetching.
 
-                LoadType.APPEND -> {
-                    // Get the last item's key to determine the next offset
-                    val lastItem = state.lastItemOrNull()
-                    val remoteKeys = lastItem?.let { remoteKeyDao.remoteKeysItemId(it.id) }
-                    remoteKeys?.nextOffset
-                        ?: return MediatorResult.Success(endOfPaginationReached = true)
-                }
+        val loadKey = when (loadType) {
+            LoadType.REFRESH -> null // Start from the beginning on refresh
+            LoadType.PREPEND -> {
+                // Get the first item's key to determine the prev offset
+                val firstItem = state.firstItemOrNull()
+                val remoteKeys =
+                    firstItem?.let { remoteKeyDao.remoteKeysItemId(it.id, currentAccountId) }
+                remoteKeys?.prevOffset
+                    ?: return MediatorResult.Success(endOfPaginationReached = true)
             }
 
-            // fetch api
+            LoadType.APPEND -> {
+                // Get the last item's key to determine the next offset
+                val lastItem = state.lastItemOrNull()
+                val remoteKeys =
+                    lastItem?.let { remoteKeyDao.remoteKeysItemId(it.id, currentAccountId) }
+                remoteKeys?.nextOffset
+                    ?: return MediatorResult.Success(endOfPaginationReached = true)
+            }
+        }
+
+        try {
+            // Calculate limit and offset for the API call
             val offset =
                 loadKey ?: 0 //Default to 0 if null, means its load type refresh or first time load
-            val response = api.list(
-                query.copy(offset = offset, limit = state.config.pageSize).toMap()
-            )
-            val endOfPaginationReached = response.isEmpty() || response.size < state.config.pageSize
+            val limit = state.config.pageSize
 
-            // update db
+            // Prepare query parameters based on filter and pagination
+            val params = query.toMap().toMutableMap().apply {
+                put("limit", limit.toString())
+                put("offset", offset.toString())
+            }
+
+            // Fetch data from the network
+            val torrents = api.list(params)
+
+            val endOfPaginationReached = torrents.isEmpty() || torrents.size < state.config.pageSize
+
             database.withTransaction {
                 if (loadType == LoadType.REFRESH) {
+                    // Clear existing data and remote keys on refresh
                     remoteKeyDao.clearRemoteKeys(currentAccountId)
                     torrentDao.clearAll(currentAccountId)
                 }
 
-                val entities = response.map { it.toEntity(currentAccountId) }
-                torrentDao.insertAll(entities)
                 val prevOffset = if (offset == 0) null else offset - state.config.pageSize
                 val nextOffset =
                     if (endOfPaginationReached) null else offset + state.config.pageSize
-                val keys = entities.map {
+                val keys = torrents.map {
                     RemoteKeys(
                         torrentId = it.id,
                         prevOffset = prevOffset,
                         nextOffset = nextOffset,
-                        accountId = currentAccountId
+                        accountId = currentAccountId,
+                        lastUpdated = System.currentTimeMillis()
                     )
                 }
                 remoteKeyDao.insertAll(keys)
+                torrentDao.insertAll(torrents.map { it.toEntity(currentAccountId) })
             }
 
-            MediatorResult.Success(endOfPaginationReached = endOfPaginationReached)
-        } catch (e: Exception) {
-            // might display db data when network is unavailable, but not sure the user case, let decide in future
-            MediatorResult.Error(e)
+            return MediatorResult.Success(endOfPaginationReached = endOfPaginationReached)
+
+        } catch (exception: IOException) {
+            // Handle network errors (though ViewModel tries to prevent this call when offline)
+            // or other IO issues like server unreachable.
+            return MediatorResult.Error(exception)
+        } catch (exception: Exception) {
+            // Handle other errors
+            return MediatorResult.Error(exception)
         }
+    }
+
+    // Helper functions for RemoteKeys (assuming these exist or need to be added/modified)
+    private suspend fun getRemoteKeyClosestToCurrentPosition(
+        state: PagingState<Int, TorrentEntity>
+    ): RemoteKeys? {
+        return state.anchorPosition?.let { position ->
+            state.closestItemToPosition(position)?.id?.let { id ->
+                database.withTransaction { remoteKeyDao.remoteKeysItemId(id, currentAccountId) }
+            }
+        }
+    }
+
+    private suspend fun getRemoteKeyForFirstItem(state: PagingState<Int, TorrentEntity>): RemoteKeys? {
+        return state.pages.firstOrNull { it.data.isNotEmpty() }?.data?.firstOrNull()
+            ?.let { torrent ->
+                database.withTransaction {
+                    remoteKeyDao.remoteKeysItemId(
+                        torrent.id,
+                        currentAccountId
+                    )
+                }
+            }
+    }
+
+    private suspend fun getRemoteKeyForLastItem(state: PagingState<Int, TorrentEntity>): RemoteKeys? {
+        return state.pages.lastOrNull { it.data.isNotEmpty() }?.data?.lastOrNull()
+            ?.let { torrent ->
+                database.withTransaction {
+                    remoteKeyDao.remoteKeysItemId(
+                        torrent.id,
+                        currentAccountId
+                    )
+                }
+            }
     }
 }

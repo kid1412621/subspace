@@ -14,7 +14,7 @@ import me.nanova.subspace.domain.model.TorrentEntity
         Account::class,
         TorrentEntity::class,
         RemoteKeys::class
-    ], version = 3
+    ], version = 4
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun torrentDao(): TorrentDao
@@ -87,6 +87,18 @@ abstract class AppDatabase : RoomDatabase() {
                 try {
                     db.execSQL("ALTER TABLE Account ADD COLUMN version TEXT NOT NULL DEFAULT '';")
                     db.execSQL("UPDATE Account SET type = 'QBITTORENT' WHERE type = 'QT';")
+                } catch (e: Exception) {
+                    Log.e("AppDatabase", "DB migration error: $e")
+                }
+            }
+        }
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                try {
+                    db.execSQL("ALTER TABLE remote_keys ADD COLUMN last_updated INTEGER NOT NULL DEFAULT 0;")
+                    val currentTime = System.currentTimeMillis()
+                    db.execSQL("UPDATE remote_keys SET last_updated = $currentTime WHERE last_updated = 0")
                 } catch (e: Exception) {
                     Log.e("AppDatabase", "DB migration error: $e")
                 }
