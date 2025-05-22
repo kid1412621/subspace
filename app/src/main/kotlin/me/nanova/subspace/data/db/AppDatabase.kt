@@ -98,7 +98,7 @@ abstract class AppDatabase : RoomDatabase() {
                 try {
                     db.execSQL("ALTER TABLE remote_keys ADD COLUMN last_updated INTEGER NOT NULL DEFAULT 0;")
                     val currentTime = System.currentTimeMillis()
-                    db.execSQL("UPDATE remote_keys SET last_updated = $currentTime WHERE last_updated = 0")
+                    db.execSQL("UPDATE remote_keys SET last_updated = ? WHERE last_updated = 0", arrayOf(currentTime))
                 } catch (e: Exception) {
                     Log.e("AppDatabase", "DB migration error: $e")
                 }
