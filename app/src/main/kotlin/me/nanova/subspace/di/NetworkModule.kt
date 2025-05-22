@@ -22,22 +22,26 @@ import javax.inject.Singleton
 @Singleton
 class RetrofitFactory @Inject constructor(
     private val moshi: Moshi,
-    private val httpClient: OkHttpClient,
+    // Instance of OkHttpClient will be provided by Hilt based on qualifiers
     private val accountRepo: AccountRepo
 ) {
     private val retrofitMap = mutableMapOf<Long, Retrofit>()
+    private val clientMap = mutableMapOf<Long, OkHttpClient>()
 
-    fun retrofit(): Retrofit {
-        return runBlocking { accountRepo.currentAccount.first() }?.let {
-            retrofitMap.getOrPut(it.id) {
-                return Retrofit.Builder()
-                    .client(httpClient)
-                    .addConverterFactory(ScalarsConverterFactory.create())
-                    .addConverterFactory(MoshiConverterFactory.create(moshi))
-                    .baseUrl(it.url)
-                    .build()
-            }
-        } ?: throw RuntimeException("No account found")
+    // This function might need to accept an OkHttpClient instance or a way to get a specific one
+    fun getRetrofit(accountId: Long, okHttpClient: OkHttpClient): Retrofit {
+        return retrofitMap.getOrPut(accountId) {
+            val account = runBlocking { accountRepo.getAccount(accountId).first() }
+                ?: throw IllegalStateException("Account not found for ID: $accountId")
+            Retrofit.Builder()
+                .client(okHttpClient) // Use the provided OkHttpClient
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .addConverterFactory(MoshiConverterFactory.create(moshi))
+                // Note: If account.url is HTTP, ensure a Network Security Configuration
+                // allows cleartext traffic for this domain, as 'usesCleartextTraffic' is false in AndroidManifest.xml.
+                .baseUrl(account.url)
+                .build()
+        }
     }
 }
 
@@ -51,44 +55,46 @@ object NetworkModule {
     @Singleton
     @Provides
     @Named("defaultRetrofit")
-    fun provideDefaultRetrofit(moshi: Moshi): Retrofit = Retrofit.Builder()
+    fun provideDefaultRetrofit(moshi: Moshi, @Named("defaultOkHttpClient") okHttpClient: OkHttpClient): Retrofit = Retrofit.Builder()
+        .client(okHttpClient) // Use the default OkHttpClient
         .addConverterFactory(ScalarsConverterFactory.create())
         .addConverterFactory(MoshiConverterFactory.create(moshi))
-        .baseUrl("https://placeholder.local")
+        .baseUrl("https://placeholder.local") // Default base URL
         .build()
 
     @Singleton
     @Provides
     fun provideRetrofitFactory(
         moshi: Moshi,
-        okHttpClient: OkHttpClient,
         accountRepo: AccountRepo
-    ): RetrofitFactory = RetrofitFactory(moshi, okHttpClient, accountRepo)
+        // OkHttpClient is no longer directly injected here, Retrofit instances get it specifically
+    ): RetrofitFactory = RetrofitFactory(moshi, accountRepo)
 
-//    fun httpClientByType(type: AccountType): OkHttpClient {
-//        when (type) {
-//            AccountType.QBITTORENT -> createOkHttpClient();
-//            AccountType.TRANSMISSION -> TODO()
-//        }
-//        return TODO("Provide the return value")
-//    }
-
-    @Provides
-    fun provideOkHttpClient(
-        cookieInterceptor: QBCookieInterceptor
-    ): OkHttpClient {
+    private fun createBaseOkHttpClientBuilder(): OkHttpClient.Builder {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY // Log HTTP request and response details
+            level = HttpLoggingInterceptor.Level.BODY
         }
-
         return OkHttpClient.Builder()
-//            .authenticator(QtAuthenticator(authApiService))
-            // qt returns 403, okhttp authenticator only response to 401/407
             .addInterceptor(loggingInterceptor)
-            .addNetworkInterceptor(cookieInterceptor)
-            .build()
     }
 
+    @Singleton
+    @Provides
+    @Named("defaultOkHttpClient")
+    fun provideDefaultOkHttpClient(): OkHttpClient {
+        return createBaseOkHttpClientBuilder().build()
+    }
+
+    @Singleton
+    @Provides
+    @Named("qbOkHttpClient")
+    fun provideQBOkHttpClient(
+        cookieInterceptor: QBCookieInterceptor // This interceptor is qB specific
+    ): OkHttpClient {
+        return createBaseOkHttpClientBuilder()
+            .addNetworkInterceptor(cookieInterceptor) // Add qB specific interceptor
+            .build()
+    }
 }
 
 

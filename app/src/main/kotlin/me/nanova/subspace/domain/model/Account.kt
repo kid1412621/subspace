@@ -10,7 +10,8 @@ data class Account(
     val id: Long = 0,
     // schema + host + port + path
     val url: String = "",
-    val type: AccountType,
+    @Deprecated("Use clientType instead") val type: AccountType, // To be removed later
+    val clientType: ClientType = ClientType.QBITTORRENT, // Default to QBITTORRENT
     val name: String = "",
     val user: String = "",
     // api key or password

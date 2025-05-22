@@ -48,44 +48,53 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import kotlinx.coroutines.launch
-import me.nanova.subspace.domain.model.FilterState
-import me.nanova.subspace.domain.model.QBCategories
-import me.nanova.subspace.domain.model.QBCategory
-import me.nanova.subspace.domain.model.QBListParams
+import me.nanova.subspace.domain.model.CategoryInfo
+import me.nanova.subspace.domain.model.DomainTorrentState
+import me.nanova.subspace.domain.model.GenericTorrentFilter
 
-private enum class FilterType(val icon: ImageVector, val showCondition: (QBListParams) -> Boolean) {
-    Status(Icons.Filled.QuestionMark, { it.filter != "all" }),
-    Category(Icons.Filled.Category, { it.category != null }),
-    Tag(Icons.AutoMirrored.Filled.Label, { it.tag != null });
+// Define filter types based on GenericTorrentFilter properties
+private enum class FilterType(val icon: ImageVector, val title: String, val showCondition: (GenericTorrentFilter) -> Boolean) {
+    Status(Icons.Filled.QuestionMark, "Status", { it.status?.isNotEmpty() == true }),
+    Category(Icons.Filled.Category, "Category", { it.category != null }),
+    Tag(Icons.AutoMirrored.Filled.Label, "Tag", { it.tags?.isNotEmpty() == true });
+    // Query is not explicitly a type here, but could be if UI is added for it.
 }
 
-private data class QBFilters(
-    var filter: String = "all",
+// Temporary data holder for filter changes within the bottom sheet
+private data class GenericFiltersHolder(
+    var status: MutableSet<DomainTorrentState> = mutableSetOf(),
     var category: String? = null,
-    var tag: String? = null,
+    var tags: MutableList<String> = mutableListOf(),
+    var query: String? = null
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilterMenu(
-    filter: QBListParams,
-    categories: QBCategories,
-    tags: List<String>,
+    currentFilter: GenericTorrentFilter,
+    allCategories: Map<String, CategoryInfo>, // Changed from QBCategories
+    allTags: List<String>,
     onClose: () -> Unit = {},
-    onFilter: (QBListParams) -> Unit = {},
+    onApplyFilter: (GenericTorrentFilter) -> Unit = {}, // Changed to GenericTorrentFilter
 ) {
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
-    val tmp = QBFilters(filter = filter.filter, tag = filter.tag, category = filter.category)
-    val checkedList = remember {
-        mutableStateListOf(
-            *FilterType.entries
-                .filter { it.showCondition(filter) }
-                .toTypedArray()
+
+    // Initialize temporary filter holder with current filter values
+    val tempFilters = remember {
+        GenericFiltersHolder(
+            status = currentFilter.status?.toMutableSet() ?: mutableSetOf(),
+            category = currentFilter.category,
+            tags = currentFilter.tags?.toMutableList() ?: mutableListOf(),
+            query = currentFilter.query
         )
     }
 
-    ModalBottomSheet(
+    // Determine which filter sections are initially active based on currentFilter
+    val activeFilterTypes = remember {
+        mutableStateListOf(
+            *FilterType.entries
+                .filter { it.showCondition(currentFilter) }
         onDismissRequest = {
             onClose()
         },
@@ -99,58 +108,82 @@ fun FilterMenu(
                 .padding(15.dp)
                 .animateContentSize()
         ) {
+            // Segmented button to toggle filter sections (Status, Category, Tag)
             MultiChoiceSegmentedButtonRow {
-                FilterType.entries.forEachIndexed { index, filter ->
+                FilterType.entries.forEachIndexed { index, filterType ->
                     SegmentedButton(
                         shape = SegmentedButtonDefaults.itemShape(
                             index = index,
                             count = FilterType.entries.size
                         ),
-                        colors = if (filter in checkedList)
+                        colors = if (filterType in activeFilterTypes)
                             SegmentedButtonDefaults.colors(MaterialTheme.colorScheme.primaryContainer)
                         else
                             SegmentedButtonDefaults.colors(),
                         icon = {
-                            SegmentedButtonDefaults.Icon(active = filter in checkedList) {
+                            SegmentedButtonDefaults.Icon(active = filterType in activeFilterTypes) {
                                 Icon(
-                                    imageVector = filter.icon,
-                                    contentDescription = null,
+                                    imageVector = filterType.icon,
+                                    contentDescription = filterType.title,
                                     modifier = Modifier.size(SegmentedButtonDefaults.IconSize)
                                 )
                             }
                         },
                         onCheckedChange = {
-                            if (!checkedList.remove(filter)) {
-                                checkedList.add(filter)
+                            if (!activeFilterTypes.remove(filterType)) {
+                                activeFilterTypes.add(filterType)
+                                // When a filter type is activated, initialize its value in tempFilters if not already set
+                                when (filterType) {
+                                    FilterType.Status -> if (tempFilters.status.isEmpty()) {
+                                        // tempFilters.status.add(DomainTorrentState.ALL) // Default or first available
+                                    }
+                                    FilterType.Category -> if (tempFilters.category == null) {
+                                        // tempFilters.category = allCategories.keys.firstOrNull() // Default or first available
+                                    }
+                                    FilterType.Tag -> if (tempFilters.tags.isEmpty()) {
+                                        // tempFilters.tags.add(allTags.firstOrNull()) // Default or first available
+                                    }
+                                }
+                            } else {
+                                // When deactivating, clear the filter from tempFilters
+                                when (filterType) {
+                                    FilterType.Status -> tempFilters.status.clear()
+                                    FilterType.Category -> tempFilters.category = null
+                                    FilterType.Tag -> tempFilters.tags.clear()
+                                }
                             }
                         },
-                        checked = filter in checkedList
+                        checked = filterType in activeFilterTypes
                     ) {
-                        Text(filter.name)
+                        Text(filterType.title)
                     }
                 }
             }
 
-            checkedList.asReversed().forEach { type ->
+            // Display filter options based on activeFilterTypes
+            activeFilterTypes.sortedBy { it.ordinal }.forEach { type ->
                 when (type) {
-                    FilterType.Status -> StatusFilterMenu(filter.filter) { tmp.filter = it }
-                    FilterType.Category -> CategoryFilterMenu(filter.category, categories) {
-                        tmp.category = it
+                    FilterType.Status -> StatusFilterMenu(tempFilters.status) { newStatusSet ->
+                        tempFilters.status = newStatusSet
                     }
-
-                    FilterType.Tag -> TagFilterMenu(filter.tag, tags) { tmp.tag = it }
+                    FilterType.Category -> CategoryFilterMenu(tempFilters.category, allCategories) { newCategory ->
+                        tempFilters.category = newCategory
+                    }
+                    FilterType.Tag -> TagFilterMenu(tempFilters.tags, allTags) { newTags ->
+                        tempFilters.tags = newTags
+                    }
                 }
             }
 
             Button(
                 onClick = {
-                    onFilter(
-                        filter.copy(
-                            filter = tmp.filter,
-                            tag = if (checkedList.contains(FilterType.Tag)) tmp.tag else null,
-                            category = if (checkedList.contains(FilterType.Category)) tmp.category else null
-                        )
+                    val newFilter = GenericTorrentFilter(
+                        status = if (activeFilterTypes.contains(FilterType.Status)) tempFilters.status.ifEmpty { null } else null,
+                        category = if (activeFilterTypes.contains(FilterType.Category)) tempFilters.category else null,
+                        tags = if (activeFilterTypes.contains(FilterType.Tag)) tempFilters.tags.ifEmpty { null } else null,
+                        query = tempFilters.query // Query is not directly managed by FilterType UI in this version
                     )
+                    onApplyFilter(newFilter)
                     scope.launch { sheetState.hide() }
                         .invokeOnCompletion {
                             if (!sheetState.isVisible) {
@@ -166,13 +199,14 @@ fun FilterMenu(
     }
 }
 
+
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun StatusFilterMenu(
-    initial: String,
-    onUpdate: (String) -> Unit = {}
+    currentStatusSet: MutableSet<DomainTorrentState>,
+    onUpdate: (MutableSet<DomainTorrentState>) -> Unit
 ) {
-    val radioOptions = FilterState.entries.map { it.toString() }
-    val (selectedOption, onOptionSelected) = remember { mutableStateOf(initial) }
+    val allPossibleStates = DomainTorrentState.entries.filterNot { it == DomainTorrentState.UNKNOWN } // Exclude UNKNOWN or other irrelevant states
 
     HorizontalDivider(Modifier.padding(vertical = 5.dp))
     Text(
@@ -180,45 +214,32 @@ private fun StatusFilterMenu(
         fontSize = MaterialTheme.typography.labelSmall.fontSize,
         color = MaterialTheme.colorScheme.outline
     )
-    Column(modifier = Modifier.selectableGroup()) {
-        radioOptions.chunked(2).forEach { rowOptions ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                rowOptions.forEach { option ->
-                    Row(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(50.dp)
-                            .selectable(
-                                selected = (option == selectedOption),
-                                onClick = {
-                                    onOptionSelected(option)
-                                    onUpdate(option)
-                                },
-                                role = Role.RadioButton
-                            )
-                            .padding(horizontal = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = (option == selectedOption),
-                            onClick = null // for accessibility
+    FlowRow(
+        Modifier
+            .fillMaxWidth(1f)
+            .wrapContentHeight(align = Alignment.Top),
+        horizontalArrangement = Arrangement.Start,
+    ) {
+        allPossibleStates.forEach { state ->
+            val isSelected = currentStatusSet.contains(state)
+            FilterChip(
+                selected = isSelected,
+                onClick = {
+                    val newSet = currentStatusSet.toMutableSet()
+                    if (isSelected) newSet.remove(state) else newSet.add(state)
+                    onUpdate(newSet)
+                },
+                label = { Text(state.name.lowercase().replaceFirstChar { it.uppercase() }) },
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                leadingIcon = {
+                    if (isSelected)
+                        Icon(
+                            imageVector = Icons.Filled.Done,
+                            contentDescription = state.name,
+                            modifier = Modifier.size(FilterChipDefaults.IconSize)
                         )
-                        Text(
-                            text = option,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
-                    }
                 }
-
-                // Fill the empty space if items are odd-numbered
-                if (rowOptions.size < 2) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-            }
+            )
         }
     }
 }
@@ -226,12 +247,12 @@ private fun StatusFilterMenu(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CategoryFilterMenu(
-    initial: String?,
-    categories: QBCategories,
-    onUpdate: (String?) -> Unit = {}
+    currentCategory: String?,
+    allCategories: Map<String, CategoryInfo>,
+    onUpdate: (String?) -> Unit
 ) {
     HorizontalDivider(Modifier.padding(vertical = 5.dp))
-    if (categories.isEmpty()) {
+    if (allCategories.isEmpty()) {
         Text(
             "No available category",
             fontSize = MaterialTheme.typography.labelSmall.fontSize,
@@ -240,7 +261,6 @@ private fun CategoryFilterMenu(
         return
     }
 
-    var selected by remember { mutableStateOf(initial) }
     Text(
         "Category",
         fontSize = MaterialTheme.typography.labelSmall.fontSize,
@@ -252,22 +272,35 @@ private fun CategoryFilterMenu(
             .wrapContentHeight(align = Alignment.Top),
         horizontalArrangement = Arrangement.Start,
     ) {
-        categories.map { it.key }.fastForEach {
+        // Add a chip for "All" or "None" category
+        FilterChip(
+            selected = currentCategory == null,
+            onClick = { onUpdate(null) },
+            label = { Text("All") },
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+            leadingIcon = {
+                if (currentCategory == null)
+                    Icon(
+                        imageVector = Icons.Filled.Done,
+                        contentDescription = "All Categories",
+                        modifier = Modifier.size(FilterChipDefaults.IconSize)
+                    )
+            }
+        )
+        allCategories.keys.forEach { categoryName ->
+            val isSelected = categoryName == currentCategory
             FilterChip(
-                selected = it == selected,
+                selected = isSelected,
                 onClick = {
-                    selected = if (it == selected) null else it
-                    onUpdate(selected)
+                    onUpdate(if (isSelected) null else categoryName)
                 },
-                label = { Text(it) },
-                modifier = Modifier
-                    .padding(horizontal = 5.dp)
-                    .align(alignment = Alignment.CenterVertically),
+                label = { Text(categoryName) },
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
                 leadingIcon = {
-                    if (it == selected)
+                    if (isSelected)
                         Icon(
                             imageVector = Icons.Filled.Done,
-                            contentDescription = it,
+                            contentDescription = categoryName,
                             modifier = Modifier.size(FilterChipDefaults.IconSize)
                         )
                 }
@@ -279,61 +312,50 @@ private fun CategoryFilterMenu(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TagFilterMenu(
-    initial: String?,
-    tags: List<String> = emptyList(),
-    onUpdate: (String?) -> Unit = {}
+    currentTags: MutableList<String>, // Now expects a list for multi-select
+    allTags: List<String>,
+    onUpdate: (MutableList<String>) -> Unit
 ) {
     HorizontalDivider(Modifier.padding(vertical = 5.dp))
-    if (tags.isEmpty()) {
-        Text(
-            "No available tag",
-            fontSize = MaterialTheme.typography.labelSmall.fontSize,
-            color = MaterialTheme.colorScheme.outline
-        )
+    if (allTags.isEmpty()) {
+        Text("No available tags", fontSize = MaterialTheme.typography.labelSmall.fontSize, color = MaterialTheme.colorScheme.outline)
         return
     }
 
-    var selected by remember { mutableStateOf(initial) }
-    Text(
-        "Tag",
-        fontSize = MaterialTheme.typography.labelSmall.fontSize,
-        color = MaterialTheme.colorScheme.outline
-    )
+    Text("Tags", fontSize = MaterialTheme.typography.labelSmall.fontSize, color = MaterialTheme.colorScheme.outline)
     FlowRow(
-        Modifier
-            .fillMaxWidth(1f)
-            .wrapContentHeight(align = Alignment.Top),
+        Modifier.fillMaxWidth(1f).wrapContentHeight(align = Alignment.Top),
         horizontalArrangement = Arrangement.Start,
     ) {
-        tags.fastForEach {
+        allTags.forEach { tag ->
+            val isSelected = currentTags.contains(tag)
             FilterChip(
-                selected = it == selected,
+                selected = isSelected,
                 onClick = {
-                    selected = if (it == selected) null else it
-                    onUpdate(selected)
+                    val newTags = currentTags.toMutableList()
+                    if (isSelected) newTags.remove(tag) else newTags.add(tag)
+                    onUpdate(newTags)
                 },
-                label = { Text(it) },
-                modifier = Modifier
-                    .padding(horizontal = 5.dp)
-                    .align(alignment = Alignment.CenterVertically),
+                label = { Text(tag) },
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
                 leadingIcon = {
-                    if (it == selected)
-                        Icon(
-                            imageVector = Icons.Filled.Done,
-                            contentDescription = it,
-                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                        )
+                    if (isSelected)
+                        Icon(Icons.Filled.Done, contentDescription = tag, modifier = Modifier.size(FilterChipDefaults.IconSize))
                 }
             )
         }
     }
 }
 
+
+// Previews need to be updated to reflect new function signatures and data types
+
 @Preview(showBackground = true)
 @Composable
 fun StatusFilterMenuPreview() {
     StatusFilterMenu(
-        initial = "downloading",
+        currentStatusSet = remember { mutableStateListOf(DomainTorrentState.DOWNLOADING, DomainTorrentState.PAUSED).toMutableSet() },
+        onUpdate = {}
     )
 }
 
@@ -341,8 +363,12 @@ fun StatusFilterMenuPreview() {
 @Composable
 fun CategoryFilterMenuPreview() {
     CategoryFilterMenu(
-        initial = "cat1",
-        categories = listOf(QBCategory("cat1"), QBCategory("cat2")).associateBy { it.name },
+        currentCategory = "Movies",
+        allCategories = mapOf(
+            "Movies" to CategoryInfo("Movies", "/path/movies"),
+            "TV Shows" to CategoryInfo("TV Shows", "/path/tv")
+        ),
+        onUpdate = {}
     )
 }
 
@@ -350,7 +376,8 @@ fun CategoryFilterMenuPreview() {
 @Composable
 fun TagFilterMenuPreview() {
     TagFilterMenu(
-        initial = "tagA",
-        tags = listOf("tagA", "tagC")
+        currentTags = remember { mutableStateListOf("HD", "Action").toMutableList() },
+        allTags = listOf("HD", "Action", "Comedy", "Drama"),
+        onUpdate = {}
     )
 }

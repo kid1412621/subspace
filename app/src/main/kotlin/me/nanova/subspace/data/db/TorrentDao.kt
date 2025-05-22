@@ -8,8 +8,7 @@ import androidx.room.Upsert
 import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteQuery
 import kotlinx.coroutines.flow.Flow
-import me.nanova.subspace.domain.model.QBFilterState
-import me.nanova.subspace.domain.model.QBListParams
+import me.nanova.subspace.domain.model.GenericTorrentFilter // Changed import
 import me.nanova.subspace.domain.model.TorrentEntity
 
 @Dao
@@ -29,32 +28,40 @@ interface TorrentDao {
     companion object {
         fun buildQuery(
             accountId: Long,
-            filter: QBListParams,
+            filter: GenericTorrentFilter, // Changed parameter type
         ): SupportSQLiteQuery {
-            // TODO: temp fix PagingSource<Int, TorrentEntity>
-            var query =
-                "SELECT *, added_on AS addedOn, last_updated AS lastUpdated FROM torrent WHERE account_id = $accountId"
+            val queryBuilder = StringBuilder("SELECT * FROM torrent WHERE account_id = $accountId")
 
-            if (filter.category != null) {
-                query += " AND category = '${filter.category}'"
+            // Handle status filter
+            filter.status?.takeIf { it.isNotEmpty() }?.let { domainStates ->
+                // Assuming TorrentEntity.state stores the string representation of DomainTorrentState
+                val stateNames = domainStates.joinToString("', '") { it.name }
+                queryBuilder.append(" AND state IN ('$stateNames')")
             }
 
-            if (filter.category != null) {
-                query += " AND ',' || tags || ',' LIKE '%,' || ${filter.tag} || ',%'"
+            // Handle category filter
+            filter.category?.let {
+                queryBuilder.append(" AND category = '${it.replace("'", "''")}'") // Escape single quotes
             }
 
-            if (filter.filter.isNotBlank()) {
-                val state = QBFilterState.valueOf(filter.filter).toQBStates()
-                if (state.isNotEmpty()) {
-                    query += " AND state IN ('${state.joinToString("', '")}')"
-                }
+            // Handle tags filter (assuming tags are stored as comma-separated string in DB)
+            filter.tags?.takeIf { it.isNotEmpty() }?.forEach { tag ->
+                // Ensure tag is properly escaped for SQL LIKE clause
+                val escapedTag = tag.replace("'", "''")
+                queryBuilder.append(" AND (',' || tags || ',' LIKE '%,$escapedTag,%')")
+            }
+            
+            // Handle query string (assuming it searches in torrent name)
+            filter.query?.takeIf { it.isNotBlank() }?.let {
+                 val escapedQuery = it.replace("'", "''")
+                queryBuilder.append(" AND name LIKE '%$escapedQuery%'")
             }
 
-            if (!filter.sort.isNullOrBlank()) {
-                query += " ORDER BY ${filter.sort} ${if (filter.reverse) "DESC" else "ASC"}"
-            }
-            return SimpleSQLiteQuery(query)
+            // Sorting is not part of GenericTorrentFilter in this iteration,
+            // but if it were, it would be appended here.
+            // Example: queryBuilder.append(" ORDER BY name ASC") 
+
+            return SimpleSQLiteQuery(queryBuilder.toString())
         }
-
     }
 }

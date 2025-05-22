@@ -16,7 +16,20 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Subspace"
-        android:usesCleartextTraffic="true"
+        android:usesCleartextTraffic="false"
+        # <!--
+        # Cleartext traffic is disabled by default for security.
+        # For development against local HTTP servers or specific trusted local network devices,
+        # create a network_security_config.xml file (e.g., in res/xml/)
+        # and reference it here with android:networkSecurityConfig="@xml/network_security_config".
+        # Example for allowing cleartext for a specific domain:
+        # <network-security-config>
+        #     <domain-config cleartextTrafficPermitted="true">
+        #         <domain includeSubdomains="true">your.local.qbittorrent.server</domain>
+        #         <domain includeSubdomains="true">192.168.1.100</domain> <!-- Or IP address -->
+        #     </domain-config>
+        # </network-security-config>
+        # -->
         android:windowSoftInputMode="adjustResize"
         tools:targetApi="35">
         <activity

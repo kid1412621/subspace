@@ -1,6 +1,7 @@
 package me.nanova.subspace.domain.model
 
 import com.squareup.moshi.Json
+import me.nanova.subspace.data.model.TorrentEntity
 
 data class Torrent(
     @Json(ignore = true)
@@ -16,7 +17,7 @@ data class Torrent(
     val progress: Float,
     // seconds
     val eta: Long,
-    val state: String,
+    val state: DomainTorrentState,
     val category: String?,
     // comma-concatenated tag list of the torrent
     val tags: String?,
@@ -40,7 +41,7 @@ fun Torrent.toEntity(aid: Long) = TorrentEntity(
     size = this.size,
     progress = this.progress,
     eta = this.eta,
-    state = this.state,
+    state = this.state.name, // Store enum name as string
     category = this.category,
     dlspeed = this.dlspeed,
     upspeed = this.upspeed,

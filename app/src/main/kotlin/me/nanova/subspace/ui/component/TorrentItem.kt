@@ -47,7 +47,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import me.nanova.subspace.domain.model.QBState
+import me.nanova.subspace.domain.model.DomainTorrentState
 import me.nanova.subspace.domain.model.Torrent
 import me.nanova.subspace.util.formatBytes
 import me.nanova.subspace.util.formatBytesPerSec
@@ -90,11 +90,11 @@ fun TorrentItem(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Icon(
-                    QBState.valueOf(torrent.state).toIcon(),
-                    contentDescription = torrent.state,
+                    torrent.state.toIcon(), // Use DomainTorrentState's toIcon()
+                    contentDescription = torrent.state.name, // Use enum name
                 )
                 Text(
-                    text = torrent.state,
+                    text = torrent.state.name, // Use enum name
                     fontSize = 11.sp
                 )
             }
@@ -243,7 +243,7 @@ fun TorrentItemPrev() {
                 size = 657457152,
                 progress = 0.16108787F,
                 eta = 8640,
-                state = QBState.downloading.toString(),
+                state = DomainTorrentState.DOWNLOADING, // Updated to use DomainTorrentState
                 category = null,
                 tags = "",
                 dlspeed = 9681262,
@@ -270,7 +270,7 @@ fun TorrentItemPrev() {
                 size = 13453865673,
                 progress = 1.0F,
                 eta = 8640000,
-                state = QBState.pausedUP.toString(),
+                state = DomainTorrentState.PAUSED, // Updated to use DomainTorrentState (PAUSED is a general state)
                 category = "movie",
                 tags = "tag1,tag2,tag3,tagZ,tag1,tag2,tag3,tagZ,tag1,tag2,tag3,tagZ",
                 dlspeed = 0,

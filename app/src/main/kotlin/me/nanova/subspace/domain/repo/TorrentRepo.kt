@@ -2,37 +2,22 @@ package me.nanova.subspace.domain.repo
 
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
-import me.nanova.subspace.domain.model.Account
-import me.nanova.subspace.domain.model.QBCategories
-import me.nanova.subspace.domain.model.QBListParams
+import me.nanova.subspace.domain.model.CategoryInfo
+import me.nanova.subspace.domain.model.GenericTorrentFilter
 import me.nanova.subspace.domain.model.Torrent
 
 interface TorrentRepo {
 
-    /**
-     * @return cookie
-     * */
-    suspend fun login(url: String, username: String, password: String): String
+    fun getTorrents(accountId: Long, filter: GenericTorrentFilter): Flow<PagingData<Torrent>>
 
-    /**
-     * @return semver without prefix `v`
-     */
-    suspend fun appVersion(url: String, cookie: String): String
+    fun getCategories(accountId: Long): Flow<Map<String, CategoryInfo>>
 
-    /**
-     * seems the api version is not suitable for compatibility check,
-     * cannot find the version mapping between api version and app version
-     */
-    suspend fun apiVersion(): String
+    fun getTags(accountId: Long): Flow<List<String>>
 
-    fun torrents(account: Account, filter: QBListParams): Flow<PagingData<Torrent>>
-
-    fun categories(): Flow<QBCategories>
-
-    fun tags(): Flow<List<String>>
-
-    suspend fun stop(torrents: List<String>)
-    suspend fun start(torrents: List<String>)
+    suspend fun stopTorrents(accountId: Long, torrentHashes: List<String>)
+    suspend fun startTorrents(accountId: Long, torrentHashes: List<String>)
+    suspend fun pauseTorrents(accountId: Long, torrentHashes: List<String>)
+    suspend fun deleteTorrents(accountId: Long, torrentHashes: List<String>, deleteData: Boolean)
 
 }
 

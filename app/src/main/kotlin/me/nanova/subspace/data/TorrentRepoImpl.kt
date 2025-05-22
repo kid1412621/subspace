@@ -6,56 +6,32 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import me.nanova.subspace.data.api.QBApiService
-import me.nanova.subspace.data.api.QBAuthService
 import me.nanova.subspace.data.db.AppDatabase
 import me.nanova.subspace.data.db.TorrentDao
 import me.nanova.subspace.data.db.TorrentDao.Companion.buildQuery
-import me.nanova.subspace.domain.model.Account
-import me.nanova.subspace.domain.model.QBCategories
-import me.nanova.subspace.domain.model.QBListParams
+import me.nanova.subspace.di.TorrentClientFactory // Import TorrentClientFactory
+import me.nanova.subspace.domain.model.CategoryInfo
+import me.nanova.subspace.domain.model.GenericTorrentFilter
 import me.nanova.subspace.domain.model.Torrent
 import me.nanova.subspace.domain.model.toModel
 import me.nanova.subspace.domain.repo.TorrentRepo
 import javax.inject.Inject
-import javax.inject.Provider
 
 class TorrentRepoImpl @Inject constructor(
     private val database: AppDatabase,
     private val torrentDao: TorrentDao,
-    private val apiService: Provider<QBApiService>,
-    private val authService: QBAuthService,
+    private val torrentClientFactory: TorrentClientFactory // Injected TorrentClientFactory
 ) : TorrentRepo {
-
-    override suspend fun login(url: String, username: String, password: String): String {
-        val res = authService.login(url, username, password)
-        if (!res.isSuccessful) {
-            if (res.code() == 403) {
-                throw RuntimeException("Wrong username or password.")
-            }
-            throw RuntimeException("Cannot connect to qBittorent service.")
-        }
-        val cookie = res.headers()["Set-Cookie"]
-        if (cookie.isNullOrBlank()) {
-            throw RuntimeException("Failed to retrieve cookie.")
-        }
-        return cookie
-    }
-
-    override suspend fun appVersion(url: String, cookie: String) =
-        authService.appVersion(url, cookie).removePrefix("v")
-
-    override suspend fun apiVersion() = apiService.get().apiVersion()
 
     companion object {
         const val PAGE_SIZE = 20
     }
 
     @OptIn(ExperimentalPagingApi::class)
-    override fun torrents(account: Account, filter: QBListParams): Flow<PagingData<Torrent>> {
+    override fun getTorrents(accountId: Long, filter: GenericTorrentFilter): Flow<PagingData<Torrent>> {
+        val client = torrentClientFactory.getClient(accountId) // Get client using the factory
+
         return Pager(
             config = PagingConfig(
                 pageSize = PAGE_SIZE,
@@ -63,37 +39,42 @@ class TorrentRepoImpl @Inject constructor(
                 enablePlaceholders = true,
             ),
             remoteMediator = TorrentRemoteMediator(
-                account.id,
+                accountId,
                 filter,
                 database,
-                apiService.get()
+                client // Pass the dynamically obtained client
             ),
             pagingSourceFactory = {
-                torrentDao.pagingSource(buildQuery(account.id, filter))
+                // buildQuery might need to be adapted for GenericTorrentFilter
+                torrentDao.pagingSource(buildQuery(accountId, filter))
             }
         ).flow.map { pagingData ->
             pagingData.map { entity -> entity.toModel() }
         }
     }
 
-    override fun categories(): Flow<QBCategories> {
-        return flow {
-            emit(apiService.get().categories() ?: emptyMap())
-        }.catch { e -> throw e }
+    override fun getCategories(accountId: Long): Flow<Map<String, CategoryInfo>> {
+        return torrentClientFactory.getClient(accountId).getCategories()
     }
 
-    override fun tags(): Flow<List<String>> {
-        return flow {
-            emit(apiService.get().tags())
-        }.catch { e -> throw e }
+    override fun getTags(accountId: Long): Flow<List<String>> {
+        return torrentClientFactory.getClient(accountId).getTags()
     }
 
-    override suspend fun stop(torrents: List<String>) {
-        apiService.get().stop(torrents.joinToString("|"))
+    override suspend fun stopTorrents(accountId: Long, torrentHashes: List<String>) {
+        torrentClientFactory.getClient(accountId).stopTorrents(torrentHashes)
     }
 
-    override suspend fun start(torrents: List<String>) {
-        apiService.get().start(torrents.joinToString("|"))
+    override suspend fun startTorrents(accountId: Long, torrentHashes: List<String>) {
+        torrentClientFactory.getClient(accountId).startTorrents(torrentHashes)
+    }
+
+    override suspend fun pauseTorrents(accountId: Long, torrentHashes: List<String>) {
+        torrentClientFactory.getClient(accountId).pauseTorrents(torrentHashes)
+    }
+
+    override suspend fun deleteTorrents(accountId: Long, torrentHashes: List<String>, deleteData: Boolean) {
+        torrentClientFactory.getClient(accountId).deleteTorrents(torrentHashes, deleteData)
     }
 }
 
