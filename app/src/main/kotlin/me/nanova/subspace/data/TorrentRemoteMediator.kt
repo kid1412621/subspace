@@ -29,7 +29,7 @@ class TorrentRemoteMediator(
 
     override suspend fun initialize(): InitializeAction {
         // Check if cached data is older than 30 minutes
-val cacheTimeout = TimeUnit.MILLISECONDS.convert(30, TimeUnit.MINUTES)
+        val cacheTimeout = TimeUnit.MILLISECONDS.convert(30, TimeUnit.MINUTES)
         val latest = database.withTransaction {
             remoteKeyDao.lastUpdatedByAccount(currentAccountId)
         }
@@ -123,38 +123,4 @@ val cacheTimeout = TimeUnit.MILLISECONDS.convert(30, TimeUnit.MINUTES)
         }
     }
 
-    // Helper functions for RemoteKeys (assuming these exist or need to be added/modified)
-    private suspend fun getRemoteKeyClosestToCurrentPosition(
-        state: PagingState<Int, TorrentEntity>
-    ): RemoteKeys? {
-        return state.anchorPosition?.let { position ->
-            state.closestItemToPosition(position)?.id?.let { id ->
-                database.withTransaction { remoteKeyDao.remoteKeysItemId(id, currentAccountId) }
-            }
-        }
-    }
-
-    private suspend fun getRemoteKeyForFirstItem(state: PagingState<Int, TorrentEntity>): RemoteKeys? {
-        return state.pages.firstOrNull { it.data.isNotEmpty() }?.data?.firstOrNull()
-            ?.let { torrent ->
-                database.withTransaction {
-                    remoteKeyDao.remoteKeysItemId(
-                        torrent.id,
-                        currentAccountId
-                    )
-                }
-            }
-    }
-
-    private suspend fun getRemoteKeyForLastItem(state: PagingState<Int, TorrentEntity>): RemoteKeys? {
-        return state.pages.lastOrNull { it.data.isNotEmpty() }?.data?.lastOrNull()
-            ?.let { torrent ->
-                database.withTransaction {
-                    remoteKeyDao.remoteKeysItemId(
-                        torrent.id,
-                        currentAccountId
-                    )
-                }
-            }
-    }
 }
