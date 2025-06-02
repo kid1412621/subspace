@@ -28,6 +28,9 @@ class TorrentRepoImpl @Inject constructor(
     private val torrentDao: TorrentDao,
     private val apiService: Provider<QBApiService>,
     private val authService: QBAuthService,
+    // NetworkStatusMonitor is no longer needed directly here,
+    // it's used in the ViewModel to control when torrents() is called.
+    // private val networkStatusMonitor: NetworkStatusMonitor
 ) : TorrentRepo {
 
     override suspend fun login(url: String, username: String, password: String): String {
@@ -55,6 +58,7 @@ class TorrentRepoImpl @Inject constructor(
     }
 
     @OptIn(ExperimentalPagingApi::class)
+    // Removed NetworkStatusMonitor parameter
     override fun torrents(account: Account, filter: QBListParams): Flow<PagingData<Torrent>> {
         return Pager(
             config = PagingConfig(
@@ -66,7 +70,8 @@ class TorrentRepoImpl @Inject constructor(
                 account.id,
                 filter,
                 database,
-                apiService.get()
+                apiService.get(),
+                // NetworkStatusMonitor is no longer passed to the RemoteMediator
             ),
             pagingSourceFactory = {
                 torrentDao.pagingSource(buildQuery(account.id, filter))
@@ -96,5 +101,3 @@ class TorrentRepoImpl @Inject constructor(
         apiService.get().start(torrents.joinToString("|"))
     }
 }
-
-

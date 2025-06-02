@@ -14,5 +14,7 @@ data class RemoteKeys(
     @ColumnInfo(name = "prev_offset")
     val prevOffset: Int?,
     @ColumnInfo(name = "next_offset")
-    val nextOffset: Int?
+    val nextOffset: Int?,
+    @ColumnInfo(name = "last_updated")
+    val lastUpdated: Long = System.currentTimeMillis()
 )
