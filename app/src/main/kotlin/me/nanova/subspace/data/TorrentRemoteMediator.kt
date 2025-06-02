@@ -29,7 +29,7 @@ class TorrentRemoteMediator(
 
     override suspend fun initialize(): InitializeAction {
         // Check if cached data is older than 30 minutes
-        val cacheTimeout = TimeUnit.MILLISECONDS.convert(1, TimeUnit.SECONDS) // Using 1 second for testing, revert to 30 minutes later
+val cacheTimeout = TimeUnit.MILLISECONDS.convert(30, TimeUnit.MINUTES)
         val latest = database.withTransaction {
             remoteKeyDao.lastUpdatedByAccount(currentAccountId)
         }
