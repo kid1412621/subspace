@@ -34,7 +34,7 @@ object RepoModule {
         appDatabase: AppDatabase,
         torrentDao: TorrentDao,
         apiService: Provider<QBApiService>,
-        authService: QBAuthService
+        authService: QBAuthService,
     ): TorrentRepo {
         return TorrentRepoImpl(appDatabase, torrentDao, apiService, authService)
     }

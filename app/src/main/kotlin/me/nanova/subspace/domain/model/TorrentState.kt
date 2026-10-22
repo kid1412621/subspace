@@ -100,10 +100,11 @@ enum class QBState {
     }
 
     companion object {
-        fun isStopped(state: String): Boolean = when (QBState.valueOf(state)) {
-            pausedDL, pausedUP, stoppedDL, stoppedUP  -> true
-            else -> false
-        }
+        fun isStopped(stateString: String): Boolean =
+            when (QBState.entries.find { it.name.equals(stateString, ignoreCase = true) }) {
+                pausedDL, pausedUP, stoppedDL, stoppedUP -> true
+                else -> false
+            }
     }
 
 }

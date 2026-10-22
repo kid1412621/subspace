@@ -25,6 +25,7 @@ interface TorrentRepo {
      */
     suspend fun apiVersion(): String
 
+    // Removed NetworkStatusMonitor parameter
     fun torrents(account: Account, filter: QBListParams): Flow<PagingData<Torrent>>
 
     fun categories(): Flow<QBCategories>
@@ -35,4 +36,3 @@ interface TorrentRepo {
     suspend fun start(torrents: List<String>)
 
 }
-
