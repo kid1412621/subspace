@@ -12,7 +12,6 @@ import me.nanova.subspace.domain.model.RemoteKeys
 import me.nanova.subspace.domain.model.TorrentEntity
 import me.nanova.subspace.domain.model.toEntity
 import java.io.IOException
-import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalPagingApi::class)
 class TorrentRemoteMediator(
@@ -28,18 +27,16 @@ class TorrentRemoteMediator(
     private val remoteKeyDao = database.remoteKeyDao()
 
     override suspend fun initialize(): InitializeAction {
-        // Check if cached data is older than 30 minutes
-        val cacheTimeout = TimeUnit.MILLISECONDS.convert(30, TimeUnit.MINUTES)
-        val latest = database.withTransaction {
-            remoteKeyDao.lastUpdatedByAccount(currentAccountId)
-        }
+        return InitializeAction.LAUNCH_INITIAL_REFRESH
+    }
 
-        return if (latest != null && System.currentTimeMillis() - latest.lastUpdated <= cacheTimeout) {
-            // Cached data is valid, no need to refresh
-            InitializeAction.SKIP_INITIAL_REFRESH
-        } else {
-            // Cached data is stale or missing, trigger a refresh
-            InitializeAction.LAUNCH_INITIAL_REFRESH
+    private suspend fun getRemoteKeyClosestToCurrentPosition(
+        state: PagingState<Int, TorrentEntity>
+    ): RemoteKeys? {
+        return state.anchorPosition?.let { position ->
+            state.closestItemToPosition(position)?.id?.let { id ->
+                remoteKeyDao.remoteKeysItemId(id, currentAccountId)
+            }
         }
     }
 
@@ -47,13 +44,10 @@ class TorrentRemoteMediator(
         loadType: LoadType,
         state: PagingState<Int, TorrentEntity>
     ): MediatorResult {
-        // Network status check is now done in the ViewModel before calling this.
-        // If this method is called, we assume the ViewModel determined it's appropriate to try fetching.
-
+        val pageSize = state.config.pageSize
         val loadKey = when (loadType) {
-            LoadType.REFRESH -> null // Start from the beginning on refresh
+            LoadType.REFRESH -> null
             LoadType.PREPEND -> {
-                // Get the first item's key to determine the prev offset
                 val firstItem = state.firstItemOrNull()
                 val remoteKeys =
                     firstItem?.let { remoteKeyDao.remoteKeysItemId(it.id, currentAccountId) }
@@ -62,7 +56,6 @@ class TorrentRemoteMediator(
             }
 
             LoadType.APPEND -> {
-                // Get the last item's key to determine the next offset
                 val lastItem = state.lastItemOrNull()
                 val remoteKeys =
                     lastItem?.let { remoteKeyDao.remoteKeysItemId(it.id, currentAccountId) }
@@ -72,10 +65,19 @@ class TorrentRemoteMediator(
         }
 
         try {
-            // Calculate limit and offset for the API call
-            val offset =
-                loadKey ?: 0 //Default to 0 if null, means its load type refresh or first time load
-            val limit = state.config.pageSize
+            val offset: Int
+            val limit: Int
+            if (loadType == LoadType.REFRESH) {
+                val remoteKeys = getRemoteKeyClosestToCurrentPosition(state)
+                val anchorPageOffset = remoteKeys?.prevOffset?.plus(pageSize)
+                    ?: remoteKeys?.nextOffset?.minus(pageSize)?.coerceAtLeast(0)
+                    ?: 0
+                offset = 0
+                limit = anchorPageOffset + pageSize
+            } else {
+                offset = loadKey ?: 0
+                limit = pageSize
+            }
 
             // Prepare query parameters based on filter and pagination
             val params = query.toMap().toMutableMap().apply {
@@ -86,7 +88,8 @@ class TorrentRemoteMediator(
             // Fetch data from the network
             val torrents = api.list(params)
 
-            val endOfPaginationReached = torrents.isEmpty() || torrents.size < state.config.pageSize
+            val endOfPaginationReached = torrents.size < limit
+            val now = System.currentTimeMillis()
 
             database.withTransaction {
                 if (loadType == LoadType.REFRESH) {
@@ -95,16 +98,20 @@ class TorrentRemoteMediator(
                     torrentDao.clearAll(currentAccountId)
                 }
 
-                val prevOffset = if (offset == 0) null else offset - state.config.pageSize
-                val nextOffset =
-                    if (endOfPaginationReached) null else offset + state.config.pageSize
-                val keys = torrents.map {
+                val keys = torrents.mapIndexed { index, torrent ->
+                    val itemPageOffset = offset + (index / pageSize) * pageSize
+                    val isLastLoadedPage =
+                        (index / pageSize + 1) * pageSize >= limit ||
+                                (index / pageSize + 1) * pageSize >= torrents.size
+                    val prevOffset = if (itemPageOffset == 0) null else itemPageOffset - pageSize
+                    val nextOffset =
+                        if (endOfPaginationReached && isLastLoadedPage) null else itemPageOffset + pageSize
                     RemoteKeys(
-                        torrentId = it.id,
+                        torrentId = torrent.id,
                         prevOffset = prevOffset,
                         nextOffset = nextOffset,
                         accountId = currentAccountId,
-                        lastUpdated = System.currentTimeMillis()
+                        lastUpdated = now
                     )
                 }
                 remoteKeyDao.insertAll(keys)
@@ -114,11 +121,8 @@ class TorrentRemoteMediator(
             return MediatorResult.Success(endOfPaginationReached = endOfPaginationReached)
 
         } catch (exception: IOException) {
-            // Handle network errors (though ViewModel tries to prevent this call when offline)
-            // or other IO issues like server unreachable.
             return MediatorResult.Error(exception)
         } catch (exception: Exception) {
-            // Handle other errors
             return MediatorResult.Error(exception)
         }
     }

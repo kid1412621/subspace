@@ -14,11 +14,12 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -64,26 +65,31 @@ class HomeViewModel @Inject constructor(
         initialValue = true // Assume online initially until status is known
     )
 
-    // Periodic trigger flow that depends only on the interval
+    // Periodic trigger flow that emits while online and interval > 0
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val periodicRefreshTrigger = _refreshInterval
-        .flatMapLatest { interval ->
-            if (interval > 0) {
-                // Create a periodic flow that emits Unit every 'interval' milliseconds
-                flow {
-                    while (true) {
-                        emit(Unit)
-                        delay(interval)
-                    }
+    private val periodicRefreshTrigger: Flow<Unit> = combine(
+        _refreshInterval,
+        isOnline
+    ) { interval, online ->
+        if (online) interval else 0L
+    }.flatMapLatest { interval ->
+        if (interval > 0) {
+            flow {
+                while (true) {
+                    delay(interval)
+                    emit(Unit)
                 }
-            } else {
-                // If interval is 0 or negative, emit nothing and complete
-                emptyFlow()
             }
+        } else {
+            emptyFlow()
         }
+    }
 
     // Shared flow for manual refresh events triggered by the UI
     private val _manualRefreshTrigger = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    // Combined refresh events for the UI to trigger Paging refresh while active
+    val refreshTrigger: Flow<Unit> = merge(periodicRefreshTrigger, _manualRefreshTrigger)
 
     init {
         viewModelScope.launch {
@@ -100,28 +106,13 @@ class HomeViewModel @Inject constructor(
     val pagingDataFlow: Flow<PagingData<Torrent>> =
         combine(
             currentAccount.filterNotNull(),
-            _homeUiState,
-            // Merge the periodic trigger and the manual trigger
-            merge(periodicRefreshTrigger, _manualRefreshTrigger),
-            isOnline // Combine with network status
-        ) { account, uiState, _, isOnline -> // Receive account, filter, trigger Unit, and network status
-            if (isOnline) {
-                account to uiState.filter // Emit account and filter if online
-            } else {
-                null // Emit null if offline, signaling no refresh
-            }
+            _homeUiState.map { it.filter }.distinctUntilChanged(),
+        ) { account, filter ->
+            account to filter
         }
-            // No distinctUntilChanged here, as we want to trigger refresh even if account/filter are the same
-            .flatMapLatest { accountFilterPair ->
-                if (accountFilterPair != null) {
-                    val (account, filter) = accountFilterPair
-                    // Call torrents without networkStatusMonitor parameter
-                    torrentRepo.torrents(account, filter)
-                } else {
-                    // If offline (accountFilterPair is null), emit empty PagingData immediately.
-                    // The UI will show the offline message based on the separate isOnline flow.
-                    flowOf(PagingData.empty())
-                }
+            .distinctUntilChanged()
+            .flatMapLatest { (account, filter) ->
+                torrentRepo.torrents(account, filter)
             }.cachedIn(viewModelScope)
 
     fun switchAccount(account: Account) {
@@ -169,6 +160,7 @@ class HomeViewModel @Inject constructor(
             } else {
                 torrentRepo.stop(listOf(torrent.hash))
             }
+            _manualRefreshTrigger.emit(Unit)
         }
     }
 }

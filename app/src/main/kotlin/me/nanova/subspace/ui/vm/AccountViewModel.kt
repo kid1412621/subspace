@@ -8,15 +8,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import me.nanova.subspace.data.api.QBAuthService
 import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.domain.model.AccountType
 import me.nanova.subspace.domain.repo.AccountRepo
 import me.nanova.subspace.domain.repo.TorrentRepo
 import me.nanova.subspace.util.MINIMAL_SUPPORTED_QB_VERSION
 import me.nanova.subspace.util.isVersionAtLeast
-import retrofit2.Retrofit
-import retrofit2.converter.scalars.ScalarsConverterFactory
 import javax.inject.Inject
 
 @HiltViewModel
