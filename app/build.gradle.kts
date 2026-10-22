@@ -4,12 +4,12 @@ import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.plugin.compose")
-    id("com.google.devtools.ksp")
-    id("com.google.dagger.hilt.android")
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt.android)
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 kotlin {
@@ -27,8 +27,8 @@ android {
         applicationId = "me.nanova.subspace"
         minSdk = 29
         targetSdk = 37
-        versionCode = 15
-        versionName = "0.7.1"
+        versionCode = 16
+        versionName = "0.8.0"
         base.archivesName.set("subspace-v${versionName}-${versionCode}")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -112,32 +112,32 @@ androidComponents {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.19.1")
+    implementation(libs.androidx.core.ktx)
 
     // https://developer.android.com/jetpack/compose/bom/bom-mapping
-    implementation(platform("androidx.compose:compose-bom:2026.09.00"))
-    implementation("androidx.activity:activity-ktx:1.13.0")
-    implementation("androidx.activity:activity-compose")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose")
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.activity.ktx)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
 //    ksp("androidx.lifecycle:lifecycle-compiler")
     // Android Studio Preview support
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    debugImplementation("androidx.compose.ui:ui-tooling")
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    debugImplementation(libs.androidx.compose.ui.tooling)
 
     // paging
-    implementation("androidx.paging:paging-compose:3.5.3")
-    implementation("androidx.paging:paging-runtime-ktx:3.5.3")
+    implementation(libs.androidx.paging.compose)
+    implementation(libs.androidx.paging.runtime.ktx)
 
     // nav
-    implementation("androidx.navigation:navigation-compose")
-    implementation("androidx.navigation:navigation-runtime-ktx:2.10.2")
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.navigation.runtime.ktx)
 
     // Material Design 3
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.compose.animation:animation")
-    implementation("androidx.compose.animation:animation-graphics")
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.compose.animation)
+    implementation(libs.androidx.compose.animation.graphics)
     // https://developer.android.com/jetpack/androidx/releases/compose-material3-adaptive
 //    implementation("androidx.compose.material3.adaptive:adaptive:1.0.0")
 //    implementation("androidx.compose.material3.adaptive:adaptive-layout:1.0.0")
@@ -145,39 +145,39 @@ dependencies {
 //    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.3.1")
 
     // datastore
-    implementation("androidx.datastore:datastore-preferences:1.3.0")
+    implementation(libs.androidx.datastore.preferences)
 
     // hilt
-    implementation("com.google.dagger:hilt-android:2.60.1")
-    ksp("com.google.dagger:hilt-android-compiler:2.60.1")
-    implementation("androidx.hilt:hilt-navigation-compose:1.4.0")
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.android.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
 
     // room
-    implementation("androidx.room:room-runtime:2.8.5")
-    implementation("androidx.room:room-ktx:2.8.5")
-    implementation("androidx.room:room-paging:2.8.5")
-    ksp("androidx.room:room-compiler:2.8.5")
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.room.paging)
+    ksp(libs.androidx.room.compiler)
 
     // retrofit
-    implementation(platform("com.squareup.retrofit2:retrofit-bom:3.0.0"))
-    implementation("com.squareup.retrofit2:retrofit")
-    implementation("com.squareup.retrofit2:converter-scalars")
-    implementation("com.squareup.retrofit2:converter-moshi")
-    implementation("com.squareup.moshi:moshi-kotlin:1.15.2")
-    implementation("com.squareup.okhttp3:logging-interceptor:5.5.1")
+    implementation(platform(libs.retrofit.bom))
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.scalars)
+    implementation(libs.retrofit.converter.moshi)
+    implementation(libs.moshi.kotlin)
+    implementation(libs.okhttp.logging.interceptor)
 
     // firebase
-    implementation(platform("com.google.firebase:firebase-bom:35.1.0"))
-    implementation("com.google.firebase:firebase-crashlytics")
-    implementation("com.google.firebase:firebase-analytics")
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.analytics)
 
 
-    androidTestImplementation(platform("androidx.compose:compose-bom:2026.09.00"))
+    androidTestImplementation(platform(libs.androidx.compose.bom))
     // UI Tests
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.3.0")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }

@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.8.0 - 2026-10-22
+
+- Bump Gradle to 9.8.2, AGP to 9.4.1, Compose BOM to 2026.09.00, target SDK to 37, and migrate to Gradle version catalog;
+- Add auto periodical refresh and network connectivity monitoring;
+- Add toggle torrent state;
+- Improve paging anchor calculation and error handling.
+
 ## 0.7.1 - 2025-05-10
 
 - Fix crash on boot
