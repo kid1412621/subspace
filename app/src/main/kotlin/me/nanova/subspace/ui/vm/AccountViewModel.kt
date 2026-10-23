@@ -11,16 +11,13 @@ import kotlinx.coroutines.launch
 import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.domain.model.AccountType
 import me.nanova.subspace.domain.repo.AccountRepo
-import me.nanova.subspace.domain.repo.TorrentRepo
-import me.nanova.subspace.util.MINIMAL_SUPPORTED_QB_VERSION
-import me.nanova.subspace.util.isVersionAtLeast
+import me.nanova.subspace.domain.usecase.SaveAccountUseCase
 import javax.inject.Inject
 
 @HiltViewModel
-class AccountViewModel
-@Inject constructor(
+class AccountViewModel @Inject constructor(
     private val accountRepo: AccountRepo,
-    private val torrentRepo: TorrentRepo,
+    private val saveAccountUseCase: SaveAccountUseCase,
 ) : ViewModel() {
 
     val account = MutableStateFlow(Account(type = AccountType.QBITTORENT))
@@ -47,48 +44,24 @@ class AccountViewModel
 
     fun saveAccount(account: Account, isCreate: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            if (account.type != AccountType.QBITTORENT) {
-                snackBarMessage.update { "${account.type} not supported yet." }
-                return@launch
-            }
-
             loading.update { true }
             try {
-                // check connection
-                val cookie = torrentRepo.login(
-                    "${account.url}/api/v2/auth/login",
-                    account.user,
-                    account.pass
-                )
-
-                // check version
-                val version = torrentRepo.appVersion("${account.url}/api/v2/app/version", cookie)
-                if (notSupportedVersion(version)) {
-                    snackBarMessage.update { "Not supported version, $version is obsoleted." }
-                    return@launch
-                }
-                // store app version for api mapping, like /torrents/pause → /torrents/stop
-                val acc4db = account.copy(version = version)
-
-                if (isCreate) {
-                    accountRepo.save(acc4db)
-                } else {
-//                  // TODO: since user might change to another instance and no way to know, need to cleanup torrents under the account
-                    accountRepo.update(acc4db)
-                }
-                submitted.update { true }
-            } catch (ex: Exception) {
-                Log.e("[Account]", ex.message ?: "")
-                snackBarMessage.update { "Cannot connect to ${account.type} service due to: ${ex.message}" }
-                return@launch
+                saveAccountUseCase(account, isCreate)
+                    .onSuccess {
+                        submitted.update { true }
+                    }
+                    .onFailure { ex ->
+                        Log.e("[Account]", ex.message ?: "")
+                        val message = when (ex) {
+                            is UnsupportedOperationException, is IllegalStateException -> ex.message
+                            else -> "Cannot connect to ${account.type} service due to: ${ex.message}"
+                        }
+                        snackBarMessage.update { message }
+                    }
             } finally {
                 loading.update { false }
             }
-
         }
     }
-
-    private fun notSupportedVersion(version: String) =
-        !isVersionAtLeast(version, MINIMAL_SUPPORTED_QB_VERSION)
 
 }

@@ -1,7 +1,5 @@
 package me.nanova.subspace.domain.model
 
-import me.nanova.subspace.data.TorrentRepoImpl.Companion.PAGE_SIZE
-
 data class QBListParams(
     val filter: String = "all",
     val category: String? = null,
@@ -9,14 +7,14 @@ data class QBListParams(
     val sort: String? = null,
     val reverse: Boolean = false,
     val hashes: String? = null,
-    val limit: Int = PAGE_SIZE,
+    val limit: Int = DEFAULT_PAGE_SIZE,
     val offset: Int = 0,
 ) {
+    companion object {
+        const val DEFAULT_PAGE_SIZE = 20
+    }
+
     fun toMap(): Map<String, String?> {
-//        val queryParamsMap = this::class.memberProperties
-//            .filter { it.isAccessible = true; (it as KProperty1<QtListParams, *>).get(this) != null }
-//            .associate { it.name to (it as KProperty1<QtListParams, *>).get(this).toString() }
-//        return queryParamsMap;
         @Suppress("UNCHECKED_CAST")
         return mapOf(
             "filter" to filter,

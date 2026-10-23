@@ -7,7 +7,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,12 +24,16 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,12 +48,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.domain.model.AccountType
+import me.nanova.subspace.ui.mapper.toMonoIcon
+import me.nanova.subspace.ui.theme.MdSpacing
+import me.nanova.subspace.ui.theme.Theme
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AccountMenu(
     currentAccountId: Long?,
@@ -70,6 +77,7 @@ fun AccountMenu(
         stickyHeader {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.surfaceContainer,
                 onClick = {
                     scope.launch {
                         lazyColumnState.animateScrollToItem(0)
@@ -77,24 +85,27 @@ fun AccountMenu(
                 }
             ) {
                 Row(
-                    modifier = Modifier.padding(7.dp, 0.dp),
+                    modifier = Modifier.padding(horizontal = MdSpacing.sm, vertical = MdSpacing.xs),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         "Servers",
-                        modifier = Modifier.padding(10.dp),
-                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(horizontal = MdSpacing.xs),
+                        style = MaterialTheme.typography.titleLargeEmphasized,
                     )
                     FilledIconButton(
                         onClick = { onAccountAdding() },
-                        modifier = Modifier.padding(10.dp),
+                        shapes = IconButtonDefaults.shapes(),
                     ) {
                         Icon(Icons.Rounded.Add, contentDescription = "add new server")
                     }
                 }
             }
-            HorizontalDivider()
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant,
+                modifier = Modifier.padding(bottom = MdSpacing.xs)
+            )
         }
 
         items(accounts, key = { it.id }) {
@@ -115,7 +126,7 @@ fun AccountMenu(
                         ) {
                             NavItemInfoLabels(
                                 !showOverlay, isCurrent, it,
-                                modifier = Modifier.padding(vertical = 4.dp)
+                                modifier = Modifier.padding(vertical = MdSpacing.xxs)
                             )
 
                             NavItemActionButtons(
@@ -123,37 +134,41 @@ fun AccountMenu(
                                 onDismiss = { showOverlay = false },
                                 onEditing = { onAccountEditing(it) },
                                 onDeleting = { onAccountDeleting(it) },
-                                modifier = Modifier.padding(vertical = 4.dp)
+                                modifier = Modifier.padding(vertical = MdSpacing.xxs)
                             )
                         }
-                        Icon(
-                            Icons.Outlined.MoreVert,
-                            "Actions on account",
-                            modifier = Modifier.clickable { showOverlay = !showOverlay }
-                        )
+                        IconButton(
+                            onClick = { showOverlay = !showOverlay },
+                            shapes = IconButtonDefaults.shapes(),
+                        ) {
+                            Icon(
+                                Icons.Outlined.MoreVert,
+                                contentDescription = "Actions on account",
+                            )
+                        }
                     }
                 },
                 icon = {
                     Icon(
                         imageVector = ImageVector.vectorResource(id = it.type.toMonoIcon()),
                         contentDescription = it.user,
-                        modifier = Modifier.size(43.dp),
-                        tint = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+                        modifier = Modifier.size(36.dp),
                     )
                 },
                 selected = isCurrent,
                 modifier = Modifier
-                    .padding(10.dp, 15.dp)
+                    .padding(NavigationDrawerItemDefaults.ItemPadding)
+                    .padding(vertical = MdSpacing.xxs)
                     .fillMaxWidth(),
                 onClick = { onAccountSelected(it) },
             )
-            HorizontalDivider()
         }
     }
 }
 
 private fun Account.isCurrent(id: Long?) = id?.equals(this.id) == true
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun NavItemInfoLabels(
     showLabel: Boolean,
@@ -161,32 +176,34 @@ private fun NavItemInfoLabels(
     account: Account,
     modifier: Modifier = Modifier
 ) {
+    val spatialSpec = MaterialTheme.motionScheme.fastSpatialSpec<IntOffset>()
+    val effectsSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+
     AnimatedVisibility(
         visible = showLabel,
-        enter = fadeIn() + slideInVertically { -it },
-        exit = fadeOut() + slideOutVertically { -it },
+        enter = fadeIn(effectsSpec) + slideInVertically(spatialSpec) { -it },
+        exit = fadeOut(effectsSpec) + slideOutVertically(spatialSpec) { -it },
         modifier = modifier
     ) {
-        Column {
+        Column(verticalArrangement = Arrangement.Center) {
             Text(
-                color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
                 text = account.name,
-                style = MaterialTheme.typography.titleMedium,
+                style = if (isCurrent) MaterialTheme.typography.titleMediumEmphasized else MaterialTheme.typography.titleMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
+                color = if (isCurrent) MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant,
                 text = "${account.user}@${account.url}",
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(bottom = 2.dp)
             )
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun NavItemActionButtons(
     showOverlay: Boolean,
@@ -195,10 +212,13 @@ private fun NavItemActionButtons(
     onDeleting: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val spatialSpec = MaterialTheme.motionScheme.fastSpatialSpec<IntOffset>()
+    val effectsSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+
     AnimatedVisibility(
         visible = showOverlay,
-        enter = fadeIn() + slideInVertically { it },
-        exit = fadeOut() + slideOutVertically { it },
+        enter = fadeIn(effectsSpec) + slideInVertically(spatialSpec) { it },
+        exit = fadeOut(effectsSpec) + slideOutVertically(spatialSpec) { it },
         modifier = modifier
     ) {
 
@@ -207,7 +227,8 @@ private fun NavItemActionButtons(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            FilledIconButton(
+            FilledTonalIconButton(
+                shapes = IconButtonDefaults.shapes(),
                 onClick = {
                     onEditing()
                     onDismiss()
@@ -216,8 +237,10 @@ private fun NavItemActionButtons(
                 Icon(Icons.Outlined.Edit, "Edit account")
             }
             FilledIconButton(
+                shapes = IconButtonDefaults.shapes(),
                 colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.error
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
                 ),
                 onClick = {
                     onDeleting()
@@ -226,9 +249,11 @@ private fun NavItemActionButtons(
             ) {
                 Icon(Icons.Outlined.Delete, "Delete account")
             }
-            FilledIconButton(
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.secondary
+            FilledTonalIconButton(
+                shapes = IconButtonDefaults.shapes(),
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                 ),
                 onClick = { onDismiss() }
             ) {
@@ -245,7 +270,7 @@ private fun NavItemActionButtons(
 }
 
 @Composable
-@Preview
+@Preview(showBackground = true)
 fun AccountMenuPrev() {
     val accounts = mutableListOf(
         Account(
@@ -279,5 +304,7 @@ fun AccountMenuPrev() {
         )
     }
 
-    AccountMenu(currentAccountId = 1, accounts = accounts)
+    Theme {
+        AccountMenu(currentAccountId = 1, accounts = accounts)
+    }
 }

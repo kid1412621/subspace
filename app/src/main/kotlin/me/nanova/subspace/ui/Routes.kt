@@ -1,9 +1,13 @@
 package me.nanova.subspace.ui
 
-enum class Routes(name: String) {
-    Home(name = "home"),
-    AccountCreation(name = "account"),
-    AccountDetails(name = "account/{accountId}"),
-    Settings(name = "settings"),
-    Blank(name = "")
-}
+import androidx.navigation3.runtime.NavKey
+import kotlinx.serialization.Serializable
+
+@Serializable
+data object HomeRoute : NavKey
+
+@Serializable
+data object AccountCreationRoute : NavKey
+
+@Serializable
+data class AccountDetailsRoute(val accountId: Long) : NavKey

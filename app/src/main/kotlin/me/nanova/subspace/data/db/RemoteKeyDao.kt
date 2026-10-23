@@ -1,10 +1,10 @@
 package me.nanova.subspace.data.db
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
-import me.nanova.subspace.domain.model.RemoteKeys
+import androidx.room3.Dao
+import androidx.room3.Insert
+import androidx.room3.OnConflictStrategy
+import androidx.room3.Query
+import me.nanova.subspace.data.db.entity.RemoteKeys
 
 @Dao
 interface RemoteKeyDao {

@@ -1,8 +1,8 @@
-package me.nanova.subspace.domain.model
+package me.nanova.subspace.data.db.entity
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import androidx.room3.ColumnInfo
+import androidx.room3.Entity
+import androidx.room3.PrimaryKey
 
 @Entity(tableName = "remote_keys")
 data class RemoteKeys(

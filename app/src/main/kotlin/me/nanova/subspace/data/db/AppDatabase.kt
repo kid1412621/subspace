@@ -1,17 +1,18 @@
 package me.nanova.subspace.data.db
 
 import android.util.Log
-import androidx.room.Database
-import androidx.room.RoomDatabase
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
-import me.nanova.subspace.domain.model.Account
-import me.nanova.subspace.domain.model.RemoteKeys
-import me.nanova.subspace.domain.model.TorrentEntity
+import androidx.room3.Database
+import androidx.room3.RoomDatabase
+import androidx.room3.migration.Migration
+import androidx.sqlite.SQLiteConnection
+import androidx.sqlite.execSQL
+import me.nanova.subspace.data.db.entity.AccountEntity
+import me.nanova.subspace.data.db.entity.RemoteKeys
+import me.nanova.subspace.data.db.entity.TorrentEntity
 
 @Database(
     entities = [
-        Account::class,
+        AccountEntity::class,
         TorrentEntity::class,
         RemoteKeys::class
     ], version = 4
@@ -25,18 +26,18 @@ abstract class AppDatabase : RoomDatabase() {
         const val DATABASE_NAME = "subspace.db"
 
         val MIGRATION_1_2 = object : Migration(1, 2) {
-            override fun migrate(db: SupportSQLiteDatabase) {
+            override suspend fun migrate(connection: SQLiteConnection) {
                 try {
-                    db.execSQL("ALTER TABLE Account ADD COLUMN use_lan_switch INTEGER NOT NULL DEFAULT 0;")
-                    db.execSQL("ALTER TABLE Account ADD COLUMN lan_url TEXT NOT NULL DEFAULT '';")
-                    db.execSQL("ALTER TABLE Account ADD COLUMN lan_ssid TEXT NOT NULL DEFAULT '';")
+                    connection.execSQL("ALTER TABLE Account ADD COLUMN use_lan_switch INTEGER NOT NULL DEFAULT 0;")
+                    connection.execSQL("ALTER TABLE Account ADD COLUMN lan_url TEXT NOT NULL DEFAULT '';")
+                    connection.execSQL("ALTER TABLE Account ADD COLUMN lan_ssid TEXT NOT NULL DEFAULT '';")
                     // sqlite table name is case-insensitive
-                    db.execSQL("ALTER TABLE Account RENAME TO tmp_account;")
-                    db.execSQL("ALTER TABLE tmp_account RENAME TO account;")
+                    connection.execSQL("ALTER TABLE Account RENAME TO tmp_account;")
+                    connection.execSQL("ALTER TABLE tmp_account RENAME TO account;")
 
                     // previous version didn't use this table
-                    db.execSQL("DROP TABLE torrent;")
-                    db.execSQL(
+                    connection.execSQL("DROP TABLE torrent;")
+                    connection.execSQL(
                         """
                     CREATE TABLE torrent (
                         id TEXT PRIMARY KEY NOT NULL,
@@ -62,10 +63,10 @@ abstract class AppDatabase : RoomDatabase() {
                     );
                     """
                     )
-                    db.execSQL("CREATE INDEX index_torrent_hash ON torrent (hash);")
-                    db.execSQL("CREATE INDEX index_torrent_account_id ON torrent (account_id);")
+                    connection.execSQL("CREATE INDEX index_torrent_hash ON torrent (hash);")
+                    connection.execSQL("CREATE INDEX index_torrent_account_id ON torrent (account_id);")
 
-                    db.execSQL(
+                    connection.execSQL(
                         """
                     CREATE TABLE remote_keys (
                         torrent_id TEXT PRIMARY KEY NOT NULL,
@@ -75,7 +76,7 @@ abstract class AppDatabase : RoomDatabase() {
                     );
                     """
                     )
-                    db.execSQL("CREATE INDEX index_remote_keys_account_id ON remote_keys (account_id);")
+                    connection.execSQL("CREATE INDEX index_remote_keys_account_id ON remote_keys (account_id);")
                 } catch (e: Exception) {
                     Log.e("AppDatabase", "DB migration error: $e")
                 }
@@ -83,10 +84,10 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         val MIGRATION_2_3 = object : Migration(2, 3) {
-            override fun migrate(db: SupportSQLiteDatabase) {
+            override suspend fun migrate(connection: SQLiteConnection) {
                 try {
-                    db.execSQL("ALTER TABLE Account ADD COLUMN version TEXT NOT NULL DEFAULT '';")
-                    db.execSQL("UPDATE Account SET type = 'QBITTORENT' WHERE type = 'QT';")
+                    connection.execSQL("ALTER TABLE Account ADD COLUMN version TEXT NOT NULL DEFAULT '';")
+                    connection.execSQL("UPDATE Account SET type = 'QBITTORENT' WHERE type = 'QT';")
                 } catch (e: Exception) {
                     Log.e("AppDatabase", "DB migration error: $e")
                 }
@@ -94,11 +95,11 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         val MIGRATION_3_4 = object : Migration(3, 4) {
-            override fun migrate(db: SupportSQLiteDatabase) {
+            override suspend fun migrate(connection: SQLiteConnection) {
                 try {
-                    db.execSQL("ALTER TABLE remote_keys ADD COLUMN last_updated INTEGER NOT NULL DEFAULT 0;")
+                    connection.execSQL("ALTER TABLE remote_keys ADD COLUMN last_updated INTEGER NOT NULL DEFAULT 0;")
                     val currentTime = System.currentTimeMillis()
-                    db.execSQL("UPDATE remote_keys SET last_updated = ? WHERE last_updated = 0", arrayOf(currentTime))
+                    connection.execSQL("UPDATE remote_keys SET last_updated = $currentTime WHERE last_updated = 0")
                 } catch (e: Exception) {
                     Log.e("AppDatabase", "DB migration error: $e")
                 }

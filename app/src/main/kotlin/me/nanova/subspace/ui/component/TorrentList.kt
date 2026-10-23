@@ -1,24 +1,34 @@
 package me.nanova.subspace.ui.component
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -35,8 +46,10 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import me.nanova.subspace.ui.theme.MdSpacing
 import me.nanova.subspace.ui.vm.HomeViewModel
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ErrorContent(
     message: String,
@@ -44,31 +57,46 @@ fun ErrorContent(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier,
+        modifier = modifier.padding(MdSpacing.md),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Text(
             text = message,
-            color = MaterialTheme.colorScheme.error
+            style = MaterialTheme.typography.bodyLargeEmphasized,
+            color = MaterialTheme.colorScheme.error,
+            textAlign = TextAlign.Center,
         )
-        Spacer(modifier = Modifier.height(16.dp))
-        IconButton(onClick = onRetry) {
-            Icon(Icons.Filled.Refresh, "Retry")
+        Spacer(modifier = Modifier.height(MdSpacing.sm))
+        FilledTonalButton(
+            onClick = onRetry,
+            shapes = ButtonDefaults.shapes(),
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Refresh,
+                contentDescription = "Retry",
+                modifier = Modifier.size(ButtonDefaults.IconSize)
+            )
+            Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
+            Text(
+                text = "Retry",
+                style = MaterialTheme.typography.labelLargeEmphasized
+            )
         }
-        Text(text = "Retry")
     }
 }
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 fun TorrentList(
     viewModel: HomeViewModel,
+    contentPadding: PaddingValues = PaddingValues(),
 ) {
     val lazyListState = rememberLazyListState()
     val list = viewModel.pagingDataFlow.collectAsLazyPagingItems()
     val isOnline by viewModel.isOnline.collectAsStateWithLifecycle() // Observe network status
     val lifecycleOwner = LocalLifecycleOwner.current
+    val pullToRefreshState = rememberPullToRefreshState()
 
     // Local state to control the manual pull-to-refresh indicator
     var isManualRefreshing by remember { mutableStateOf(false) }
@@ -103,6 +131,7 @@ fun TorrentList(
     }
 
     PullToRefreshBox(
+        state = pullToRefreshState,
         // Use the local state for the refreshing indicator
         isRefreshing = isManualRefreshing,
         onRefresh = {
@@ -115,16 +144,30 @@ fun TorrentList(
                 isManualRefreshing = false
             }
         },
+        indicator = {
+            PullToRefreshDefaults.LoadingIndicator(
+                state = pullToRefreshState,
+                isRefreshing = isManualRefreshing,
+                modifier = Modifier.align(Alignment.TopCenter),
+            )
+        },
     ) {
         // Display offline message if network is down
         if (!isOnline) {
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .padding(contentPadding)
+                    .consumeWindowInsets(contentPadding)
+                    .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Text(text = "Offline", color = MaterialTheme.colorScheme.error)
-                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Offline",
+                    style = MaterialTheme.typography.titleMediumEmphasized,
+                    color = MaterialTheme.colorScheme.error
+                )
+                Spacer(modifier = Modifier.height(MdSpacing.sm))
             }
             return@PullToRefreshBox
         } else if (list.loadState.refresh is LoadState.Error) {
@@ -133,52 +176,65 @@ fun TorrentList(
             ErrorContent(
                 message = "Failed to fetch data: ${error.error.localizedMessage}",
                 onRetry = { viewModel.triggerManualRefresh() },
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .padding(contentPadding)
+                    .consumeWindowInsets(contentPadding)
+                    .fillMaxSize()
             )
             return@PullToRefreshBox // Exit the composable early if there's an error (and not offline)
         }
 
-        LazyColumn(
-            state = lazyListState,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+        Box(
             modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
         ) {
-            items(
-                list.itemCount,
-                key = list.itemKey { it.id },
-            ) { idx ->
-                list[idx]?.let {
-                    TorrentItem(
-                        modifier = Modifier.animateItem(),
-                        torrent = it,
-                        onToggleStatus = { viewModel.toggleTorrentStatus(it) }
-                    )
+            LazyColumn(
+                state = lazyListState,
+                contentPadding = contentPadding,
+                verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
+                modifier = Modifier
+                    .widthIn(max = 1040.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = MdSpacing.xs)
+                    .consumeWindowInsets(contentPadding),
+            ) {
+                items(
+                    list.itemCount,
+                    key = list.itemKey { it.id },
+                ) { idx ->
+                    list[idx]?.let {
+                        TorrentItem(
+                            modifier = Modifier.animateItem(),
+                            torrent = it,
+                            index = idx,
+                            count = list.itemCount,
+                            onToggleStatus = { viewModel.toggleTorrentStatus(it) }
+                        )
+                    }
                 }
 
-                HorizontalDivider()
-            }
-
-            if (list.loadState.append == LoadState.Loading) {
-                item {
-                    Spacer(modifier = Modifier.height(5.dp))
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentWidth(Alignment.CenterHorizontally)
-                    )
+                if (list.loadState.append == LoadState.Loading) {
+                    item {
+                        LoadingIndicator(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = MdSpacing.xs)
+                                .wrapContentWidth(Alignment.CenterHorizontally)
+                        )
+                    }
                 }
-            }
 
-            if (list.loadState.append is LoadState.Error) {
-                item {
-                    val error = list.loadState.append as LoadState.Error
-                    ErrorContent(
-                        message = "Failed to load more: ${error.error.localizedMessage}",
-                        onRetry = { list.retry() }, // PagingData.retry() for append errors
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentWidth(Alignment.CenterHorizontally)
-                    )
+                if (list.loadState.append is LoadState.Error) {
+                    item {
+                        val error = list.loadState.append as LoadState.Error
+                        ErrorContent(
+                            message = "Failed to load more: ${error.error.localizedMessage}",
+                            onRetry = { list.retry() }, // PagingData.retry() for append errors
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentWidth(Alignment.CenterHorizontally)
+                        )
+                    }
                 }
             }
         }

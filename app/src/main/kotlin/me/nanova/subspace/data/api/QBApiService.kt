@@ -1,8 +1,8 @@
 package me.nanova.subspace.data.api
 
 import kotlinx.coroutines.flow.Flow
+import me.nanova.subspace.data.api.dto.TorrentDto
 import me.nanova.subspace.domain.model.QBCategories
-import me.nanova.subspace.domain.model.Torrent
 import okhttp3.ResponseBody
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
@@ -19,7 +19,7 @@ interface QBApiService {
     suspend fun apiVersion(): String
 
     @GET("api/v2/torrents/info")
-    suspend fun list(@QueryMap params: Map<String, String?>): List<Torrent>
+    suspend fun list(@QueryMap params: Map<String, String?>): List<TorrentDto>
 
     @GET("api/v2/torrents/categories")
     suspend fun categories(): QBCategories?
@@ -28,7 +28,7 @@ interface QBApiService {
     suspend fun tags(): List<String>
 
     @GET("api/v2/torrents/info")
-    fun flow(@QueryMap params: Map<String, String?>): Flow<List<Torrent>>
+    fun flow(@QueryMap params: Map<String, String?>): Flow<List<TorrentDto>>
 
     @FormUrlEncoded
     @POST("api/v2/torrents/start")

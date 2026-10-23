@@ -1,24 +1,26 @@
 package me.nanova.subspace.data.db
 
 import androidx.paging.PagingSource
-import androidx.room.Dao
-import androidx.room.Query
-import androidx.room.RawQuery
-import androidx.room.Upsert
-import androidx.sqlite.db.SimpleSQLiteQuery
-import androidx.sqlite.db.SupportSQLiteQuery
+import androidx.room3.Dao
+import androidx.room3.DaoReturnTypeConverters
+import androidx.room3.Query
+import androidx.room3.RawQuery
+import androidx.room3.RoomRawQuery
+import androidx.room3.Upsert
+import androidx.room3.paging.PagingSourceDaoReturnTypeConverter
 import kotlinx.coroutines.flow.Flow
+import me.nanova.subspace.data.db.entity.TorrentEntity
 import me.nanova.subspace.domain.model.QBFilterState
 import me.nanova.subspace.domain.model.QBListParams
-import me.nanova.subspace.domain.model.TorrentEntity
 
 @Dao
+@DaoReturnTypeConverters(PagingSourceDaoReturnTypeConverter::class)
 interface TorrentDao {
     @Query("SELECT * FROM torrent WHERE account_id = :accountId")
     fun getAll(accountId: Long): Flow<List<TorrentEntity>>
 
     @RawQuery(observedEntities = [TorrentEntity::class])
-    fun pagingSource(query: SupportSQLiteQuery): PagingSource<Int, TorrentEntity>
+    fun pagingSource(query: RoomRawQuery): PagingSource<Int, TorrentEntity>
 
     @Upsert
     suspend fun insertAll(torrents: List<TorrentEntity>)
@@ -30,7 +32,7 @@ interface TorrentDao {
         fun buildQuery(
             accountId: Long,
             filter: QBListParams,
-        ): SupportSQLiteQuery {
+        ): RoomRawQuery {
             // TODO: temp fix PagingSource<Int, TorrentEntity>
             var query =
                 "SELECT *, added_on AS addedOn, last_updated AS lastUpdated FROM torrent WHERE account_id = $accountId"
@@ -53,7 +55,7 @@ interface TorrentDao {
             if (!filter.sort.isNullOrBlank()) {
                 query += " ORDER BY ${filter.sort} ${if (filter.reverse) "DESC" else "ASC"}"
             }
-            return SimpleSQLiteQuery(query)
+            return RoomRawQuery(query)
         }
 
     }

@@ -14,11 +14,11 @@ import me.nanova.subspace.data.api.QBAuthService
 import me.nanova.subspace.data.db.AppDatabase
 import me.nanova.subspace.data.db.TorrentDao
 import me.nanova.subspace.data.db.TorrentDao.Companion.buildQuery
+import me.nanova.subspace.data.db.entity.toDomain
 import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.domain.model.QBCategories
 import me.nanova.subspace.domain.model.QBListParams
 import me.nanova.subspace.domain.model.Torrent
-import me.nanova.subspace.domain.model.toModel
 import me.nanova.subspace.domain.repo.TorrentRepo
 import javax.inject.Inject
 import javax.inject.Provider
@@ -77,7 +77,7 @@ class TorrentRepoImpl @Inject constructor(
                 torrentDao.pagingSource(buildQuery(account.id, filter))
             }
         ).flow.map { pagingData ->
-            pagingData.map { entity -> entity.toModel() }
+            pagingData.map { entity -> entity.toDomain() }
         }
     }
 

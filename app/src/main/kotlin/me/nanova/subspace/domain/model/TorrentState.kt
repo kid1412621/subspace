@@ -1,17 +1,5 @@
 package me.nanova.subspace.domain.model
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DownloadDone
-import androidx.compose.material.icons.filled.Downloading
-import androidx.compose.material.icons.filled.ErrorOutline
-import androidx.compose.material.icons.filled.HourglassTop
-import androidx.compose.material.icons.filled.MoreTime
-import androidx.compose.material.icons.filled.PauseCircleOutline
-import androidx.compose.material.icons.filled.QuestionMark
-import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.Upload
-import androidx.compose.ui.graphics.vector.ImageVector
-
 /**
  * [official wiki](https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-5.0)#:~:text=Possible%20values%20of%20state)
  *
@@ -84,20 +72,6 @@ enum class QBState {
 
     // Unknown status
     unknown;
-
-    fun toIcon(): ImageVector {
-        return when (this) {
-            pausedUP, stoppedUP -> Icons.Filled.DownloadDone
-            pausedDL -> Icons.Filled.PauseCircleOutline
-            stoppedDL -> Icons.Filled.Stop
-            uploading, forcedUP -> Icons.Filled.Upload
-            downloading, forcedDL, metaDL, forcedMetaDL -> Icons.Filled.Downloading
-            stalledDL, stalledUP -> Icons.Filled.HourglassTop
-            queuedDL, queuedUP -> Icons.Filled.MoreTime
-            error -> Icons.Filled.ErrorOutline
-            else -> Icons.Filled.QuestionMark
-        }
-    }
 
     companion object {
         fun isStopped(stateString: String): Boolean =

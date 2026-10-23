@@ -4,13 +4,13 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
-import androidx.room.withTransaction
+import androidx.room3.withWriteTransaction
 import me.nanova.subspace.data.api.QBApiService
+import me.nanova.subspace.data.api.dto.toEntity
 import me.nanova.subspace.data.db.AppDatabase
+import me.nanova.subspace.data.db.entity.RemoteKeys
+import me.nanova.subspace.data.db.entity.TorrentEntity
 import me.nanova.subspace.domain.model.QBListParams
-import me.nanova.subspace.domain.model.RemoteKeys
-import me.nanova.subspace.domain.model.TorrentEntity
-import me.nanova.subspace.domain.model.toEntity
 import java.io.IOException
 
 @OptIn(ExperimentalPagingApi::class)
@@ -91,7 +91,7 @@ class TorrentRemoteMediator(
             val endOfPaginationReached = torrents.size < limit
             val now = System.currentTimeMillis()
 
-            database.withTransaction {
+            database.withWriteTransaction {
                 if (loadType == LoadType.REFRESH) {
                     // Clear existing data and remote keys on refresh
                     remoteKeyDao.clearRemoteKeys(currentAccountId)

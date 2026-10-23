@@ -24,13 +24,13 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import me.nanova.subspace.data.NetworkStatusMonitor
 import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.domain.model.QBListParams
-import me.nanova.subspace.domain.model.QBState
 import me.nanova.subspace.domain.model.Torrent
 import me.nanova.subspace.domain.repo.AccountRepo
+import me.nanova.subspace.domain.repo.NetworkMonitor
 import me.nanova.subspace.domain.repo.TorrentRepo
+import me.nanova.subspace.domain.usecase.ToggleTorrentStatusUseCase
 import javax.inject.Inject
 
 
@@ -44,7 +44,8 @@ data class HomeUiState(
 class HomeViewModel @Inject constructor(
     private val torrentRepo: TorrentRepo,
     private val accountRepo: AccountRepo,
-    private val networkStatusMonitor: NetworkStatusMonitor // Inject NetworkStatusMonitor
+    private val toggleTorrentStatusUseCase: ToggleTorrentStatusUseCase,
+    networkMonitor: NetworkMonitor
 ) : ViewModel() {
 
     private val _homeUiState = MutableStateFlow(HomeUiState())
@@ -58,8 +59,8 @@ class HomeViewModel @Inject constructor(
     private val _refreshInterval = MutableStateFlow(2000L) // Default 2 seconds
     val refreshInterval: StateFlow<Long> = _refreshInterval.asStateFlow() // Expose to UI if needed
 
-    // Network status flow is now provided by NetworkStatusMonitor
-    val isOnline: StateFlow<Boolean> = networkStatusMonitor.networkStatus.stateIn(
+    // Network status flow is provided by NetworkMonitor
+    val isOnline: StateFlow<Boolean> = networkMonitor.networkStatus.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000), // Keep the flow active for 5s after the last collector disappears
         initialValue = true // Assume online initially until status is known
@@ -155,11 +156,7 @@ class HomeViewModel @Inject constructor(
      */
     fun toggleTorrentStatus(torrent: Torrent) {
         viewModelScope.launch {
-            if (QBState.isStopped(torrent.state)) {
-                torrentRepo.start(listOf(torrent.hash))
-            } else {
-                torrentRepo.stop(listOf(torrent.hash))
-            }
+            toggleTorrentStatusUseCase(torrent)
             _manualRefreshTrigger.emit(Unit)
         }
     }

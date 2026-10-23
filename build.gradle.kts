@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.android.application) apply false
     // https://plugins.gradle.org/plugin/org.jetbrains.kotlin.plugin.compose
     alias(libs.plugins.kotlin.compose) apply false
+    alias(libs.plugins.kotlin.serialization) apply false
     // https://github.com/google/ksp/releases
     alias(libs.plugins.ksp) apply false
     // https://github.com/google/dagger/releases

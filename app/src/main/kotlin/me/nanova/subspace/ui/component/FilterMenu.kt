@@ -20,7 +20,9 @@ import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -31,8 +33,9 @@ import androidx.compose.material3.MultiChoiceSegmentedButtonRow
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -45,6 +48,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import kotlinx.coroutines.launch
@@ -52,6 +56,8 @@ import me.nanova.subspace.domain.model.FilterState
 import me.nanova.subspace.domain.model.QBCategories
 import me.nanova.subspace.domain.model.QBCategory
 import me.nanova.subspace.domain.model.QBListParams
+import me.nanova.subspace.ui.theme.MdSpacing
+import me.nanova.subspace.ui.theme.Theme
 
 private enum class FilterType(val icon: ImageVector, val showCondition: (QBListParams) -> Boolean) {
     Status(Icons.Filled.QuestionMark, { it.filter != "all" }),
@@ -65,7 +71,7 @@ private data class QBFilters(
     var tag: String? = null,
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun FilterMenu(
     filter: QBListParams,
@@ -75,7 +81,7 @@ fun FilterMenu(
     onFilter: (QBListParams) -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
     val tmp = QBFilters(filter = filter.filter, tag = filter.tag, category = filter.category)
     val checkedList = remember {
         mutableStateListOf(
@@ -93,40 +99,43 @@ fun FilterMenu(
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceAround,
+            verticalArrangement = Arrangement.spacedBy(MdSpacing.xs),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(15.dp)
-                .animateContentSize()
+                .padding(horizontal = MdSpacing.md, vertical = MdSpacing.sm)
+                .animateContentSize(
+                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntSize>()
+                )
         ) {
-            MultiChoiceSegmentedButtonRow {
-                FilterType.entries.forEachIndexed { index, filter ->
+            MultiChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                FilterType.entries.forEachIndexed { index, filterType ->
+                    val isChecked = filterType in checkedList
                     SegmentedButton(
                         shape = SegmentedButtonDefaults.itemShape(
                             index = index,
                             count = FilterType.entries.size
                         ),
-                        colors = if (filter in checkedList)
-                            SegmentedButtonDefaults.colors(MaterialTheme.colorScheme.primaryContainer)
-                        else
-                            SegmentedButtonDefaults.colors(),
+                        colors = SegmentedButtonDefaults.colors(),
                         icon = {
-                            SegmentedButtonDefaults.Icon(active = filter in checkedList) {
+                            SegmentedButtonDefaults.Icon(active = isChecked) {
                                 Icon(
-                                    imageVector = filter.icon,
+                                    imageVector = filterType.icon,
                                     contentDescription = null,
                                     modifier = Modifier.size(SegmentedButtonDefaults.IconSize)
                                 )
                             }
                         },
                         onCheckedChange = {
-                            if (!checkedList.remove(filter)) {
-                                checkedList.add(filter)
+                            if (!checkedList.remove(filterType)) {
+                                checkedList.add(filterType)
                             }
                         },
-                        checked = filter in checkedList
+                        checked = isChecked
                     ) {
-                        Text(filter.name)
+                        Text(
+                            text = filterType.name,
+                            style = if (isChecked) MaterialTheme.typography.labelLargeEmphasized else MaterialTheme.typography.labelLarge
+                        )
                     }
                 }
             }
@@ -158,14 +167,21 @@ fun FilterMenu(
                             }
                         }
                 },
-                modifier = Modifier.padding(top = 20.dp)
+                shapes = ButtonDefaults.shapes(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = MdSpacing.sm)
             ) {
-                Text("Confirm")
+                Text(
+                    text = "Confirm",
+                    style = MaterialTheme.typography.labelLargeEmphasized
+                )
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun StatusFilterMenu(
     initial: String,
@@ -174,42 +190,46 @@ private fun StatusFilterMenu(
     val radioOptions = FilterState.entries.map { it.toString() }
     val (selectedOption, onOptionSelected) = remember { mutableStateOf(initial) }
 
-    HorizontalDivider(Modifier.padding(vertical = 5.dp))
+    HorizontalDivider(
+        modifier = Modifier.padding(vertical = MdSpacing.xxs),
+        color = MaterialTheme.colorScheme.outlineVariant
+    )
     Text(
         "Status",
-        fontSize = MaterialTheme.typography.labelSmall.fontSize,
-        color = MaterialTheme.colorScheme.outline
+        style = MaterialTheme.typography.labelMediumEmphasized,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
     )
     Column(modifier = Modifier.selectableGroup()) {
         radioOptions.chunked(2).forEach { rowOptions ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(MdSpacing.sm)
             ) {
                 rowOptions.forEach { option ->
+                    val selected = option == selectedOption
                     Row(
                         modifier = Modifier
                             .weight(1f)
-                            .height(50.dp)
+                            .height(48.dp)
                             .selectable(
-                                selected = (option == selectedOption),
+                                selected = selected,
                                 onClick = {
                                     onOptionSelected(option)
                                     onUpdate(option)
                                 },
                                 role = Role.RadioButton
                             )
-                            .padding(horizontal = 8.dp),
+                            .padding(horizontal = MdSpacing.xs),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
-                            selected = (option == selectedOption),
+                            selected = selected,
                             onClick = null // for accessibility
                         )
                         Text(
                             text = option,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(start = 8.dp)
+                            style = if (selected) MaterialTheme.typography.bodyLargeEmphasized else MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(start = MdSpacing.xs)
                         )
                     }
                 }
@@ -223,19 +243,22 @@ private fun StatusFilterMenu(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun CategoryFilterMenu(
     initial: String?,
     categories: QBCategories,
     onUpdate: (String?) -> Unit = {}
 ) {
-    HorizontalDivider(Modifier.padding(vertical = 5.dp))
+    HorizontalDivider(
+        modifier = Modifier.padding(vertical = MdSpacing.xxs),
+        color = MaterialTheme.colorScheme.outlineVariant
+    )
     if (categories.isEmpty()) {
         Text(
             "No available category",
-            fontSize = MaterialTheme.typography.labelSmall.fontSize,
-            color = MaterialTheme.colorScheme.outline
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         return
     }
@@ -243,31 +266,36 @@ private fun CategoryFilterMenu(
     var selected by remember { mutableStateOf(initial) }
     Text(
         "Category",
-        fontSize = MaterialTheme.typography.labelSmall.fontSize,
-        color = MaterialTheme.colorScheme.outline
+        style = MaterialTheme.typography.labelMediumEmphasized,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
     )
     FlowRow(
         Modifier
-            .fillMaxWidth(1f)
+            .fillMaxWidth()
             .wrapContentHeight(align = Alignment.Top),
-        horizontalArrangement = Arrangement.Start,
+        horizontalArrangement = Arrangement.spacedBy(MdSpacing.xs),
     ) {
         categories.map { it.key }.fastForEach {
+            val isSelected = it == selected
             FilterChip(
-                selected = it == selected,
+                selected = isSelected,
                 onClick = {
-                    selected = if (it == selected) null else it
+                    selected = if (isSelected) null else it
                     onUpdate(selected)
                 },
-                label = { Text(it) },
-                modifier = Modifier
-                    .padding(horizontal = 5.dp)
-                    .align(alignment = Alignment.CenterVertically),
+                shapes = FilterChipDefaults.shapes(),
+                label = {
+                    Text(
+                        text = it,
+                        style = if (isSelected) MaterialTheme.typography.labelLargeEmphasized else MaterialTheme.typography.labelLarge
+                    )
+                },
+                modifier = Modifier.align(alignment = Alignment.CenterVertically),
                 leadingIcon = {
-                    if (it == selected)
+                    if (isSelected)
                         Icon(
                             imageVector = Icons.Filled.Done,
-                            contentDescription = it,
+                            contentDescription = null,
                             modifier = Modifier.size(FilterChipDefaults.IconSize)
                         )
                 }
@@ -276,19 +304,22 @@ private fun CategoryFilterMenu(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun TagFilterMenu(
     initial: String?,
     tags: List<String> = emptyList(),
     onUpdate: (String?) -> Unit = {}
 ) {
-    HorizontalDivider(Modifier.padding(vertical = 5.dp))
+    HorizontalDivider(
+        modifier = Modifier.padding(vertical = MdSpacing.xxs),
+        color = MaterialTheme.colorScheme.outlineVariant
+    )
     if (tags.isEmpty()) {
         Text(
             "No available tag",
-            fontSize = MaterialTheme.typography.labelSmall.fontSize,
-            color = MaterialTheme.colorScheme.outline
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         return
     }
@@ -296,31 +327,36 @@ private fun TagFilterMenu(
     var selected by remember { mutableStateOf(initial) }
     Text(
         "Tag",
-        fontSize = MaterialTheme.typography.labelSmall.fontSize,
-        color = MaterialTheme.colorScheme.outline
+        style = MaterialTheme.typography.labelMediumEmphasized,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
     )
     FlowRow(
         Modifier
-            .fillMaxWidth(1f)
+            .fillMaxWidth()
             .wrapContentHeight(align = Alignment.Top),
-        horizontalArrangement = Arrangement.Start,
+        horizontalArrangement = Arrangement.spacedBy(MdSpacing.xs),
     ) {
         tags.fastForEach {
+            val isSelected = it == selected
             FilterChip(
-                selected = it == selected,
+                selected = isSelected,
                 onClick = {
-                    selected = if (it == selected) null else it
+                    selected = if (isSelected) null else it
                     onUpdate(selected)
                 },
-                label = { Text(it) },
-                modifier = Modifier
-                    .padding(horizontal = 5.dp)
-                    .align(alignment = Alignment.CenterVertically),
+                shapes = FilterChipDefaults.shapes(),
+                label = {
+                    Text(
+                        text = it,
+                        style = if (isSelected) MaterialTheme.typography.labelLargeEmphasized else MaterialTheme.typography.labelLarge
+                    )
+                },
+                modifier = Modifier.align(alignment = Alignment.CenterVertically),
                 leadingIcon = {
-                    if (it == selected)
+                    if (isSelected)
                         Icon(
                             imageVector = Icons.Filled.Done,
-                            contentDescription = it,
+                            contentDescription = null,
                             modifier = Modifier.size(FilterChipDefaults.IconSize)
                         )
                 }
@@ -332,25 +368,37 @@ private fun TagFilterMenu(
 @Preview(showBackground = true)
 @Composable
 fun StatusFilterMenuPreview() {
-    StatusFilterMenu(
-        initial = "downloading",
-    )
+    Theme {
+        Column {
+            StatusFilterMenu(
+                initial = "downloading",
+            )
+        }
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun CategoryFilterMenuPreview() {
-    CategoryFilterMenu(
-        initial = "cat1",
-        categories = listOf(QBCategory("cat1"), QBCategory("cat2")).associateBy { it.name },
-    )
+    Theme {
+        Column {
+            CategoryFilterMenu(
+                initial = "cat1",
+                categories = listOf(QBCategory("cat1"), QBCategory("cat2")).associateBy { it.name },
+            )
+        }
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun TagFilterMenuPreview() {
-    TagFilterMenu(
-        initial = "tagA",
-        tags = listOf("tagA", "tagC")
-    )
+    Theme {
+        Column {
+            TagFilterMenu(
+                initial = "tagA",
+                tags = listOf("tagA", "tagC")
+            )
+        }
+    }
 }

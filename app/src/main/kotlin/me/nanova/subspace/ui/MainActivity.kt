@@ -5,112 +5,106 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.core.EaseIn
-import androidx.compose.animation.core.EaseOut
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
-import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.animation.togetherWith
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.core.view.WindowCompat
-import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
+import androidx.compose.ui.unit.IntOffset
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.ui.NavDisplay
 import dagger.hilt.android.AndroidEntryPoint
 import me.nanova.subspace.ui.page.AccountPage
 import me.nanova.subspace.ui.page.HomePage
 import me.nanova.subspace.ui.theme.Theme
 
+val LocalWindowWidthSizeClass = compositionLocalOf { WindowWidthSizeClass.Compact }
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        WindowCompat.setDecorFitsSystemWindows(window, false)
         enableEdgeToEdge()
+        window.isNavigationBarContrastEnforced = false
 
         setContent {
-            Theme {
-                AppContainer(
-                    Modifier.safeContentPadding()
-                )
+            val windowSizeClass = calculateWindowSizeClass(this)
+            CompositionLocalProvider(LocalWindowWidthSizeClass provides windowSizeClass.widthSizeClass) {
+                Theme {
+                    AppContainer()
+                }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AppContainer(
     modifier: Modifier = Modifier,
-    navController: NavHostController = rememberNavController(),
+    navigationState: NavigationState = rememberNavigationState(startRoute = HomeRoute),
 ) {
+    val navigator = remember(navigationState) { Navigator(navigationState) }
+    val spatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
+    val effectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
 
-    NavHost(
-        navController = navController,
-        startDestination = Routes.Home.name,
-//                    modifier = Modifier.padding(innerPadding)
-    ) {
-        composable(
-            route = Routes.AccountCreation.name,
-            enterTransition = {
-                fadeIn(
-                    animationSpec = tween(
-                        300, easing = LinearEasing
-                    )
-                ) + slideIntoContainer(
-                    animationSpec = tween(300, easing = EaseIn),
-                    towards = AnimatedContentTransitionScope.SlideDirection.Start
-                )
-            },
-            exitTransition = {
-                slideOutOfContainer(
-                    animationSpec = tween(300, easing = EaseOut),
-                    towards = AnimatedContentTransitionScope.SlideDirection.End
-                )
-            }
-        ) {
-            AccountPage(navController = navController)
-        }
-        composable(
-            route = "${Routes.AccountDetails.name}/{accountId}",
-            arguments = listOf(
-                navArgument("accountId") { type = NavType.LongType }
-            ),
-            enterTransition = {
-                fadeIn(
-                    animationSpec = tween(
-                        300, easing = LinearEasing
-                    )
-                ) + slideIntoContainer(
-                    animationSpec = tween(300, easing = EaseIn),
-                    towards = AnimatedContentTransitionScope.SlideDirection.Start
-                )
-            },
-            exitTransition = {
-                slideOutOfContainer(
-                    animationSpec = tween(300, easing = EaseOut),
-                    towards = AnimatedContentTransitionScope.SlideDirection.End
-                )
-            }
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getLong("accountId")
-            AccountPage(
-                id = id,
-                navController = navController
+    val entryProvider = entryProvider {
+        entry<HomeRoute> {
+            HomePage(
+                navigator = navigator
             )
         }
-        composable(route = Routes.Home.name) {
-            HomePage(
-                navController = navController
+        entry<AccountCreationRoute> {
+            AccountPage(
+                navigator = navigator
+            )
+        }
+        entry<AccountDetailsRoute> { key ->
+            AccountPage(
+                id = key.accountId,
+                navigator = navigator
             )
         }
     }
+
+    NavDisplay(
+        entries = navigationState.toEntries(entryProvider),
+        onBack = { navigator.goBack() },
+        modifier = modifier,
+        transitionSpec = {
+            (fadeIn(
+                animationSpec = effectsSpec
+            ) + slideIntoContainer(
+                animationSpec = spatialSpec,
+                towards = AnimatedContentTransitionScope.SlideDirection.Start
+            )) togetherWith ExitTransition.KeepUntilTransitionsFinished
+        },
+        popTransitionSpec = {
+            EnterTransition.None togetherWith slideOutOfContainer(
+                animationSpec = spatialSpec,
+                towards = AnimatedContentTransitionScope.SlideDirection.End
+            )
+        },
+        predictivePopTransitionSpec = {
+            EnterTransition.None togetherWith slideOutOfContainer(
+                animationSpec = spatialSpec,
+                towards = AnimatedContentTransitionScope.SlideDirection.End
+            )
+        }
+    )
 }
 
 @Preview(showBackground = true)

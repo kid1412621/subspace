@@ -10,14 +10,15 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import me.nanova.subspace.domain.repo.NetworkMonitor
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class NetworkStatusMonitor @Inject constructor(
     @ApplicationContext private val context: Context
-) {
-    val networkStatus: Flow<Boolean> = callbackFlow {
+) : NetworkMonitor {
+    override val networkStatus: Flow<Boolean> = callbackFlow {
         val connectivityManager =
             context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val activeNetworks = mutableSetOf<Network>()

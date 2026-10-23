@@ -1,16 +1,27 @@
 package me.nanova.subspace.ui.page
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.filled.Abc
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Dns
@@ -18,15 +29,22 @@ import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -45,21 +63,25 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.domain.model.AccountType
-import me.nanova.subspace.ui.Routes
+import me.nanova.subspace.ui.Navigator
 import me.nanova.subspace.ui.component.ValidTextField
+import me.nanova.subspace.ui.mapper.toIcon
+import me.nanova.subspace.ui.theme.MdSpacing
+import me.nanova.subspace.ui.theme.Theme
 import me.nanova.subspace.ui.vm.AccountViewModel
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AccountPage(
     id: Long? = null,
     viewModel: AccountViewModel = hiltViewModel(),
-    navController: NavHostController,
+    navigator: Navigator,
 ) {
     val snackBarHostState = remember { SnackbarHostState() }
     val snackBarMessage by viewModel.snackBarMessage.collectAsState()
@@ -82,17 +104,45 @@ fun AccountPage(
 
     LaunchedEffect(added) {
         if (added) {
-            navController.navigate(Routes.Home.name)
+            navigator.goBack()
         }
     }
 
     Scaffold(
+        topBar = {
+            TopAppBar(
+                colors = topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                ),
+                navigationIcon = {
+                    IconButton(
+                        onClick = { navigator.goBack() },
+                        shapes = IconButtonDefaults.shapes(),
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
+                title = {
+                    Text(
+                        text = if (id == null) "Add Server" else "Edit Server",
+                        style = MaterialTheme.typography.titleLargeEmphasized
+                    )
+                }
+            )
+        },
         snackbarHost = {
             SnackbarHost(hostState = snackBarHostState)
         },
     ) { contentPadding ->
         AccountForm(
-            modifier = Modifier.padding(contentPadding),
+            modifier = Modifier
+                .padding(contentPadding)
+                .consumeWindowInsets(contentPadding),
             loading,
             account,
             onUpdateAccount = { viewModel.updateAccount(it) },
@@ -100,6 +150,7 @@ fun AccountPage(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun AccountForm(
     modifier: Modifier = Modifier,
@@ -115,79 +166,121 @@ private fun AccountForm(
     var passwordHidden by rememberSaveable { mutableStateOf(true) }
 
     Surface(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxSize(),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 30.dp),
-            verticalArrangement = Arrangement.spacedBy(26.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
         ) {
-            LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 55.dp),
-                horizontalArrangement = Arrangement.spacedBy(15.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp),
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth(fraction = 0.8f)
-                    .padding(bottom = 10.dp)
+                    .widthIn(max = 640.dp)
+                    .fillMaxWidth()
+                    .imePadding()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = MdSpacing.md, vertical = MdSpacing.sm),
+                verticalArrangement = Arrangement.spacedBy(MdSpacing.sm),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                items(AccountType.entries.toTypedArray()) {
-                    Image(
-                        modifier = Modifier
-                            .size(50.dp)
-                            .clickable { onUpdateAccount(account.copy(type = it)) },
-                        alignment = Alignment.Center,
-                        painter = painterResource(id = it.toIcon()),
-                        contentDescription = it.name,
-                        colorFilter = if (it != account.type) ColorFilter
-                            .colorMatrix(ColorMatrix().apply { setToSaturation(0f) })
-                        else null
-                    )
-                }
-            }
-
-            ValidTextField(
-                label = "Name",
-                value = account.name,
-                leadingIcon = { Icon(Icons.Filled.Abc, contentDescription = "name") },
-                placeholder = "Server Name",
-                onChanged = { onUpdateAccount(account.copy(name = it)) },
-                onValidation = { validations["name"] = it }
-            )
-            ValidTextField(
-                label = "host",
-                value = account.url,
-                placeholder = "http(s)://host:port/path",
-                keyboardType = KeyboardType.Uri,
-                leadingIcon = { Icon(Icons.Filled.Dns, contentDescription = "host") },
-                onChanged = { onUpdateAccount(account.copy(url = it)) },
-                validations = mapOf(
-                    { it: String ->
-                        """\bhttps?://\S+""".toRegex(RegexOption.IGNORE_CASE).matches(it)
+                Text(
+                    text = "Server Type",
+                    style = MaterialTheme.typography.labelLargeEmphasized,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 96.dp),
+                    horizontalArrangement = Arrangement.spacedBy(MdSpacing.xs),
+                    verticalArrangement = Arrangement.spacedBy(MdSpacing.xs),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 220.dp)
+                ) {
+                    items(AccountType.entries.toTypedArray()) { type ->
+                        val selected = type == account.type
+                        Surface(
+                            selected = selected,
+                            onClick = { onUpdateAccount(account.copy(type = type)) },
+                            shape = if (selected) MaterialTheme.shapes.largeIncreased else MaterialTheme.shapes.medium,
+                            color = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
+                            border = if (selected) BorderStroke(
+                                MdSpacing.micro,
+                                MaterialTheme.colorScheme.primary
+                            ) else null,
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(MdSpacing.xs),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(MdSpacing.xxs)
+                            ) {
+                                Image(
+                                    modifier = Modifier.size(40.dp),
+                                    alignment = Alignment.Center,
+                                    painter = painterResource(id = type.toIcon()),
+                                    contentDescription = type.name,
+                                    colorFilter = if (!selected) ColorFilter
+                                        .colorMatrix(ColorMatrix().apply { setToSaturation(0f) })
+                                    else null
+                                )
+                                Text(
+                                    text = type.name.lowercase()
+                                        .replaceFirstChar { it.uppercase() },
+                                    style = if (selected) MaterialTheme.typography.labelSmallEmphasized else MaterialTheme.typography.labelSmall,
+                                    color = if (selected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
                     }
-                            to "URL should start with http:// or https://"
-                ),
-                onValidation = { validations["host"] = it }
-            )
-            ValidTextField(
-                label = "user",
-                value = account.user,
-                placeholder = "Server account username",
-                leadingIcon = { Icon(Icons.Filled.AccountCircle, contentDescription = "user") },
-                onChanged = { onUpdateAccount(account.copy(user = it)) },
-                onValidation = { validations["user"] = it }
-            )
-            ValidTextField(
-                label = "password",
-                value = account.pass,
-                onChanged = { onUpdateAccount(account.copy(pass = it)) },
-                placeholder = "Server account password",
-                leadingIcon = { Icon(Icons.Filled.Password, contentDescription = "password") },
+                }
+
+                Spacer(modifier = Modifier.height(MdSpacing.xxs))
+
+                ValidTextField(
+                    label = "Name",
+                    value = account.name,
+                    leadingIcon = { Icon(Icons.Filled.Abc, contentDescription = null) },
+                    placeholder = "Server Name",
+                    onChanged = { onUpdateAccount(account.copy(name = it)) },
+                    onValidation = { validations["name"] = it }
+                )
+                ValidTextField(
+                    label = "Host",
+                    value = account.url,
+                    placeholder = "http(s)://host:port/path",
+                    keyboardType = KeyboardType.Uri,
+                    leadingIcon = { Icon(Icons.Filled.Dns, contentDescription = null) },
+                    onChanged = { onUpdateAccount(account.copy(url = it)) },
+                    validations = mapOf(
+                        { it: String ->
+                            """\bhttps?://\S+""".toRegex(RegexOption.IGNORE_CASE).matches(it)
+                        }
+                                to "URL should start with http:// or https://"
+                    ),
+                    onValidation = { validations["host"] = it }
+                )
+                ValidTextField(
+                    label = "User",
+                    value = account.user,
+                    placeholder = "Server account username",
+                    leadingIcon = { Icon(Icons.Filled.AccountCircle, contentDescription = null) },
+                    onChanged = { onUpdateAccount(account.copy(user = it)) },
+                    onValidation = { validations["user"] = it }
+                )
+                ValidTextField(
+                    label = "Password",
+                    value = account.pass,
+                    onChanged = { onUpdateAccount(account.copy(pass = it)) },
+                    placeholder = "Server account password",
+                    leadingIcon = { Icon(Icons.Filled.Password, contentDescription = null) },
                 last = true,
                 keyboardType = KeyboardType.Password,
                 trailingIcon = {
-                    IconButton(onClick = { passwordHidden = !passwordHidden }) {
+                    IconButton(
+                        onClick = { passwordHidden = !passwordHidden },
+                        shapes = IconButtonDefaults.shapes(),
+                    ) {
                         Icon(
                             imageVector = if (passwordHidden) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
                             contentDescription = if (passwordHidden) "Show password" else "Hide password"
@@ -198,17 +291,25 @@ private fun AccountForm(
                 onValidation = { validations["pass"] = it }
             )
 
-            Button(
+                Spacer(modifier = Modifier.height(MdSpacing.xs))
+
+                Button(
                 enabled = !loading && validations.isNotEmpty() && validations.values.all { it },
+                    shapes = ButtonDefaults.shapes(),
+                    modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     focusManager.clearFocus()
                     onSubmitAccount(account)
                 }
             ) {
                 if (loading) {
-                    CircularProgressIndicator(modifier = Modifier.size(16.dp))
+                    LoadingIndicator(modifier = Modifier.size(20.dp))
                 } else {
-                    Text("Submit")
+                    Text(
+                        text = "Submit",
+                        style = MaterialTheme.typography.labelLargeEmphasized
+                    )
+                }
                 }
             }
         }
@@ -217,7 +318,9 @@ private fun AccountForm(
 
 
 @Composable
-@Preview
+@Preview(showBackground = true)
 fun NewAccountFormPrev() {
-    AccountForm()
+    Theme {
+        AccountForm()
+    }
 }

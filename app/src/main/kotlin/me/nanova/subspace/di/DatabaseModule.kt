@@ -1,7 +1,8 @@
 package me.nanova.subspace.di
 
 import android.content.Context
-import androidx.room.Room
+import androidx.room3.Room
+import androidx.sqlite.driver.AndroidSQLiteDriver
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -25,7 +26,8 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext appContext: Context): AppDatabase {
         return Room
-            .databaseBuilder(appContext, AppDatabase::class.java, DATABASE_NAME)
+            .databaseBuilder<AppDatabase>(appContext, DATABASE_NAME)
+            .setDriver(AndroidSQLiteDriver())
             .addMigrations(MIGRATION_1_2)
             .addMigrations(MIGRATION_2_3)
             .addMigrations(MIGRATION_3_4)

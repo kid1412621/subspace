@@ -3,8 +3,9 @@ package me.nanova.subspace.ui.component
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -74,8 +75,8 @@ fun ValidTextField(
         onValidation(isValid)
     }
 
-    // Render the TextField
-    TextField(
+    // Render the OutlinedTextField
+    OutlinedTextField(
         value = value,
         onValueChange = { newValue ->
             onChanged(newValue) // Update parent state
@@ -87,6 +88,8 @@ fun ValidTextField(
         leadingIcon = leadingIcon,
         trailingIcon = trailingIcon,
         visualTransformation = visualTransformation,
+        singleLine = true,
+        shape = MaterialTheme.shapes.small,
         supportingText = { if (errorMsg != null) Text(errorMsg!!) }, // Display error message
         keyboardOptions = KeyboardOptions(
             keyboardType = keyboardType,
@@ -103,7 +106,7 @@ fun ValidTextField(
         ),
         isError = errorMsg != null, // Show error state
         modifier = modifier
-            .fillMaxWidth(fraction = 0.8f)
+            .fillMaxWidth()
             .onPreviewKeyEvent { keyEvent ->
                 // Handle Tab key press for focus navigation
                 if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.Tab) {
