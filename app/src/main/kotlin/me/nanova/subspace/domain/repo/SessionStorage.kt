@@ -2,27 +2,21 @@ package me.nanova.subspace.domain.repo
 
 import kotlinx.coroutines.flow.Flow
 
+data class QBSession(val cookie: String, val savedAtMillis: Long)
+
 interface SessionStorage {
     val activeAccountId: Flow<Long?>
 
-    val qbCookie: Flow<String?>
-
-    val qbCookieTime: Flow<Long?>
+    suspend fun getQBSession(accountId: Long): QBSession?
 
     /**
      * Sets the currently active account ID. Pass null to clear the active account.
      */
     suspend fun setActiveAccountId(accountId: Long?)
 
-    /**
-     * Saves the QB Cookie for a specific account ID.
-     */
-    suspend fun saveQBCookie(accountId: Long, cookie: String)
+    suspend fun saveQBSession(accountId: Long, session: QBSession)
 
-    /**
-     * Updates the QB Cookie timestamp for a specific account ID to the current time.
-     */
-    suspend fun updateQBCookieTime(accountId: Long)
+    suspend fun invalidateQBSession(accountId: Long, rejected: QBSession)
 
     /**
      * Clears all stored data for a specific account ID (cookie and timestamp).

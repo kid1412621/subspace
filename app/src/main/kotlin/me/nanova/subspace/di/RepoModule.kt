@@ -7,8 +7,10 @@ import dagger.hilt.components.SingletonComponent
 import me.nanova.subspace.data.AccountRepoImpl
 import me.nanova.subspace.data.NetworkStatusMonitor
 import me.nanova.subspace.data.TorrentRepoImpl
+import me.nanova.subspace.data.storage.SettingsRepoImpl
 import me.nanova.subspace.domain.repo.AccountRepo
 import me.nanova.subspace.domain.repo.NetworkMonitor
+import me.nanova.subspace.domain.repo.SettingsRepo
 import me.nanova.subspace.domain.repo.TorrentRepo
 import javax.inject.Singleton
 
@@ -33,5 +35,11 @@ abstract class RepoModule {
     abstract fun bindNetworkMonitor(
         impl: NetworkStatusMonitor
     ): NetworkMonitor
+
+    @Binds
+    @Singleton
+    abstract fun bindSettingsRepo(
+        impl: SettingsRepoImpl
+    ): SettingsRepo
 
 }

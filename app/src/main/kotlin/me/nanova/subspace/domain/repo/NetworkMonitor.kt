@@ -4,4 +4,5 @@ import kotlinx.coroutines.flow.Flow
 
 interface NetworkMonitor {
     val networkStatus: Flow<Boolean>
+    val isUnmeteredWifi: Flow<Boolean>
 }

@@ -9,11 +9,10 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import me.nanova.subspace.domain.repo.QBSession
 import me.nanova.subspace.domain.repo.SessionStorage
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -44,38 +43,14 @@ class SessionStorageImpl @Inject constructor(@ApplicationContext private val con
             preferences[ACTIVE_ACCOUNT_ID_KEY]
         }
 
-    /**
-     * Flow emitting the QB Cookie for the *currently active* account.
-     * Emits null if no account is active or if the active account has no cookie.
-     */
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override val qbCookie: Flow<String?> = activeAccountId.flatMapLatest { accountId ->
-        if (accountId == null) {
-            Log.d(TAG, "No active account ID, qbCookie emitting null.")
-            flowOf(null) // No active account, so no specific cookie
-        } else {
-            Log.d(TAG, "Active account ID changed to $accountId, observing its cookie.")
-            context.dataStore.data.map { preferences ->
-                preferences[qbCookiePreferenceKey(accountId)]
-            }
-        }
-    }
+    override suspend fun getQBSession(accountId: Long): QBSession? =
+        context.dataStore.data.first().sessionFor(accountId)
 
-    /**
-     * Flow emitting the QB Cookie timestamp for the *currently active* account.
-     * Emits null if no account is active or if the active account has no cookie timestamp.
-     */
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override val qbCookieTime: Flow<Long?> = activeAccountId.flatMapLatest { accountId ->
-        if (accountId == null) {
-            Log.d(TAG, "No active account ID, qbCookieTime emitting null.")
-            flowOf(null) // No active account, so no specific timestamp
-        } else {
-            Log.d(TAG, "Active account ID changed to $accountId, observing its cookie time.")
-            context.dataStore.data.map { preferences ->
-                preferences[qbCookieTimePreferenceKey(accountId)]
-            }
-        }
+    private fun Preferences.sessionFor(accountId: Long): QBSession? {
+        val cookie = this[qbCookiePreferenceKey(accountId)]?.takeIf { it.isNotBlank() }
+            ?: return null
+        val timestamp = this[qbCookieTimePreferenceKey(accountId)] ?: return null
+        return QBSession(cookie, timestamp)
     }
 
     /**
@@ -93,25 +68,20 @@ class SessionStorageImpl @Inject constructor(@ApplicationContext private val con
         }
     }
 
-    /**
-     * Saves the QB Cookie for a specific account ID.
-     */
-    override suspend fun saveQBCookie(accountId: Long, cookie: String) {
+    override suspend fun saveQBSession(accountId: Long, session: QBSession) {
         context.dataStore.edit { preferences ->
-            preferences[qbCookiePreferenceKey(accountId)] = cookie
+            preferences[qbCookiePreferenceKey(accountId)] = session.cookie
+            preferences[qbCookieTimePreferenceKey(accountId)] = session.savedAtMillis
         }
-        Log.i(TAG, "Saved cookie for account $accountId: ${cookie.take(10)}...")
     }
 
-    /**
-     * Updates the QB Cookie timestamp for a specific account ID to the current time.
-     */
-    override suspend fun updateQBCookieTime(accountId: Long) {
-        val currentTime = System.currentTimeMillis()
+    override suspend fun invalidateQBSession(accountId: Long, rejected: QBSession) {
         context.dataStore.edit { preferences ->
-            preferences[qbCookieTimePreferenceKey(accountId)] = currentTime
+            if (preferences.sessionFor(accountId) == rejected) {
+                preferences.remove(qbCookiePreferenceKey(accountId))
+                preferences.remove(qbCookieTimePreferenceKey(accountId))
+            }
         }
-        Log.i(TAG, "Updated cookie time for account $accountId to $currentTime.")
     }
 
     /**

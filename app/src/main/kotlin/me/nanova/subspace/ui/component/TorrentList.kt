@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -46,15 +45,20 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import me.nanova.subspace.ui.theme.MdSpacing
 import me.nanova.subspace.ui.vm.HomeViewModel
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ErrorContent(
     message: String,
     onRetry: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isRetrying: Boolean = false,
 ) {
     Column(
         modifier = modifier.padding(MdSpacing.md),
@@ -70,16 +74,23 @@ fun ErrorContent(
         Spacer(modifier = Modifier.height(MdSpacing.sm))
         FilledTonalButton(
             onClick = onRetry,
+            enabled = !isRetrying,
             shapes = ButtonDefaults.shapes(),
         ) {
-            Icon(
-                imageVector = Icons.Filled.Refresh,
-                contentDescription = "Retry",
-                modifier = Modifier.size(ButtonDefaults.IconSize)
-            )
+            if (isRetrying) {
+                LoadingIndicator(
+                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Filled.Refresh,
+                    contentDescription = "Retry",
+                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                )
+            }
             Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
             Text(
-                text = "Retry",
+                text = if (isRetrying) "Retrying..." else "Retry",
                 style = MaterialTheme.typography.labelLargeEmphasized
             )
         }
@@ -87,46 +98,101 @@ fun ErrorContent(
 }
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 fun TorrentList(
     viewModel: HomeViewModel,
     contentPadding: PaddingValues = PaddingValues(),
+    refreshAfterDelete: Boolean = false,
+    onDeleteRefreshStarted: () -> Unit = {},
+    onTorrentClick: (me.nanova.subspace.domain.model.Torrent) -> Unit = {},
 ) {
     val lazyListState = rememberLazyListState()
     val list = viewModel.pagingDataFlow.collectAsLazyPagingItems()
     val isOnline by viewModel.isOnline.collectAsStateWithLifecycle() // Observe network status
+    val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
+    val currentAccount by viewModel.currentAccount.collectAsStateWithLifecycle(initialValue = null)
     val lifecycleOwner = LocalLifecycleOwner.current
     val pullToRefreshState = rememberPullToRefreshState()
 
+    var torrentToDelete by remember { mutableStateOf<me.nanova.subspace.domain.model.Torrent?>(null) }
+
+    if (torrentToDelete != null) {
+        DeleteConfirmDialog(
+            torrentName = torrentToDelete!!.name,
+            onDismiss = { torrentToDelete = null },
+            onConfirm = { deleteFiles ->
+                viewModel.deleteTorrent(torrentToDelete!!.hash, deleteFiles)
+                torrentToDelete = null
+            }
+        )
+    }
+
     // Local state to control the manual pull-to-refresh indicator
     var isManualRefreshing by remember { mutableStateOf(false) }
+    // Persist the latest refresh error across transient Loading states so the UI does not flicker
+    var lastRefreshError by remember(currentAccount?.id) { mutableStateOf<Throwable?>(null) }
 
-    // Collect periodic and manual refresh triggers only while the UI is STARTED
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            viewModel.refreshTrigger.collect {
-                if (list.loadState.refresh !is LoadState.Loading) {
+            launch {
+                viewModel.manualRefreshTrigger.collect {
                     list.refresh()
+                    viewModel.refreshServerTransferInfo()
+                }
+            }
+            launch {
+                viewModel.periodicRefreshInterval.collectLatest { interval ->
+                    if (interval <= 0) return@collectLatest
+                    while (true) {
+                        delay(interval.milliseconds)
+                        val refreshState =
+                            list.loadState.mediator?.refresh ?: list.loadState.refresh
+                        if (refreshState !is LoadState.Loading) {
+                            list.refresh()
+                            viewModel.refreshServerTransferInfo()
+                        }
+                    }
                 }
             }
         }
     }
 
+    LaunchedEffect(refreshAfterDelete, lifecycleOwner) {
+        if (refreshAfterDelete) {
+            lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                list.refresh()
+                onDeleteRefreshStarted()
+            }
+        }
+    }
+
+    val mediatorRefresh = list.loadState.mediator?.refresh
+
     // Trigger a refresh immediately when network connectivity is restored
     LaunchedEffect(isOnline) {
-        if (isOnline && list.loadState.refresh is LoadState.Error) {
-            list.refresh()
+        if (isOnline && (mediatorRefresh is LoadState.Error || lastRefreshError != null)) {
+            viewModel.triggerManualRefresh()
         } else if (!isOnline) {
             isManualRefreshing = false
         }
     }
 
-    // Observe the Paging load state to reset the manual refreshing state
-    LaunchedEffect(list.loadState.refresh) {
-        // Reset manual refreshing state when the refresh load state is no longer Loading
-        // This happens after both manual and automatic refreshes complete (or are skipped/errored)
-        if (list.loadState.refresh is LoadState.NotLoading || list.loadState.refresh is LoadState.Error) {
-            isManualRefreshing = false
+    // Observe the RemoteMediator refresh load state to reset manual refreshing and track error persistence
+    LaunchedEffect(mediatorRefresh) {
+        when (mediatorRefresh) {
+            is LoadState.NotLoading -> {
+                isManualRefreshing = false
+                lastRefreshError = null
+                viewModel.setServerReachable(true)
+            }
+
+            is LoadState.Error -> {
+                isManualRefreshing = false
+                lastRefreshError = mediatorRefresh.error
+                viewModel.setServerReachable(false)
+            }
+
+            is LoadState.Loading, null -> Unit
         }
     }
 
@@ -152,6 +218,10 @@ fun TorrentList(
             )
         },
     ) {
+        val activeError = (mediatorRefresh as? LoadState.Error)?.error
+            ?: (list.loadState.refresh as? LoadState.Error)?.error
+            ?: lastRefreshError
+
         // Display offline message if network is down
         if (!isOnline) {
             Column(
@@ -170,18 +240,18 @@ fun TorrentList(
                 Spacer(modifier = Modifier.height(MdSpacing.sm))
             }
             return@PullToRefreshBox
-        } else if (list.loadState.refresh is LoadState.Error) {
-            // Handle other refresh errors when online
-            val error = list.loadState.refresh as LoadState.Error
+        } else if (activeError != null) {
+            // Keep error content visible even during a retry Loading transition to prevent flickering
             ErrorContent(
-                message = "Failed to fetch data: ${error.error.localizedMessage}",
+                message = "Failed to fetch data: ${activeError.localizedMessage}",
+                isRetrying = mediatorRefresh is LoadState.Loading || list.loadState.refresh is LoadState.Loading,
                 onRetry = { viewModel.triggerManualRefresh() },
                 modifier = Modifier
                     .padding(contentPadding)
                     .consumeWindowInsets(contentPadding)
                     .fillMaxSize()
             )
-            return@PullToRefreshBox // Exit the composable early if there's an error (and not offline)
+            return@PullToRefreshBox
         }
 
         Box(
@@ -202,13 +272,24 @@ fun TorrentList(
                     list.itemCount,
                     key = list.itemKey { it.id },
                 ) { idx ->
-                    list[idx]?.let {
+                    list[idx]?.let { torrent ->
                         TorrentItem(
                             modifier = Modifier.animateItem(),
-                            torrent = it,
+                            torrent = torrent,
                             index = idx,
                             count = list.itemCount,
-                            onToggleStatus = { viewModel.toggleTorrentStatus(it) }
+                            useSI = appSettings.useSIUnits,
+                            toBit = appSettings.showInBits,
+                            onToggleStatus = { viewModel.toggleTorrentStatus(it) },
+                            onClick = { onTorrentClick(it) },
+                            onDelete = {
+                                if (appSettings.confirmDelete) {
+                                    torrentToDelete = it
+                                } else {
+                                    viewModel.deleteTorrent(it.hash, false)
+                                }
+                            },
+                            onRecheck = { viewModel.recheckTorrent(it.hash) }
                         )
                     }
                 }

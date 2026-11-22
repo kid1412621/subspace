@@ -2,6 +2,7 @@ package me.nanova.subspace.ui.component
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -19,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.QuestionMark
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,6 +29,8 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.MultiChoiceSegmentedButtonRow
@@ -37,6 +41,7 @@ import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -77,18 +82,27 @@ fun FilterMenu(
     filter: QBListParams,
     categories: QBCategories,
     tags: List<String>,
+    onRefreshCategories: () -> Unit = {},
+    onRefreshTags: () -> Unit = {},
     onClose: () -> Unit = {},
     onFilter: (QBListParams) -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
     val sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
-    val tmp = QBFilters(filter = filter.filter, tag = filter.tag, category = filter.category)
+    val tmp = remember(filter) {
+        QBFilters(filter = filter.filter, tag = filter.tag, category = filter.category)
+    }
     val checkedList = remember {
         mutableStateListOf(
             *FilterType.entries
                 .filter { it.showCondition(filter) }
                 .toTypedArray()
         )
+    }
+
+    LaunchedEffect(Unit) {
+        onRefreshCategories()
+        onRefreshTags()
     }
 
     ModalBottomSheet(
@@ -143,11 +157,19 @@ fun FilterMenu(
             checkedList.asReversed().forEach { type ->
                 when (type) {
                     FilterType.Status -> StatusFilterMenu(filter.filter) { tmp.filter = it }
-                    FilterType.Category -> CategoryFilterMenu(filter.category, categories) {
+                    FilterType.Category -> CategoryFilterMenu(
+                        initial = filter.category,
+                        categories = categories,
+                        onRefresh = onRefreshCategories,
+                    ) {
                         tmp.category = it
                     }
 
-                    FilterType.Tag -> TagFilterMenu(filter.tag, tags) { tmp.tag = it }
+                    FilterType.Tag -> TagFilterMenu(
+                        initial = filter.tag,
+                        tags = tags,
+                        onRefresh = onRefreshTags,
+                    ) { tmp.tag = it }
                 }
             }
 
@@ -248,12 +270,45 @@ private fun StatusFilterMenu(
 private fun CategoryFilterMenu(
     initial: String?,
     categories: QBCategories,
+    onRefresh: () -> Unit = {},
     onUpdate: (String?) -> Unit = {}
 ) {
+    var selected by remember { mutableStateOf(initial) }
+    LaunchedEffect(categories) {
+        if (selected != null && !categories.containsKey(selected)) {
+            selected = null
+            onUpdate(null)
+        }
+    }
+
     HorizontalDivider(
         modifier = Modifier.padding(vertical = MdSpacing.xxs),
         color = MaterialTheme.colorScheme.outlineVariant
     )
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            "Category",
+            style = MaterialTheme.typography.labelMediumEmphasized,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        IconButton(
+            onClick = onRefresh,
+            shapes = IconButtonDefaults.shapes(),
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .size(28.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Refresh,
+                contentDescription = "Refresh categories",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+    }
     if (categories.isEmpty()) {
         Text(
             "No available category",
@@ -262,13 +317,6 @@ private fun CategoryFilterMenu(
         )
         return
     }
-
-    var selected by remember { mutableStateOf(initial) }
-    Text(
-        "Category",
-        style = MaterialTheme.typography.labelMediumEmphasized,
-        color = MaterialTheme.colorScheme.onSurfaceVariant
-    )
     FlowRow(
         Modifier
             .fillMaxWidth()
@@ -309,12 +357,45 @@ private fun CategoryFilterMenu(
 private fun TagFilterMenu(
     initial: String?,
     tags: List<String> = emptyList(),
+    onRefresh: () -> Unit = {},
     onUpdate: (String?) -> Unit = {}
 ) {
+    var selected by remember { mutableStateOf(initial) }
+    LaunchedEffect(tags) {
+        if (selected != null && selected !in tags) {
+            selected = null
+            onUpdate(null)
+        }
+    }
+
     HorizontalDivider(
         modifier = Modifier.padding(vertical = MdSpacing.xxs),
         color = MaterialTheme.colorScheme.outlineVariant
     )
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            "Tag",
+            style = MaterialTheme.typography.labelMediumEmphasized,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        IconButton(
+            onClick = onRefresh,
+            shapes = IconButtonDefaults.shapes(),
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .size(28.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Refresh,
+                contentDescription = "Refresh tags",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+    }
     if (tags.isEmpty()) {
         Text(
             "No available tag",
@@ -323,13 +404,6 @@ private fun TagFilterMenu(
         )
         return
     }
-
-    var selected by remember { mutableStateOf(initial) }
-    Text(
-        "Tag",
-        style = MaterialTheme.typography.labelMediumEmphasized,
-        color = MaterialTheme.colorScheme.onSurfaceVariant
-    )
     FlowRow(
         Modifier
             .fillMaxWidth()

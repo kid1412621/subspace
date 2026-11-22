@@ -60,14 +60,16 @@ TBD
 
 # Torrent state mapping
 
-|             | qBittorrent(<5.0.0) | qBittorrent(>=5.0.0) | Transmission |
-|-------------|:-------------------:|:--------------------:|:------------:|
-| all         |                     |                      |              |
-| active      |                     |                      |              |
-| downloading |                     |                      |              |
-| seeding     |                     |                      |              |
-| completed   |                     |                      |              |
-| paused      |                     |         N/A          |              |
-| stopped     |         N/A         |                      |              |
-| stalled     |                     |                      |              |
-| errored     |                     |                      |     N/A      |
+| State       | qBittorrent (<5.0.0)                 | qBittorrent (>=5.0.0)                | Transmission                   |
+|-------------|:------------------------------------:|:------------------------------------:|:------------------------------:|
+| all         | `all`                                | `all`                                | `all`                          |
+| active      | `downloading`, `uploading`           | `downloading`, `uploading`           | `4` (Download), `6` (Seed)     |
+| downloading | `downloading`, `metaDL`, `forcedDL`  | `downloading`, `metaDL`, `forcedDL`  | `4` (`TR_STATUS_DOWNLOAD`)     |
+| seeding     | `uploading`, `forcedUP`              | `uploading`, `forcedUP`              | `6` (`TR_STATUS_SEED`)         |
+| completed   | `pausedUP`                           | `stoppedUP`                          | `0` (`STOPPED` with 100%)      |
+| paused      | `pausedDL`                           | N/A (renamed to `stoppedDL`)         | `0` (`STOPPED` with <100%)     |
+| stopped     | N/A (was `pausedDL`)                 | `stoppedDL`                          | `0` (`TR_STATUS_STOPPED`)      |
+| stalled     | `stalledDL`, `stalledUP`             | `stalledDL`, `stalledUP`             | `4`, `6` (0 transfer speed)    |
+| errored     | `error`, `missingFiles`              | `error`, `missingFiles`              | `error > 0`                    |
+| queued      | `queuedDL`, `queuedUP`               | `queuedDL`, `queuedUP`               | `1`, `3`, `5` (Queued states)  |
+| checking    | `checkingDL`, `checkingUP`           | `checkingDL`, `checkingUP`           | `2` (`TR_STATUS_CHECK`)        |

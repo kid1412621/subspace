@@ -9,6 +9,7 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import me.nanova.subspace.data.api.QBCookieInterceptor
+import me.nanova.subspace.domain.model.Account
 import me.nanova.subspace.domain.repo.AccountRepo
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -25,19 +26,21 @@ class RetrofitFactory @Inject constructor(
     private val httpClient: OkHttpClient,
     private val accountRepo: AccountRepo
 ) {
-    private val retrofitMap = mutableMapOf<Long, Retrofit>()
-
     fun retrofit(): Retrofit {
-        return runBlocking { accountRepo.currentAccount.first() }?.let {
-            retrofitMap.getOrPut(it.id) {
-                return Retrofit.Builder()
-                    .client(httpClient)
-                    .addConverterFactory(ScalarsConverterFactory.create())
-                    .addConverterFactory(MoshiConverterFactory.create(moshi))
-                    .baseUrl(it.url)
-                    .build()
-            }
-        } ?: throw RuntimeException("No account found")
+        val account = runBlocking { accountRepo.currentAccount.first() }
+            ?: error("No account found")
+        val accountClient = httpClient.newBuilder().addInterceptor { chain ->
+            val request = chain.request().newBuilder()
+                .tag(Account::class.java, account)
+                .build()
+            chain.proceed(request)
+        }.build()
+        return Retrofit.Builder()
+            .client(accountClient)
+            .addConverterFactory(ScalarsConverterFactory.create())
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .baseUrl(account.url)
+            .build()
     }
 }
 

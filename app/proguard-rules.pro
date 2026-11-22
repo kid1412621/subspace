@@ -20,33 +20,11 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
-# Keep annotation default values (e.g., retrofit2.http.Field.encoded).
--keepattributes AnnotationDefault
-
-# Keep generic signature of Call, Response (R8 full mode strips signatures from non-kept items).
+# Preserve the generic signature of Retrofit Call for R8 full mode.
 -keep,allowobfuscation,allowshrinking interface retrofit2.Call
--keep,allowobfuscation,allowshrinking class retrofit2.Response
 
-# With R8 full mode generic signatures are stripped for classes that are not
-# kept. Suspend functions are wrapped in continuations where the type argument
-# is used.
--keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation
-#  -keep class hilt_aggregated_deps.** { *; }
-
-
-##---------------Begin: proguard configuration for Gson  ----------
-# Gson uses generic type information stored in a class file when working with fields. Proguard
-# removes such information by default, so configure it to keep all of it.
--keep class com.google.gson.** { *; }
 -keepattributes Signature
-# For using GSON @Expose annotation
 -keepattributes *Annotation*
-# Gson specific classes
--keep class sun.misc.Unsafe { *; }
-#-keep class com.google.gson.stream.** { *; }
-# Application classes that will be serialized/deserialized over Gson
--keep class me.nanova.subspace.domain.model.** { *; }
-##---------------End: proguard configuration for Gson  ----------
 
 ##---------------Begin: proguard configuration for OkHttp  ----------
 # Don't warn on unused classes.
@@ -60,31 +38,12 @@
 -dontwarn org.openjsse.net.ssl.OpenJSSE
 ##---------------End: proguard configuration for OkHttp  ----------
 
-# ---------------Begin: proguard configuration for Jetpack DataStore Preferences ----------
-# Keep the classes and members that DataStore Preferences relies on for Protocol Buffer serialization.
-# This is crucial for preventing crashes like "Field preferences_ not found".
-
-# Keep the main DataStore Preferences classes
--keep class androidx.datastore.preferences.core.** { *; }
--keep class androidx.datastore.preferences.** { *; }
-
-# Keep Protocol Buffer Lite runtime classes, which DataStore Preferences uses internally.
--keep class androidx.datastore.preferences.protobuf.** { *; }
-
-# Specifically, keep the generated PreferencesProto classes and their members.
-# The error often relates to PreferencesProto$PreferenceMap and its 'preferences_' field.
--keep class androidx.datastore.preferences.PreferencesProto* {
-    <fields>;
-    <methods>;
-}
-
-# Keep all classes that extend GeneratedMessageLite, as these are part of the protobuf mechanism.
--keep public class * extends androidx.datastore.preferences.protobuf.GeneratedMessageLite {
-    <fields>;
-    <methods>;
-}
-
-# If using custom serializers or types with DataStore,
-# ensure those are kept as well. For example:
-# -keep class your.package.YourCustomPreferenceClass { *; }
-##---------------End: proguard configuration for Jetpack DataStore Preferences ----------
+# qBittorrent response models are decoded by Moshi reflection.
+-keep class me.nanova.subspace.domain.model.QBCategory { *; }
+-keep class me.nanova.subspace.data.api.dto.TorrentDto { *; }
+-keep class me.nanova.subspace.data.api.dto.TorrentPropertiesDto { *; }
+-keep class me.nanova.subspace.data.api.dto.TorrentFileDto { *; }
+-keep class me.nanova.subspace.data.api.dto.TorrentTrackerDto { *; }
+-keep class me.nanova.subspace.data.api.dto.TorrentPeersResponseDto { *; }
+-keep class me.nanova.subspace.data.api.dto.TorrentPeerDto { *; }
+-keep class me.nanova.subspace.data.api.dto.TransferInfoDto { *; }

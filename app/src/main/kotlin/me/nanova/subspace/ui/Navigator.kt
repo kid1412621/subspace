@@ -18,6 +18,13 @@ class Navigator(val state: NavigationState) {
         }
     }
 
+    fun goHome() {
+        state.topLevelRoute = state.startRoute
+        state.backStacks[state.startRoute]?.let { stack ->
+            while (stack.size > 1) stack.removeAt(stack.lastIndex)
+        }
+    }
+
     fun goBack() {
         val currentStack = state.backStacks[state.topLevelRoute]
             ?: error("Stack for ${state.topLevelRoute} not found")

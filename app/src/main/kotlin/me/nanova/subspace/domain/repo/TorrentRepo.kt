@@ -35,4 +35,22 @@ interface TorrentRepo {
     suspend fun stop(torrents: List<String>)
     suspend fun start(torrents: List<String>)
 
+    suspend fun addTorrent(params: me.nanova.subspace.domain.model.AddTorrentParams)
+    suspend fun delete(torrents: List<String>, deleteFiles: Boolean)
+    suspend fun recheck(torrents: List<String>)
+
+    suspend fun getTorrentProperties(hash: String): me.nanova.subspace.domain.model.TorrentProperties
+    suspend fun getTorrentFiles(hash: String): List<me.nanova.subspace.domain.model.TorrentFile>
+    suspend fun setFilePriority(
+        hash: String,
+        fileIds: List<Int>,
+        priority: me.nanova.subspace.domain.model.FilePriority
+    )
+
+    suspend fun getTorrentTrackers(hash: String): List<me.nanova.subspace.domain.model.TorrentTracker>
+    suspend fun getTorrentPeers(hash: String): List<me.nanova.subspace.domain.model.TorrentPeer>
+    suspend fun reannounce(torrents: List<String>)
+
+    suspend fun getTransferInfo(): me.nanova.subspace.domain.model.ServerTransferInfo
+    suspend fun toggleSpeedLimitsMode()
 }

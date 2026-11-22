@@ -59,7 +59,7 @@ class NetworkStatusMonitor @Inject constructor(
             connectivityManager.getNetworkCapabilities(it)
                 ?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
         } ?: false
-        if (isInitialOnline && activeNetwork != null) {
+        if (isInitialOnline) {
             activeNetworks.add(activeNetwork)
         }
         trySend(isInitialOnline)
@@ -67,9 +67,34 @@ class NetworkStatusMonitor @Inject constructor(
         // Register the callback
         connectivityManager.registerNetworkCallback(request, networkCallback)
 
-        // Unregister the callback when the flow is cancelled
+        // Unregister the callback when the flow is canceled
         awaitClose {
             connectivityManager.unregisterNetworkCallback(networkCallback)
         }
     }.distinctUntilChanged()
+
+    override val isUnmeteredWifi: Flow<Boolean> = callbackFlow {
+        val manager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        fun update() {
+            val capabilities = manager.activeNetwork?.let(manager::getNetworkCapabilities)
+            trySend(capabilities?.let {
+                it.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) &&
+                        it.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED) &&
+                        it.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            } ?: false)
+        }
+
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) = update()
+            override fun onLost(network: Network) = update()
+            override fun onCapabilitiesChanged(
+                network: Network,
+                networkCapabilities: NetworkCapabilities
+            ) = update()
+        }
+        manager.registerDefaultNetworkCallback(callback)
+        update()
+        awaitClose { manager.unregisterNetworkCallback(callback) }
+    }.distinctUntilChanged()
+
 }

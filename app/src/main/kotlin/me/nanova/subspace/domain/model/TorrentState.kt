@@ -1,6 +1,80 @@
 package me.nanova.subspace.domain.model
 
 /**
+ * Unified status for displaying across different client implementations
+ * (qBittorrent <5.0, qBittorrent >=5.0, Transmission, etc.)
+ */
+enum class TorrentStatus(val label: String) {
+    DOWNLOADING("Downloading"),
+    SEEDING("Seeding"),
+    COMPLETED("Completed"),
+    PAUSED("Paused"),
+    STOPPED("Stopped"),
+    STALLED("Stalled"),
+    QUEUED("Queued"),
+    CHECKING("Checking"),
+    ALLOCATING("Allocating"),
+    MOVING("Moving"),
+    ERROR("Error"),
+    UNKNOWN("Unknown");
+
+    val isStopped: Boolean
+        get() = this == PAUSED || this == STOPPED || this == COMPLETED
+
+    companion object {
+        fun from(clientType: AccountType, state: String?, progress: Float): TorrentStatus =
+            when (clientType) {
+                AccountType.QBITTORENT -> fromQBittorrent(state, progress)
+                AccountType.TRANSMISSION -> fromTransmission(state, progress)
+            }
+
+        fun fromQBittorrent(state: String?, progress: Float = 0f): TorrentStatus {
+            return when (val normalized = state.orEmpty().trim().lowercase()) {
+                "downloading", "metadl", "forcedmetadl", "forceddl" -> DOWNLOADING
+                "uploading", "forcedup" -> SEEDING
+                "stoppedup", "pausedup" -> COMPLETED
+                "stoppeddl" -> STOPPED
+                "pauseddl", "paused" -> PAUSED
+                "stalleddl", "stalledup", "stalled", "stalled_downloading", "stalled_uploading" -> STALLED
+                "queued", "queueddl", "queuedup" -> QUEUED
+                "checking", "checkingdl", "checkingup", "checkingresumedata" -> CHECKING
+                "allocating" -> ALLOCATING
+                "moving" -> MOVING
+                "error", "missingfiles", "errored" -> ERROR
+                else -> inferStatus(normalized, progress)
+            }
+        }
+
+        fun fromTransmission(state: String?, progress: Float = 0f): TorrentStatus {
+            val normalized = state.orEmpty().trim().lowercase()
+            return when (TRState.fromNormalized(normalized)) {
+                TRState.STOPPED -> stoppedStatus(progress)
+                TRState.QUEUED_TO_VERIFY, TRState.QUEUED_TO_DOWNLOAD, TRState.QUEUED_TO_SEED -> QUEUED
+                TRState.VERIFYING -> CHECKING
+                TRState.DOWNLOADING -> DOWNLOADING
+                TRState.SEEDING -> SEEDING
+                null -> inferStatus(normalized, progress)
+            }
+        }
+
+        private fun inferStatus(state: String, progress: Float): TorrentStatus = when {
+            state.contains("error") -> ERROR
+            state.contains("check") -> CHECKING
+            state.contains("queue") -> QUEUED
+            state.contains("stall") -> STALLED
+            state.contains("upload") || state.contains("seed") -> SEEDING
+            state.contains("download") -> DOWNLOADING
+            state.contains("pause") -> PAUSED
+            state.contains("stop") -> stoppedStatus(progress)
+            else -> UNKNOWN
+        }
+
+        private fun stoppedStatus(progress: Float): TorrentStatus =
+            if (progress >= 1.0f) COMPLETED else STOPPED
+    }
+}
+
+/**
  * [official wiki](https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-5.0)#:~:text=Possible%20values%20of%20state)
  *
  * **NOTE**: the value slightly differs from @see [QBFilterState], e.g. error vs errored
@@ -75,10 +149,7 @@ enum class QBState {
 
     companion object {
         fun isStopped(stateString: String): Boolean =
-            when (QBState.entries.find { it.name.equals(stateString, ignoreCase = true) }) {
-                pausedDL, pausedUP, stoppedDL, stoppedUP -> true
-                else -> false
-            }
+            TorrentStatus.fromQBittorrent(stateString).isStopped
     }
 
 }
@@ -86,14 +157,29 @@ enum class QBState {
 /**
  * [doc](https://github.com/transmission/transmission/blob/main/docs/rpc-spec.md)
  */
-enum class TRState(value: Int) {
+enum class TRState(val code: Int) {
     STOPPED(0),
     QUEUED_TO_VERIFY(1),
     VERIFYING(2),
     QUEUED_TO_DOWNLOAD(3),
     DOWNLOADING(4),
     QUEUED_TO_SEED(5),
-    SEEDING(6)
+    SEEDING(6);
+
+    companion object {
+        private val byCode = entries.associateBy { it.code.toString() }
+
+        internal fun fromNormalized(state: String): TRState? = when (state) {
+            "tr_status_stopped", "stopped" -> STOPPED
+            "tr_status_check_wait", "queued_to_verify" -> QUEUED_TO_VERIFY
+            "tr_status_check", "verifying" -> VERIFYING
+            "tr_status_download_wait", "queued_to_download" -> QUEUED_TO_DOWNLOAD
+            "tr_status_download", "downloading" -> DOWNLOADING
+            "tr_status_seed_wait", "queued_to_seed" -> QUEUED_TO_SEED
+            "tr_status_seed", "seeding" -> SEEDING
+            else -> byCode[state]
+        }
+    }
 }
 
 /**

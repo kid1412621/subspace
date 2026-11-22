@@ -3,6 +3,7 @@ package me.nanova.subspace.data.db.entity
 import androidx.room3.ColumnInfo
 import androidx.room3.Entity
 import androidx.room3.PrimaryKey
+import me.nanova.subspace.domain.model.AccountType
 import me.nanova.subspace.domain.model.Torrent
 
 @Entity(tableName = "torrent")
@@ -38,7 +39,7 @@ data class TorrentEntity(
     val lastUpdated: Long = System.currentTimeMillis()
 )
 
-fun TorrentEntity.toDomain() = Torrent(
+fun TorrentEntity.toDomain(clientType: AccountType) = Torrent(
     id = this.id,
     hash = this.hash,
     name = this.name,
@@ -56,5 +57,6 @@ fun TorrentEntity.toDomain() = Torrent(
     uploaded = this.uploaded,
     seeds = this.seeds,
     leechs = this.leechs,
-    priority = this.priority
+    priority = this.priority,
+    clientType = clientType,
 )

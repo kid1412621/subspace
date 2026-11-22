@@ -23,4 +23,8 @@ data class Torrent(
     val leechs: Int,
     val seeds: Int,
     val priority: Int,
-)
+    val clientType: AccountType = AccountType.QBITTORENT,
+) {
+    val status: TorrentStatus
+        get() = TorrentStatus.from(clientType, state, progress)
+}

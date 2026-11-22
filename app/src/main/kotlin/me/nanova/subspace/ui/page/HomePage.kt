@@ -1,6 +1,7 @@
 package me.nanova.subspace.ui.page
 
 
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,7 +17,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.CleaningServices
 import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material.icons.rounded.Menu
-import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.SwapVert
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
@@ -25,8 +26,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DismissibleDrawerSheet
 import androidx.compose.material3.DismissibleNavigationDrawer
 import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalIconToggleButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -56,7 +55,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -67,7 +66,10 @@ import me.nanova.subspace.ui.AccountCreationRoute
 import me.nanova.subspace.ui.AccountDetailsRoute
 import me.nanova.subspace.ui.LocalWindowWidthSizeClass
 import me.nanova.subspace.ui.Navigator
+import me.nanova.subspace.ui.SettingsRoute
+import me.nanova.subspace.ui.TorrentDetailsRoute
 import me.nanova.subspace.ui.component.AccountMenu
+import me.nanova.subspace.ui.component.AddTorrentSheet
 import me.nanova.subspace.ui.component.FilterMenu
 import me.nanova.subspace.ui.component.SortMenu
 import me.nanova.subspace.ui.component.TorrentList
@@ -75,15 +77,20 @@ import me.nanova.subspace.ui.theme.MdSpacing
 import me.nanova.subspace.ui.theme.Theme
 import me.nanova.subspace.ui.vm.HomeUiState
 import me.nanova.subspace.ui.vm.HomeViewModel
+import me.nanova.subspace.util.formatBytesPerSec
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HomePage(
     homeViewModel: HomeViewModel = hiltViewModel(),
     navigator: Navigator,
+    incomingTorrent: Uri? = null,
+    onIncomingTorrentHandled: () -> Unit = {},
+    refreshAfterDelete: Boolean = false,
+    onDeleteRefreshStarted: () -> Unit = {},
 ) {
     val uiState by homeViewModel.homeUiState.collectAsState()
     val currentAccount by homeViewModel.currentAccount.collectAsState(initial = null)
+    val appSettings by homeViewModel.appSettings.collectAsState()
     val accounts by homeViewModel.accounts.collectAsState(initial = emptyList())
 
     val snackBarHostState = remember { SnackbarHostState() }
@@ -95,7 +102,7 @@ fun HomePage(
         uiState.error?.let {
             val result = snackBarHostState.showSnackbar(it)
             if (result == SnackbarResult.Dismissed) {
-                uiState.error = null
+                homeViewModel.clearError()
             }
         }
     }
@@ -122,6 +129,12 @@ fun HomePage(
             },
             onAccountDeleting = {
                 homeViewModel.deleteAccount(it)
+            },
+            onGoSettings = {
+                navigator.navigate(SettingsRoute)
+                if (!isExpanded) {
+                    scope.launch { drawerState.close() }
+                }
             }
         )
     }
@@ -155,14 +168,28 @@ fun HomePage(
                     },
                     title = {
                         Text(
-                            text = LocalContext.current.resources.getString(R.string.app_name),
+                            text = LocalResources.current.getString(R.string.app_name),
                             style = MaterialTheme.typography.titleLargeEmphasized
                         )
                     },
                     subtitle = {
                         currentAccount?.let { account ->
+                            val transferInfo by homeViewModel.serverTransferInfo.collectAsState()
+                            val speedText = transferInfo?.let {
+                                " • ↓ ${
+                                    it.dlInfoSpeed.formatBytesPerSec(
+                                        appSettings.useSIUnits,
+                                        appSettings.showInBits
+                                    )
+                                }  ↑ ${
+                                    it.upInfoSpeed.formatBytesPerSec(
+                                        appSettings.useSIUnits,
+                                        appSettings.showInBits
+                                    )
+                                }"
+                            } ?: ""
                             Text(
-                                text = account.name,
+                                text = "${account.name}$speedText",
                                 style = MaterialTheme.typography.labelMedium
                             )
                         }
@@ -170,7 +197,13 @@ fun HomePage(
                 )
             },
             bottomBar = {
-                BottomBar(currentAccount != null, uiState, homeViewModel)
+                BottomBar(
+                    show = currentAccount != null,
+                    uiState = uiState,
+                    homeViewModel = homeViewModel,
+                    incomingTorrent = incomingTorrent,
+                    onIncomingTorrentHandled = onIncomingTorrentHandled,
+                )
             },
             snackbarHost = {
                 SnackbarHost(hostState = snackBarHostState)
@@ -193,6 +226,16 @@ fun HomePage(
                     TorrentList(
                         viewModel = homeViewModel,
                         contentPadding = innerPadding,
+                        refreshAfterDelete = refreshAfterDelete,
+                        onDeleteRefreshStarted = onDeleteRefreshStarted,
+                        onTorrentClick = { torrent ->
+                            navigator.navigate(
+                                TorrentDetailsRoute(
+                                    hash = torrent.hash,
+                                    title = torrent.name
+                                )
+                            )
+                        }
                     )
                 }
             }
@@ -227,38 +270,76 @@ fun HomePage(
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun BottomBar(
     show: Boolean = false,
     uiState: HomeUiState,
     homeViewModel: HomeViewModel,
+    incomingTorrent: Uri?,
+    onIncomingTorrentHandled: () -> Unit,
 ) {
     if (!show) return
 
     var showSortMenu by remember { mutableStateOf(false) }
     var showFilterSheet by remember { mutableStateOf(false) }
+    var showAddTorrentSheet by remember { mutableStateOf(false) }
+    var addTorrentError by remember(incomingTorrent) { mutableStateOf<String?>(null) }
+    var isAddingTorrent by remember(incomingTorrent) { mutableStateOf(false) }
+    val closeAddTorrentSheet = {
+        showAddTorrentSheet = false
+        addTorrentError = null
+        onIncomingTorrentHandled()
+    }
     val category by homeViewModel.categories.collectAsState(initial = emptyMap())
     val tags by homeViewModel.tags.collectAsState(initial = emptyList())
+    val transferInfo by homeViewModel.serverTransferInfo.collectAsState()
 
     if (showFilterSheet) {
         FilterMenu(
-            uiState.filter,
-            category,
-            tags,
+            filter = uiState.filter,
+            categories = category,
+            tags = tags,
+            onRefreshCategories = { homeViewModel.refreshCategories() },
+            onRefreshTags = { homeViewModel.refreshTags() },
             onClose = { showFilterSheet = false },
             onFilter = { homeViewModel.updateFilter(it) }
         )
     }
 
+    if (showAddTorrentSheet || incomingTorrent != null) {
+        AddTorrentSheet(
+            incomingTorrent = incomingTorrent,
+            categories = category,
+            tags = tags,
+            onRefreshCategories = { homeViewModel.refreshCategories() },
+            onRefreshTags = { homeViewModel.refreshTags() },
+            error = addTorrentError,
+            isSubmitting = isAddingTorrent,
+            onDismiss = closeAddTorrentSheet,
+            onAddTorrent = { params ->
+                addTorrentError = null
+                isAddingTorrent = true
+                homeViewModel.addTorrent(
+                    params,
+                    onError = { addTorrentError = it; isAddingTorrent = false }) {
+                    isAddingTorrent = false
+                    closeAddTorrentSheet()
+                }
+            }
+        )
+    }
+
     BottomAppBar(
         actions = {
-            IconButton(
-                onClick = { /* do something */ },
-                enabled = false,
-                shapes = IconButtonDefaults.shapes(),
+            FilledTonalIconToggleButton(
+                checked = transferInfo?.altSpeedLimitsEnabled == true,
+                onCheckedChange = { homeViewModel.toggleAltSpeedMode() },
+                shapes = IconButtonDefaults.toggleableShapes(),
             ) {
-                Icon(Icons.Rounded.Search, contentDescription = "search")
+                Icon(
+                    Icons.Rounded.Speed,
+                    contentDescription = "Alternate Speed Limits (Turtle Mode)"
+                )
             }
             FilledTonalIconToggleButton(
                 checked = uiState.filter.hasFiltered(),
@@ -304,7 +385,7 @@ private fun BottomBar(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { },
+                onClick = { showAddTorrentSheet = true },
                 containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
                 elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
             ) {
@@ -314,7 +395,6 @@ private fun BottomBar(
     )
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun BlankAccount(
     modifier: Modifier = Modifier,

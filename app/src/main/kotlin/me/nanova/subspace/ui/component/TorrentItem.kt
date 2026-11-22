@@ -1,8 +1,10 @@
 package me.nanova.subspace.ui.component
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -19,9 +21,16 @@ import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Timelapse
 import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material.icons.outlined.Upload
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LinearWavyProgressIndicator
@@ -36,7 +45,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
@@ -44,6 +55,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import me.nanova.subspace.domain.model.QBState
 import me.nanova.subspace.domain.model.Torrent
+import me.nanova.subspace.ui.mapper.toColor
 import me.nanova.subspace.ui.mapper.toIcon
 import me.nanova.subspace.ui.theme.MdSpacing
 import me.nanova.subspace.ui.theme.Theme
@@ -64,6 +76,9 @@ fun TorrentItem(
     useSI: Boolean = false,
     toBit: Boolean = false,
     onToggleStatus: (Torrent) -> Unit = {},
+    onClick: (Torrent) -> Unit = {},
+    onDelete: (Torrent) -> Unit = {},
+    onRecheck: (Torrent) -> Unit = {},
 ) {
     val progress by remember(torrent.progress) { mutableFloatStateOf(torrent.progress) }
     val animatedProgress by animateFloatAsState(
@@ -72,15 +87,67 @@ fun TorrentItem(
         label = "progressAnimation"
     )
     val isActiveTransfer = torrent.dlspeed > 0 || torrent.upspeed > 0
+    val status = remember(torrent.clientType, torrent.state, torrent.progress) { torrent.status }
+    var showMenu by remember { mutableStateOf(false) }
 
     SegmentedListItem(
         shapes = ListItemDefaults.segmentedShapes(index = index, count = count),
         colors = ListItemDefaults.segmentedColors(),
-        modifier = modifier,
+        modifier = modifier.clickable { onClick(torrent) },
         verticalAlignment = Alignment.CenterVertically,
+        trailingContent = {
+            Box {
+                IconButton(
+                    onClick = { showMenu = true },
+                    shapes = IconButtonDefaults.shapes()
+                ) {
+                    Icon(Icons.Rounded.MoreVert, contentDescription = "More options")
+                }
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Details") },
+                        leadingIcon = { Icon(Icons.Rounded.Info, contentDescription = null) },
+                        onClick = {
+                            showMenu = false
+                            onClick(torrent)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Recheck Hash") },
+                        leadingIcon = { Icon(Icons.Rounded.Refresh, contentDescription = null) },
+                        onClick = {
+                            showMenu = false
+                            onRecheck(torrent)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                "Delete",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Rounded.Delete,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        },
+                        onClick = {
+                            showMenu = false
+                            onDelete(torrent)
+                        }
+                    )
+                }
+            }
+        },
         leadingContent = {
             Column(
-                modifier = Modifier.widthIn(min = 56.dp, max = 72.dp),
+                modifier = Modifier.widthIn(min = 56.dp, max = 76.dp),
                 verticalArrangement = Arrangement.spacedBy(MdSpacing.xxs),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -89,12 +156,13 @@ fun TorrentItem(
                     shapes = IconButtonDefaults.shapes(),
                 ) {
                     Icon(
-                        imageVector = QBState.valueOf(torrent.state).toIcon(),
-                        contentDescription = torrent.state,
+                        imageVector = status.toIcon(),
+                        contentDescription = status.label,
+                        tint = status.toColor()
                     )
                 }
                 Text(
-                    text = torrent.state,
+                    text = status.label,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,

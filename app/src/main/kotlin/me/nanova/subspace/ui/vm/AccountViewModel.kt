@@ -32,6 +32,9 @@ class AccountViewModel @Inject constructor(
             try {
                 val acc = accountRepo.get(accountId)
                 account.update { acc ?: it }
+            } catch (e: Exception) {
+                Log.e("AccountViewModel", "Failed to load account $accountId", e)
+                snackBarMessage.update { e.localizedMessage ?: "Failed to load account" }
             } finally {
                 loading.update { false }
             }

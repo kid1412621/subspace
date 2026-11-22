@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.9.0 - 2026-11-22
+
+### Added
+
+- Add qBittorrent downloads from magnet links, URLs, or `.torrent` files. Android can open magnet links and `.torrent` files directly in Subspace.
+- View torrent details, files, trackers, and peers. Set individual file priorities, force a recheck, or delete a torrent with the option to remove its downloaded files.
+- Show server-wide transfer speeds and toggle qBittorrent's alternative speed limits from the home screen.
+- Add settings for theme, transfer units, automatic refresh interval, Wi-Fi-only refresh, and delete confirmation.
+
+### Changed
+
+- Improve torrent status labels and filters, including support for the stopped states used by newer qBittorrent versions. Refresh categories and tags from the filter menu.
+- Run periodic refresh while the torrent list is active and respect the Wi-Fi-only setting on metered connections.
+- Update Gradle to 9.9.1, Android Gradle Plugin to 9.5.2, Material 3 to 1.5.0-rc01, and Navigation 3 to 1.2.1.
+
+### Fixed
+
+- Improve qBittorrent session recovery when concurrent requests encounter an expired cookie.
+- Improve the crash recovery screen and how the app restarts after a crash.
+
 ## 0.8.0 - 2026-10-22
 
 - Bump Gradle to 9.8.2, AGP to 9.4.1, Compose BOM to 2026.09.00, target SDK to 37, and migrate to Gradle version catalog;

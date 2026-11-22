@@ -11,3 +11,9 @@ data object AccountCreationRoute : NavKey
 
 @Serializable
 data class AccountDetailsRoute(val accountId: Long) : NavKey
+
+@Serializable
+data class TorrentDetailsRoute(val hash: String, val title: String = "") : NavKey
+
+@Serializable
+data object SettingsRoute : NavKey

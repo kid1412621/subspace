@@ -24,6 +24,7 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalIconButton
@@ -66,6 +67,7 @@ fun AccountMenu(
     onAccountAdding: () -> Unit = {},
     onAccountEditing: (Account) -> Unit = {},
     onAccountDeleting: (Account) -> Unit = {},
+    onGoSettings: () -> Unit = {},
 ) {
     val lazyColumnState = rememberLazyListState()
     val scope = rememberCoroutineScope()
@@ -161,6 +163,31 @@ fun AccountMenu(
                     .padding(vertical = MdSpacing.xxs)
                     .fillMaxWidth(),
                 onClick = { onAccountSelected(it) },
+            )
+        }
+
+        item {
+            if (accounts.isNotEmpty()) {
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    modifier = Modifier.padding(vertical = MdSpacing.xs)
+                )
+            }
+            NavigationDrawerItem(
+                label = { Text("Settings", style = MaterialTheme.typography.titleMedium) },
+                icon = {
+                    Icon(
+                        Icons.Rounded.Settings,
+                        contentDescription = "Settings",
+                        modifier = Modifier.size(28.dp)
+                    )
+                },
+                selected = false,
+                modifier = Modifier
+                    .padding(NavigationDrawerItemDefaults.ItemPadding)
+                    .padding(vertical = MdSpacing.xxs)
+                    .fillMaxWidth(),
+                onClick = { onGoSettings() },
             )
         }
     }
@@ -306,5 +333,13 @@ fun AccountMenuPrev() {
 
     Theme {
         AccountMenu(currentAccountId = 1, accounts = accounts)
+    }
+}
+
+@Composable
+@Preview(showBackground = true)
+fun AccountMenuEmptyPrev() {
+    Theme {
+        AccountMenu(currentAccountId = null, accounts = emptyList())
     }
 }
